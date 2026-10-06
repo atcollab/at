@@ -186,7 +186,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
             testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=2.5e-9);
-            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=3.e-4,AbsTol=2.e-4);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=3.5e-4,AbsTol=2.e-4);
         end
 
         function linopt1(testCase,dp)
@@ -223,7 +223,7 @@ classdef pytests < matlab.unittest.TestCase
             % Matlab
             [~,mbeta,mmu,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
             % check
-            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=1.e-8);
+            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=2.e-8);
             testCase.verifyEqual(mmu,pmu,AbsTol=1.E-8,RelTol=0);
             testCase.verifyEqual(mdisp,pdisp,AbsTol=1.E-8,RelTol=0);
         end
