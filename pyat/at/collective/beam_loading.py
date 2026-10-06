@@ -212,52 +212,65 @@ class BeamLoadingElement(RFCavity, Collective):
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
             NormFact (float):   Normalization factor
-            detune [Hz] (float):     Define how much to detune the cavity from
-                resonance in unints of Hz
-            cavitymode (CavityMode):  Is cavity ACTIVE (default), PASSIVE or
-                PASSIVE_SETVOLTAGE (Passive with a voltage feedback).
-                For PASSIVE_SETVOLTAGE, the voltage setpoint is specified with
-                passive_voltage
-            passive_voltage [V] (float): Voltage setpoint with the passive
-                cavity with feedback.
-            Gain ([float, float]):  Used for cavity feedbacks. If FBMode is PROP
-                then Gain[0] is the amplitude gain, and Gain[1] is the phase gain.
-                If FBMode is PROP_INTEGRAL, then Gain[0] is Prop gain and Gain[1]
-                is Integral gain. 
-            buffersize (int):  Size of the history buffer for vbeam, vgen,
-                vbunch (default 0)
-            TunerOffset:      Fixed detuning from optimal tuning
-                angle [rad]. For a negative slope of the RF voltage at the
-                synchronous position, the optimum detuning is negative.
-                Applying a positive TunerOffset will therefore
-                reduce the detuning. The reverse is true for positive RF
-                slope.
-            TunerGain (float): Used for detuning of the cavities. States the gain
-                of the correction factor to be applied.
-                
-            TunerAveragingPeriod (int): Detuning is applied in steps of
-                TunerAveragingPeriod with the average difference over this period. 
-            
+
+            SystemHarmonic (float): Used to compute the nominal rf frequency
+                for the given system. e.g. third of fourth harmonic of
+                rf_frequency. If None, then will be computed to the nearest
+                integer multiple of rf_frequency.            
             ts (float):        The timelag of the synchronous particle in the
                 full RF system [m]. If not specified, it will be calculated
                 using get_timelag_fromU0. Defines the expected position of the
                 beam to be used for the beam loading setpoints.
+            BufferSize (int):  Size of the history buffer for vbeam, vgen,
+                vbunch (default 0). Not related to feedbacks, only data
+                storage.
+
+            cavitymode (CavityMode):  Is cavity ACTIVE (default), PASSIVE or
+                PASSIVE_SETVOLTAGE (Passive with a voltage feedback).
+                For PASSIVE_SETVOLTAGE, the voltage setpoint is specified with
+                PassiveVoltage            
             fbmode (FeedbackMode): States the mode for the parameter
                 calculation to be used for the loop. PROP (default) takes
                 only the proportional component, compared to PROP_INTEGRAL
                 (coming soon) which takes a the Proportional and Integral
                 parts.
-            system_harmonic (float): Used to compute the nominal rf frequency
-                for the given system. e.g. third of fourth harmonic of
-                rf_frequency. If None, then will be computed to the nearest
-                integer multiple of rf_frequency.
-            IIR_cutoff: cutoff frequency of the IIR filter [Hz]. If 0,
-                a cutoff frequency of infinity is assumed. 
-            Delay: Loop delay. If FBMode is PROP, then the units are in turns,
-                if FBMode is PROP_INTEGRAL, then the units are in buckets.
-            Every: Every what
-            samplenum: Sample whhatt?
 
+            Detune [Hz] (float):     Define how much to detune the cavity from
+                resonance in units of Hz. 
+            PassiveVoltage [V] (float): Voltage setpoint for the passive
+                cavity with feedback.
+
+            TunerGain (float): Used for detuning of the cavities. States the gain
+                of the correction factor to be applied.
+            TunerOffset (rad): Fixed detuning from optimal tuning
+                angle. For a negative slope of the RF voltage at the
+                synchronous position, the optimum detuning is negative.
+                Applying a positive TunerOffset will therefore
+                reduce the detuning. The reverse is true for positive RF
+                slope.
+            TunerAveragingPeriod (int): Detuning is applied in steps of
+                TunerAveragingPeriod with the average difference over this period. 
+                
+                
+            Gain ([float, float]):  Used for cavity feedbacks. If FBMode is PROP
+                then Gain[0] is the amplitude gain, and Gain[1] is the phase gain.
+                If FBMode is PROP_INTEGRAL, then Gain[0] is Prop gain and Gain[1]
+                is Integral gain. 
+            Delay (int): Loop delay. If FBMode is PROP, then the units are in turns,
+                if FBMode is PROP_INTEGRAL, then the units are in buckets.
+            SampleNum (int): Number of bunch over which the mean cavity voltage is computed.
+                Units are in bucket numbers.
+            Every (int): Sampling and clock period of the feedback controller
+                Time interval between two cavity voltage monitoring and feedback.
+                Units are in bucket numbers.
+
+            IIRCutoff (float): Cutoff frequency of the IIR filter in [Hz].
+                If 0, cutoff frequency is infinity.
+                Default is 0.
+            FF (bool): Boolean switch to use feedforward constant.
+                True is recommended to prevent a cavity voltage drop in the beginning
+                of the tracking.
+            OpenLoop (bool): Do you want to apply the changes or just monitor? 
             
         Returns:
             bl_elem (Element): beam loading element
@@ -270,7 +283,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self.ring_harmonic_number = ring.harmonic_number #ring harmonic number (nbuckets) 
         energy = ring.energy
         self.system_harmonic = kwargs.pop(
-            "system_harmonic", int(np.round(frequency / ring.rf_frequency))
+            "SystemHarmonic", int(np.round(frequency / ring.rf_frequency))
         )
         harmonic_number = self.system_harmonic * ring.harmonic_number #cavity harmonic number
         if harmonic_number % 1 != 0:
@@ -317,7 +330,7 @@ class BeamLoadingElement(RFCavity, Collective):
             
         # Initialise common regulator parameters
         self.Gain = kwargs.pop("Gain", [1e-3,1e-3])
-        self.delay = kwargs.pop("delay", 1)
+        self.delay = kwargs.pop("Delay", 1)
         if self.delay <= 0:
             raise AtError('Attribute delay must be >= 1')  
 
@@ -328,12 +341,21 @@ class BeamLoadingElement(RFCavity, Collective):
 
 
         # Initialise FBMode=PROP_INTEGRAL buffers                  
-        self.every = kwargs.pop("every", 1)
-        self.samplenum = kwargs.pop("samplenum", 1)
+        self.every = kwargs.pop("Every", 1)
+        self.samplenum = kwargs.pop("SampleNum", 1)
+        if self.samplenum > ring.harmonic_number:
+            warning_string = (
+                "SampleNum cannot be greater than number of buckets. "
+                "Setting samplenum to ring.harmonic_number. "
+                "Consider using delay instead of samplenum."
+            )
+            warnings.warn(AtWarning(warning_string), stacklevel=2)   
+            self.samplenum = ring.harmonic_number
+                     
         self.samplelist_length = int(np.ceil(ring.harmonic_number/self.every))
         self.recordsize = int(np.ceil(self.delay / self.every))
 
-        self.cutoff = kwargs.pop("IIRcutoff",0.0)
+        self.Cutoff = kwargs.pop("IIRCutoff",0.0)
         self.FF = kwargs.pop("FF", 1) #bool
         self._IIRcoef = np.zeros(1)
         self._IIRout = np.zeros(2)
@@ -345,14 +367,14 @@ class BeamLoadingElement(RFCavity, Collective):
         self.detune = detune
         
         # Initialise CavityMode=Passive_SetVoltage parameters
-        self._passive_vset = kwargs.pop("passive_voltage", 0.0)  
+        self._passive_vset = kwargs.pop("PassiveVoltage", 0.0)  
               
               
         ####################################
         ### Next we perform all the checks #
         ####################################
         if not isinstance(cavitymode, CavityMode):
-            error_string = ("cavitymode has to be an "
+            error_string = ("CavityMode has to be an "
                             "instance of CavityMode")
             raise TypeError(error_string)
 
@@ -390,7 +412,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
 
         # buffer size 
-        self._buffersize = kwargs.pop("buffersize", 0)
+        self._buffersize = kwargs.pop("BufferSize", 0)
 
 
         # Initlise the buffers before super. Redefined later.

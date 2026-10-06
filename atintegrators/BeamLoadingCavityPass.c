@@ -132,7 +132,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     int every = Elem->every;  // ...in steps of every 
     int FF = Elem->ff; //Use the feedforward constant? 
     int record_size = Elem->recordsize; // overlap coming from delay and every sampling
-    int samplelist_length = ring_harmn/every + 1; // the length of the samplelist array
+    int samplelist_length = ceil(ring_harmn/every); // the length of the samplelist array
     int open = Elem->openloop; // do you want to apply the correction?
     
     double *I_record = Elem->I_record; // real and imaginary of the integral part of the loop            
@@ -264,7 +264,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                 update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay);
             }
             if(fbmode==2){
-                printf("iturn %d \n", iturn);
                 // If FBMode=PROP_INTEGRAL
                 if(iturn==0){
                     init_sample_list(samplelist, ring_harmn, every, samplelist_length); 
@@ -296,13 +295,13 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
                 };
 
-                init_cavity_record_phasor_array(vbunch,
-                                                beam_phasor_record_real, beam_phasor_record_imag,
-                                                cavity_phasor_record_real, cavity_phasor_record_imag,
-                                                generator_phasor_record_real, generator_phasor_record_imag,
-                                                ring_harmn); 
+                set_cavity_record_phasor_array(vbunch,
+                                               beam_phasor_record_real, beam_phasor_record_imag,
+                                               cavity_phasor_record_real, cavity_phasor_record_imag,
+                                               generator_phasor_record_real, generator_phasor_record_imag,
+                                               ring_harmn); 
 
-                if(iturn>=1 && TunerGain>0){
+                if(iturn>=1 && TunerGain>0 && iturn%TunerAveragingPeriod==0){
                     // It is inited above, but if the psi changes
                     // then you need to redo it
                     init_Ig2Vg_matrix(ring_harmn,
