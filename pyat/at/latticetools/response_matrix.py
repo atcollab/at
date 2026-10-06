@@ -214,10 +214,10 @@ def _resp(
 ):
     def _resp_one(variable: RefptsVariable):
         """Single response."""
-        variable.step_up(ring=ring)
+        variable.step_up(ring=ring, force=True)
         observables.evaluate(ring, **kwargs)
         op = observables.flat_values
-        variable.step_down(ring=ring)
+        variable.step_down(ring=ring, force=True)
         observables.evaluate(ring, **kwargs)
         om = observables.flat_values
         variable.reset(ring=ring)
