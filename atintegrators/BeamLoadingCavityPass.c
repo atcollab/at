@@ -301,9 +301,10 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                                                generator_phasor_record_real, generator_phasor_record_imag,
                                                ring_harmn); 
 
-                if(iturn>=1 && TunerGain>0 && iturn%TunerAveragingPeriod==0){
+                if(iturn>=1 && TunerGain>0 && iturn%TunerAveragingPeriod==1){
                     // It is inited above, but if the psi changes
-                    // then you need to redo it
+                    // then you need to redo it. The ==1 is smart because
+                    // it means the psi was changed on the turn before!
                     init_Ig2Vg_matrix(ring_harmn,
                                       Ig2Vg_vec_real, Ig2Vg_vec_imag,
                                       Ig2Vg_tmp_real, Ig2Vg_tmp_imag,
