@@ -14,7 +14,7 @@
         bend_fringe(r6, irho, gK_entrance); \
     multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
     if (phi_entrance != 0.0) { \
-        if (B1 != 0.0 && FringeQuadEntrance) quad_wedge(r6, -B1 * phi_entrance); \
+        if (B1 != 0.0) quad_wedge(r6, -B1 * phi_entrance); \
         bend_wedge(r6, irho, phi_entrance, bdiff); \
     }
 #endif /*MAGNET_ENTRY*/
@@ -24,7 +24,7 @@
     /* Exit face */ \
     if (phi_exit != 0.0) { \
         bend_wedge(r6, irho, phi_exit, bdiff); \
-        if (B1 != 0.0 && FringeQuadExit) quad_wedge(r6, -B1 * phi_exit); \
+        if (B1 != 0.0) quad_wedge(r6, -B1 * phi_exit); \
     } \
     multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
     if (FringeBendExit) \
