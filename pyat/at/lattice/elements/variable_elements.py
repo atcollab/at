@@ -104,7 +104,7 @@ class VariableThinMultipole(Element):
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
             >>> fvst = at.VariableThinMultipole(
-            ...     "FvsT", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=amp, FuncB=func, ...)
+            ...     "FvsT", at.ACMode.INTERPOLATION_TABLE, AmplitudeB=amp, FuncB=func, ...)
 
         .. note::
 
