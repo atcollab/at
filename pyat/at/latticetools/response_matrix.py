@@ -496,9 +496,9 @@ class ResponseMatrix(_SvdSolver):
 
     def open_pool(
         self, pool_size: int | None = None, start_method: str | None = None
-    ) -> bool:
+    ) -> None:
         if self._pool is not None:
-            return False
+            return
         ctx = multiprocessing.get_context(start_method)
         if pool_size is None:
             pool_size = min(len(self.variables), os.cpu_count())
@@ -509,7 +509,6 @@ class ResponseMatrix(_SvdSolver):
             initializer=_init_worker,
             initargs=(self.ring, self.observables, self.variables),
         )
-        return True
 
     def close_pool(self) -> None:
         if self._pool is not None:
@@ -653,17 +652,17 @@ class ResponseMatrix(_SvdSolver):
         """
         self.eval_kw.update(kwargs)
 
+        self.close_pool()
         ivars = np.arange(len(self.variables))
         with self._save_variables():
             if use_mp:
-                opened = self.open_pool(pool_size=pool_size, start_method=start_method)
+                self.open_pool(pool_size=pool_size, start_method=start_method)
                 try:
                     results = self._columns(
                         ivars, checkfun=checkfun, one_sided=one_sided
                     )
                 finally:
-                    if opened:
-                        self.close_pool()
+                    self.close_pool()
             else:
                 results = self._columns(ivars, checkfun=checkfun, one_sided=one_sided)
 
