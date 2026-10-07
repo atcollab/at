@@ -100,7 +100,7 @@ double get_val(struct elemab* elem, double* ramps, int mode,
        /* checking if t is outside the range of titp */
        if (t < titp[0]){
          val = fitp[0];
-       }else if(t > titp[nsamples-1]){
+       }else if(t >= titp[nsamples-1]){
          val = fitp[nsamples-1];
        }else{
          idx = binarySearch(titp , t, nsamples, 0, 0);
