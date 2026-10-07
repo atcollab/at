@@ -287,8 +287,13 @@ classdef pytests < matlab.unittest.TestCase
             [mdata,~,~,m]=ohmienvelope(lattice.m);
             jmt=jmat(3);
             aa=amat(m);
-            nn=-aa'*jmt*mdata.R*jmt*aa;
-            memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            % nn=-aa'*jmt*mdata.R*jmt*aa;
+            % memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            ainv=inv(aa);
+            rn=ainv*mdata.R*ainv';
+            emit2=[det(rn(1:2,1:2)), det(rn(3:4,3:4)), det(rn(5:6,5:6))];
+            emit2(emit2<0)=0.0;
+            memit=sqrt(emit2);
             [mtunes,mdamprate]=atdampingrates(m);
             %check
             testCase.verifyEqual(memit,pemit,AbsTol=1.e-30,RelTol=1.e-6);
