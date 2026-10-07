@@ -76,8 +76,8 @@ class VariableThinMultipole(Element):
             Sinmin(float): Sine function min limit. Default -1.1
             Sinmax(float): Sine function max limit. Default +1.1
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            FuncA(list): User defined tbt kick list for PolynomA
-            FuncB(list): User defined tbt kick list for PolynomB
+            FuncA(list|array): User defined tbt kick list for PolynomA
+            FuncB(list|array): User defined tbt kick list for PolynomB
             Periodic(bool): If True (default) the user defined kick is repeated
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
                          of the excitation
