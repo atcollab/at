@@ -434,8 +434,7 @@ def jacobian_match(
          :pycode:`use_mp=True` rarely helps.
        * The variable bounds are respected at every step: a step that would
          cross a bound is scaled down to stop on it, and a variable on a bound
-         is held fixed as long as the gradient pushes it outwards. Near a
-         bound, the finite differences are taken towards the inside.
+         is held fixed as long as the gradient pushes it outwards.
     """
     initial_values = variables.get(initial=True, check_bounds=True, **eval_kw)
 

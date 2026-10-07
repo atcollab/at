@@ -223,7 +223,7 @@ def _resp(
             variable.step_down(ring=ring, force=True)
             observables.evaluate(ring, **kwargs)
             om = observables.flat_values
-            do =  (op - om) / (2.0 * variable.delta)
+            do = (op - om) / (2.0 * variable.delta)
         else:
             do = (op - f0) / variable.delta
         variable.reset(ring=ring)
