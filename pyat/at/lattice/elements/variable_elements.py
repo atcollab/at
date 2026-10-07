@@ -204,7 +204,7 @@ class VariableThinMultipole(Element):
         setattr(self, "NSamples" + ab, nsamp)
 
     def _set_interpolate(self, ab, **kwargs):
-        interpolate = kwargs.get("Func" + ab)
+        interpolate = np.array(kwargs.get("Func" + ab))
         ndim = np.ndim(interpolate)
         if ndim != 2:
             msg = "Func" + ab + " should be of 2 dimensions."
