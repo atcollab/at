@@ -278,8 +278,8 @@ class _SvdSolver(abc.ABC):
     """SVD solver for response matrices."""
 
     _shape: tuple[int, int]
-    _obsmask: npt.NDArray[bool]
-    _varmask: npt.NDArray[bool]
+    _obsmask: npt.NDArray[np.bool]
+    _varmask: npt.NDArray[np.bool]
     _response: FloatArray | None = None
     _v: FloatArray | None = None
     _uh: FloatArray | None = None
