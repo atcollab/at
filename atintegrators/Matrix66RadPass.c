@@ -68,13 +68,19 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         double *M66, *R1, *R2, *T1, *T2;
-        M66=atGetDoubleArray(ElemData,"M66Rad"); check_error();
+        M66=atGetOptionalDoubleArray(ElemData,"M66Rad"); check_error();
+        if (!M66)  /* Fall back to M66 */
+            M66=atGetDoubleArray(ElemData,"M66"); check_error();
         /*optional fields*/
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
+        if (!T1)  /* Fall back to `T1` */
+            T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         T2=atGetOptionalDoubleArray(ElemData,"T2Rad"); check_error();
-        
+        if (!T2)  /* Fall back to `T2` */
+            T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);

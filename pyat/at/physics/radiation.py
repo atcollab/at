@@ -74,11 +74,8 @@ ENVELOPE_DTYPE = [
 _b0 = np.zeros((6, 6), dtype=np.float64)
 
 
-def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
-    """
-    compute the cumulative diffusion and orbit
-    matrices over the ring.
-    """
+def _dmatr(ring: Lattice, orbit: Orbit | None = None, keep_lattice: bool = False):
+    """Compute the cumulative diffusion and orbit matrices over the ring."""
 
     def _cumulb(it):
         """accumulate diffusion matrices."""
@@ -95,14 +92,38 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
             elem.PassMethod = "BndMPoleSymplectic4RadPass"
         return elem
 
+    def quant_diff(elem: Element):
+        """Diffusion matrix of the QuantumDiffusion element."""
+        ll = elem.Lmatp
+        return ll @ ll.T
+
+    def simple_quant_diff(elem: Element):
+        """Diffusion matrix of the SimpleQuantDiff element."""
+        sigma_xp = sqrt(elem.emitx / elem.betax)
+        sigma_yp = sqrt(elem.emity / elem.betay)
+        vx = 0.0 if sigma_xp == 0.0 else 4.0 *sigma_xp**2 / elem.taux
+        vy = 0.0 if sigma_yp == 0.0 else 4.0 *sigma_yp**2 / elem.tauy
+        vz = 0.0 if elem.espread == 0.0 else 4.0 *elem.espread**2 / elem.tauz
+        return np.diag([0.0, vx, 0.0, vy, vz, 0.0])
+
     def elem_diffusion(elem: Element, elemorb):
-        if elem.PassMethod.endswith("RadPass"):
+        if elem.PassMethod in {"Matrix66RadPass", "DeltaQRadPass", "SimpleRadiationRadPass"}:
+            # Non-radiative elements, or elements with radiation but no diffusion
+            return _b0
+        elif elem.PassMethod.endswith("RadPass"):
+            # Elements with radiation and diffusion
             if not test_mode():
                 return diffusion_matrix(substitute(elem), elemorb, energy=energy)
             elif hasattr(elem, "Bmax"):
                 return FDW(elem, orbit, energy)
             else:
                 return find_mpole_raddiff_matrix(elem, elemorb, energy)
+        elif isinstance(elem, QuantumDiffusion):
+            # QuantumDiffusion element (turned off)
+            return quant_diff(elem)
+        elif isinstance(elem, SimpleQuantDiff):
+            # SimpleQuantDiff element (turned off)
+            return simple_quant_diff(elem)
         else:
             return _b0
 
@@ -119,9 +140,9 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         axis=(1, 3),
     ).T
 
-    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs)]
+    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs, strict=False)]
 
-    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
+    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb, strict=False))), axis=0)
     return bbcum, orbs
 
 
@@ -151,7 +172,7 @@ def _lmat(dmat):
 def ohmi_envelope(
     ring: Lattice,
     refpts: Refpts = None,
-    orbit: Orbit = None,
+    orbit: Orbit | None = None,
     keep_lattice: bool = False,
 ):
     """Calculates the equilibrium beam envelope.
@@ -382,8 +403,9 @@ def get_radiation_integrals(
         return np.array([di1, di2, di3, di4, di5])
 
     def wiggler_radiation(elem: Wiggler, dini):
-        """Compute the radiation integrals in wigglers with the following
-        approximations:
+        """Compute the radiation integrals in wigglers.
+
+         with the following approximations:
 
         - The wiggler is aligned with the closed orbit
         - The self-induced dispersion is neglected in I4 and I5, but is is used
@@ -455,7 +477,7 @@ def get_radiation_integrals(
     elif len(twiss) != len(ring) + 1:
         msg = f"length of Twiss data should be {len(ring) + 1}"
         raise ValueError(msg)
-    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:]):
+    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:], strict=True):
         if isinstance(el, (Dipole, Quadrupole)):
             integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != "DriftPass":
