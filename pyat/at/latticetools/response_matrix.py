@@ -207,14 +207,14 @@ def _nocheck(v: VariableBase) -> None:
 
 
 def _resp(
-    ring: Lattice,
     observables: ObservableList,
     variables: VariableList,
+    ring: Lattice | None = None,
     checkfun: Callable[[VariableBase], None] = _nocheck,
     f0: FloatArray | None = None,
     **kwargs,
 ):
-    def _resp_one(variable: RefptsVariable):
+    def _resp_one(variable: VariableBase):
         """Single response."""
         variable.step_up(ring=ring, force=True)
         observables.evaluate(ring, **kwargs)
@@ -245,7 +245,9 @@ def _resp_mp(ivars, x=None, checkfun=_nocheck, f0=None, **kwargs):
         _globvars.set(x, ring=_globring, **kwargs)
         _globvars.get(initial=True, ring=_globring, **kwargs)
     variables = VariableList(_globvars[i] for i in ivars)
-    return _resp(_globring, _globobs, variables, checkfun=checkfun, f0=f0, **kwargs)
+    return _resp(
+        _globobs, variables, ring=_globring, checkfun=checkfun, f0=f0, **kwargs
+    )
 
 
 class _PicklableFunction:
@@ -361,6 +363,7 @@ class _SvdSolver(abc.ABC):
             msg = f"Input matrix has incompatible shape. Expected: {self.shape}."
             raise ValueError(msg)
         self._response = response
+        self.singular_values = None
 
     @property
     def weighted_response(self) -> FloatArray:
@@ -468,7 +471,8 @@ class ResponseMatrix(_SvdSolver):
             # for efficiency of parallel computation, the variable's refpts
             # must be integer
             for var in variables:
-                var.refpts = ring.get_uint32_index(var.refpts)
+                if isinstance(var, RefptsVariable):
+                    var.refpts = ring.get_uint32_index(var.refpts)
         self.ring = ring
         self.variables = variables
         self.observables = observables
@@ -487,7 +491,7 @@ class ResponseMatrix(_SvdSolver):
             VariableList(self.variables + other.variables),
             self.observables + other.observables,
             ring=self.ring,
-            eval_kw=self.eval_kw,
+            **self.eval_kw,
         )
 
     def __str__(self):
@@ -501,7 +505,7 @@ class ResponseMatrix(_SvdSolver):
             return
         ctx = multiprocessing.get_context(start_method)
         if pool_size is None:
-            pool_size = min(len(self.variables), os.cpu_count())
+            pool_size = min(len(self.variables), os.cpu_count() or 1)
         self._pool_size = pool_size
         self._pool = concurrent.futures.ProcessPoolExecutor(
             max_workers=pool_size,
@@ -522,9 +526,9 @@ class ResponseMatrix(_SvdSolver):
         if self._pool is None:
             variables = VariableList(self.variables[i] for i in ivars)
             return _resp(
-                self.ring,
                 self.observables,
                 variables,
+                ring=self.ring,
                 checkfun=checkfun,
                 f0=f0,
                 **self.eval_kw,
@@ -560,7 +564,7 @@ class ResponseMatrix(_SvdSolver):
 
     def correct(
         self,
-        ring: Lattice,
+        ring: Lattice | None = None,
         *,
         nvals: int | None = None,
         niter: int = 1,
@@ -572,10 +576,10 @@ class ResponseMatrix(_SvdSolver):
            considered that the target is already achieved for this observable.
 
         Args:
-            ring:       Lattice description. The response matrix observables
-              will be evaluated for *ring* and the deviation from target will
-              be corrected
-            apply:      If :py:obj:`True`, apply the correction to *ring*
+            ring:       Lattice description, required for RefptsVariables and
+              Observables that need a lattice. The response matrix observables
+              will be evaluated and the deviation from target will be corrected.
+            apply:      If :py:obj:`True`, apply the correction to *Variables*
             niter:      Number of iterations. For more than one iteration,
               *apply* must be :py:obj:`True`
             nvals:      Desired number of singular values. If :py:obj:`None`,
