@@ -364,14 +364,14 @@ class XsElement(dict, _XsFactory):
         return xsclass.from_dict(elem_dict, name=name, warn=warn)
 
     @staticmethod
-    def static_from_at(atelem: elt.Element, match_model: bool = False) -> XsElement:
+    def static_from_at(atelem: elt.Element, match_model: bool = True) -> XsElement:
         """Build a XsElement from an AT element.
 
         Args:
             atelem:         AT :py:class:`.Element`
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
-              matching at best the AT PassMethod. By default, the Xsuite default model
-              and integrator will be used.
+              matching at best the AT PassMethod. If :py:obj:`True`, the Xsuite default
+              model and integrator will be used.
 
         Returns:
             xselement:  new :py:class:`XsElement` object
@@ -529,7 +529,7 @@ class Multipole(XsElement):
 
         self.update(misalign)
 
-    def _set_xs_poly(self, atparams: dict, match_model: bool = False) -> None:
+    def _set_xs_poly(self, atparams: dict, match_model: bool = True) -> None:
         """Generate the AT field expansion."""
 
         def extract(poly, ord):
@@ -583,7 +583,7 @@ class Multipole(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem._set_xs_poly(atparams, match_model=match_model)
         elem._set_xs_fringe(atparams)
@@ -696,7 +696,7 @@ class Bend(Multipole):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem["k0_from_h"] = True
         return elem
@@ -745,7 +745,7 @@ class RBend(Bend):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem["rbend_model"] = "straight-body"
         hangle = 0.5 * elem["angle"]
@@ -786,7 +786,7 @@ class Cavity(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem._set_xs_lag(atparams)
         return elem
