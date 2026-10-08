@@ -502,23 +502,6 @@ class BeamLoadingElement(RFCavity, Collective):
         psi = np.arctan(- 2 * current * self.Rshunt / self.Voltage * np.cos(self._phis))
         return psi
        
-    def _compute_generator_parameters(self, current, psi):
-        """
-         Thanks to MBTRACK2 for the formula. Taken from 
-            [1] Wilson, P. B. (1994). Fundamental-mode rf design in e+ e− storage ring
-                factories. In Frontiers of Particle Beams: Factories with e+ e-Rings
-                (pp. 293-311). Springer, Berlin, Heidelberg.
-        """
-        # Generator power [W] - Eq. (4.1.2) [1] corrected with factor
-        # (1+beta)**2 instead of (1+beta**2)
-        
-        Pg = self.Voltage**2 * (1 + self.CavityBeta)**2 / (
-            2 * self.Rshunt_unloaded * 4 * self.CavityBeta * np.cos(psi)**2) * (
-                (-np.sin(self._phis) + 2 * current * self.Rshunt_unloaded /
-                 (self.Voltage * (1 + self.CavityBeta)) * np.cos(psi)**2)**2 +
-                (np.cos(self._phis) + 2 * current * self.Rshunt_unloaded /
-                 (self.Voltage *
-                  (1 + self.CavityBeta)) * np.cos(psi) * np.sin(psi))**2)
 
     def _set_optimum_detuning(self, current):
         psi = np.arctan(- 2 * current * self.Rshunt / self.Voltage * np.cos(self._phis))
@@ -555,13 +538,22 @@ class BeamLoadingElement(RFCavity, Collective):
             
         vbr = 2 * current * self.Rshunt   
                  
-        theta_g = np.arctan2(
-            (self.Voltage * np.cos(self._phis) +
-             vbr * np.cos(psi) * np.sin(psi)),
-            (-self.Voltage * np.sin(self._phis) +
-             vbr * np.cos(psi)**2)) - np.pi/2
-             
-        return np.array([Vg, theta_g])
+        numerator = (self.Voltage * np.cos(self._phis) +
+             vbr * np.cos(psi) * np.sin(psi)) 
+
+        denominator =  (-self.Voltage * np.sin(self._phis) +
+             vbr * np.cos(psi)**2)            
+        theta_g = np.arctan2(numerator, denominator) - np.pi/2
+
+        ## This needs checking
+        if numerator>0 and denominator<0:
+            theta_g -= np.pi
+        elif numerator>0 and denominator>0:
+            theta_g -= np.pi
+        if theta_g < np.pi:
+            theta_g += 2*np.pi
+
+        return np.array([Vg, theta_g, Pg])
 
     def _init_bl_params(self, current):
         if (self._cavitymode == 1) and (current > 0.0):
@@ -574,7 +566,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 )
                 warnings.warn(AtWarning(warning_string), stacklevel=2)
             psi += self.TunerOffset
-            vgen, theta_g = self._compute_generator_parameters(current, psi)
+            vgen, theta_g, _ = self._compute_generator_parameters(current, psi)
             
         elif self._cavitymode in {2, 3}:
             vgen = 0
