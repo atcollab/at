@@ -64,7 +64,9 @@ elseif isfield(elem,'damp_mat_diag')
     atclass='SimpleRadiation';
 elseif isfield(elem,'espread')
     atclass='SimpleQuantDiff';
-elseif isfield(elem,'xtable')
+elseif isfield(elem,'xtable') || ...
+        (useclass && isfield(elem,'Class') && ...
+        strcmp(elem.Class,'InsertionDeviceKickMap'))
     atclass='InsertionDeviceKickMap';
 elseif isfield(elem,'Length') && elem.Length~=0
     atclass='Drift';
