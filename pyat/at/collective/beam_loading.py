@@ -546,13 +546,14 @@ class BeamLoadingElement(RFCavity, Collective):
         theta_g = np.arctan2(numerator, denominator) - np.pi/2
 
         ## This needs checking
+        '''
         if numerator>0 and denominator<0:
             theta_g -= np.pi
         elif numerator>0 and denominator>0:
             theta_g -= np.pi
         if theta_g < np.pi:
             theta_g += 2*np.pi
-
+        '''
         return np.array([Vg, theta_g, Pg])
 
     def _init_bl_params(self, current):
