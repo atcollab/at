@@ -90,12 +90,12 @@ Model and integrator
 PyAT exact passmethods are converted to the equivalent Xsuite ``model``. Other methods
 are converting according to a ``match_model`` keyword:
 
-- ``match_model`` is False (the default): ``model``, ``integrator``,
+- ``match_model`` is False: ``model``, ``integrator``,
   ``num_multipole_kicks`` are set to their default value. This way, the default
   behaviour in AT is turned into the default behaviour in Xsuite,
-- ``match_model`` is True: a model matching at best the AT model is selected, the
-  integrator is set to ``yoshida4`` and ``num_multipole_kicks`` is set equal to
-  ``NumIntSteps``.
+- ``match_model`` is True (the default): a model matching at best the AT model is
+  selected, the integrator is set to ``yoshida4`` and ``num_multipole_kicks`` is set
+  equal to ``NumIntSteps``.
 
 This is summarised in this table:
 
@@ -314,7 +314,7 @@ class XsElement(dict, _XsFactory):
         return cls(name=name, **xsparams)
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams) -> XsElement:
+    def from_at(cls, match_model: bool = True, **atparams) -> XsElement:
         """Build a XsElement element from an AT element.
 
         Args:
@@ -364,14 +364,14 @@ class XsElement(dict, _XsFactory):
         return xsclass.from_dict(elem_dict, name=name, warn=warn)
 
     @staticmethod
-    def static_from_at(atelem: elt.Element, match_model: bool = False) -> XsElement:
+    def static_from_at(atelem: elt.Element, match_model: bool = True) -> XsElement:
         """Build a XsElement from an AT element.
 
         Args:
             atelem:         AT :py:class:`.Element`
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
-              matching at best the AT PassMethod. By default, the Xsuite default model
-              and integrator will be used.
+              matching at best the AT PassMethod. If :py:obj:`True`, the Xsuite default
+              model and integrator will be used.
 
         Returns:
             xselement:  new :py:class:`XsElement` object
@@ -529,7 +529,7 @@ class Multipole(XsElement):
 
         self.update(misalign)
 
-    def _set_xs_poly(self, atparams: dict, match_model: bool = False) -> None:
+    def _set_xs_poly(self, atparams: dict, match_model: bool = True) -> None:
         """Generate the AT field expansion."""
 
         def extract(poly, ord):
@@ -583,7 +583,7 @@ class Multipole(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem._set_xs_poly(atparams, match_model=match_model)
         elem._set_xs_fringe(atparams)
@@ -696,7 +696,7 @@ class Bend(Multipole):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem["k0_from_h"] = True
         return elem
@@ -745,7 +745,7 @@ class RBend(Bend):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem["rbend_model"] = "straight-body"
         hangle = 0.5 * elem["angle"]
@@ -786,7 +786,7 @@ class Cavity(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = False, **atparams):
+    def from_at(cls, match_model: bool = True, **atparams):
         elem = super().from_at(match_model=match_model, **atparams)
         elem._set_xs_lag(atparams)
         return elem
@@ -1089,14 +1089,14 @@ class XsLine:
         return cls.from_dict(line.to_dict(), use=use)
 
     @classmethod
-    def from_at(cls, ring: Lattice, match_model: bool = False, **kwargs) -> XsLine:
+    def from_at(cls, ring: Lattice, match_model: bool = True, **kwargs) -> XsLine:
         """Create a XsLine from an AT :py:class:`.Lattice`.
 
         Args:
             ring:           AT lattice
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
-              matching at best the AT PassMethod. By default, the Xsuite default model
-              and integrator will be used.
+              matching at best the AT PassMethod. If :py:obj:`False`, the Xsuite
+              default model and integrator will be used.
 
         Returns:
             xsline:     New :py:class:`XsLine`
@@ -1171,7 +1171,7 @@ def load_xsuite(filename: str | Path, use: str | None = None, **kwargs) -> Latti
 def save_xsuite(
     lattice: Lattice,
     filename: str | Path | None = None,
-    match_model: bool = False,
+    match_model: bool = True,
     compact: bool = False,
 ) -> None:
     """Save a :py:class:`.Lattice` as a Xsuite JSON file.
@@ -1181,7 +1181,7 @@ def save_xsuite(
         filename:       Name of the JSON file. Default: outputs on
           :py:obj:`sys.stdout`
         match_model:    If :py:obj:`True`, set the Xsuite model matching at best
-          the AT PassMethod. By default, the Xsuite default model will be used.
+          the AT PassMethod. If :py:obj:`False`, the Xsuite default model will be used.
         compact:        If :py:obj:`False` (default), the JSON file is pretty-printed
           with line feeds and indentation. Otherwise, the output is a single line.
     """
@@ -1212,13 +1212,13 @@ def lattice_from_line(line: Line, use: str | None = None, **kwargs) -> Lattice:
     return XsLine.from_xsuite(line, use=use).to_at(**kwargs)
 
 
-def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
+def line_from_lattice(ring: Lattice, match_model: bool = True) -> Line:
     """Create a Xsuite :py:class:`.Line` from an AT lattice.
 
     Args:
         ring:           AT lattice
         match_model:    if :py:obj:`True`, set the Xsuite model and integrator
-          matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+          matching at best the AT PassMethod. if :py:obj:`False`, use Xsuite defaults.
 
     Returns:
         line:           new :py:class:`.Line` object.
