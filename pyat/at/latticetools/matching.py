@@ -18,6 +18,7 @@ __all__ = ["match", "ring_match"]
 import numpy as np
 from scipy.optimize import least_squares
 
+from .jacobian import jacobian_match
 from .observablelist import ObservableList
 from ..lattice import Lattice, VariableList, AtError
 from ..lattice.lattice_variables import ElementVariable
@@ -42,12 +43,15 @@ def match(
         variables:      Variable parameters
         constraints:    Constraints to fulfill
         method:         Minimisation algorithm (see
-          :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
+          :py:func:`~scipy.optimize.least_squares`), or 'jacobian' for
+          :py:func:`.jacobian_match`. If :py:obj:`None`, use
           'lm' for unbounded problems, 'trf' otherwise,
         verbose:        Level of verbosity,
         max_nfev:       Maximum number of function evaluation,
         optim_kw:       Dictionary of optimiser keyword arguments sent to
-          :py:func:`~scipy.optimize.least_squares`,
+          :py:func:`~scipy.optimize.least_squares` or
+          :py:func:`.jacobian_match`. The tolerances *ftol*, *xtol* and
+          *gtol* have the same meaning for both,
 
     Keyword Args:
         \*\*eval_kw:    Evaluation keywords provided to the
@@ -67,7 +71,7 @@ def match(
         variables.set(vals, **eval_kw)
         constraints.evaluate(**eval_kw)
         return constraints.get_flat_weighted_deviations(err=1.0e6)
-    
+
     if np.any(np.isnan(constraints.get_flat_targets())):
         msg = (
             "The targets are undefined for some constraints. "
@@ -92,22 +96,33 @@ def match(
             method = "trf"
         else:
             method = "lm"
+
     if verbose >= 1:
         print(
             f"\n{ntargets} constraints, {len(variables)} variables,"
-            f" using method {method}\n"
+            f" using method {method!r}\n"
         )
 
-    opt = least_squares(
-        fun,
-        vini,
-        bounds=(bounds[:, 0], bounds[:, 1]),
-        x_scale=x_scale,
-        verbose=verbose,
-        max_nfev=max_nfev,
-        method=method,
-        **optim_kw,
-    )
+    if method == "jacobian":
+        opt = jacobian_match(
+            variables,
+            constraints,
+            verbose=verbose,
+            max_nfev=max_nfev,
+            **optim_kw,
+            **eval_kw,
+        )
+    else:
+        opt = least_squares(
+            fun,
+            vini,
+            bounds=(bounds[:, 0], bounds[:, 1]),
+            x_scale=x_scale,
+            verbose=verbose,
+            max_nfev=max_nfev,
+            method=method,
+            **optim_kw,
+        )
 
     if verbose >= 1:
         print("\nConstraints:")
