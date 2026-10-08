@@ -235,7 +235,7 @@ def transform_elem(
         def _set(ini, val):
             return ini if val is None else ini + val
 
-        if hasattr(elem, "_referencepoint") and reference != elem.ReferencePoint:
+        if reference.value != getattr(elem, "_referencepoint", reference.value):
             msg = (
                 f"Element {elem.FamName}: Reference point changed not allowed for "
                 "relative transformations"
