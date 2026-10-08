@@ -1,3 +1,6 @@
+#ifndef ATLALIB_H
+#define ATLALIB_H
+#include "atelem.c"
 /*   File: atlalib.c
      Matrix and Vector algebra operations for Accelerator Toolbox
      A.Terebilo   8/14/00
@@ -56,17 +59,6 @@ static void ATaddvv(double *r, const double *dr)
 		r[i]+=dr[i];
 }     	
 
-static void ATdrift6(double* r, double L)
-/*   Input parameter L is the physical length
-     1/(1+delta) normalization is done internally
-*/
-{	double p_norm = 1/(1+r[4]); 
-	double NormL  = L*p_norm;   
-	r[0]+= NormL*r[1]; 
-	r[2]+= NormL*r[3];
-	r[5]+= NormL*p_norm*(r[1]*r[1]+r[3]*r[3])/2;
-}
-
 static void ATChangePRef(double* r, double scaling)
 {
     r[1] /= scaling;
@@ -88,7 +80,6 @@ static void ATtranspm(double *M)
 			}
 }
 
-
 static void ATmultmm(const double *M2 , double *M1)
 {	/* Mutrix multiplication M2*M1, the result is stored in the M1 memory area */
 	int i,j,k;
@@ -106,7 +97,6 @@ static void ATmultmm(const double *M2 , double *M1)
 		}
 }
 
-
 static void ATmultmm55(const double *M2 , double *M1)
 {	/* Mutrix multiplication M2*M1, the result is stored in the M1 memory area */
 	int i,j,k;
@@ -123,8 +113,6 @@ static void ATmultmm55(const double *M2 , double *M1)
 					M1[j+5*i] = 	column_temp[j];
 		}
 }
-
-
 
 static void ATsandwichmmt(const double *M ,double *B)
 /* calculates the matrix product M*B*M' (M' = M transposed)
@@ -157,10 +145,6 @@ static void ATaddmm(const double *M2 , double *M1)
 
 }
 
-#ifndef atGetInf
-#define atGetInf mxGetInf
-#endif
-
 static void markaslost(double *r6,int idx)
 {
     r6[idx] = atGetInf();
@@ -188,4 +172,5 @@ static void checkiflostEllipticalAp(double *r6, const double *axesptr)
 	double znorm = r6[2]/axesptr[1];
 	if ((xnorm*xnorm + znorm*znorm) >= 1) markaslost(r6,5);
 }
+#endif /*ATLALIB_H*/
 
