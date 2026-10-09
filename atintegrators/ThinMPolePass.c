@@ -14,8 +14,6 @@ struct elem
     int MaxOrder;
     /* Optional fields */
     double Scaling;
-    double bax;
-    double bay;
     double *R1;
     double *R2;
     double *T1;
@@ -25,7 +23,6 @@ struct elem
 };
 
 void ThinMPolePass(double *r, double *A, double *B, int max_order,
-        double bax, double bay,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
@@ -33,7 +30,7 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
 {
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r,num_particles,A,B,max_order,bax,bay,T1,T2,R1,R2,EApertures,RApertures,scaling)
+    shared(r,num_particles,A,B,max_order,T1,T2,R1,R2,EApertures,RApertures,scaling)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -46,9 +43,6 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             kick(r6, A, B, max_order, 1.0);
-            r6[1] += bax*r6[4];
-            r6[3] -= bay*r6[4];
-            r6[5] -= bax*r6[0]-bay*r6[2]; /* Path lenghtening */
             /*  misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
@@ -65,20 +59,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         double Scaling;
         int MaxOrder;
-        double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
-        double bax = 0.0, bay = 0.0;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         int nl, nc;
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         /*optional fields*/
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
-        BendingAngle=atGetOptionalDoubleArraySz(ElemData,"BendingAngle", &nl, &nc); check_error();
-        if (BendingAngle) {
-            int sz = nl*nc;
-            if (sz >= 2) bay = BendingAngle[1];
-            if (sz >= 1) bax = BendingAngle[0];
-        }
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -92,8 +79,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->MaxOrder=MaxOrder;
         /*optional fields*/
         Elem->Scaling=Scaling;
-        Elem->bax=bax;
-        Elem->bay=bay;
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
@@ -102,7 +87,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
     }
     ThinMPolePass(r_in, Elem->PolynomA, Elem->PolynomB, Elem->MaxOrder,
-            Elem->bax, Elem->bay,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
             Elem->Scaling, num_particles);
@@ -123,7 +107,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Scaling;
         int MaxOrder;
         double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
-        double bax = 0.0, bay = 0.0;
         int nl, nc;
         if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
 
@@ -132,12 +115,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         /*optional fields*/
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
-        BendingAngle=atGetOptionalDoubleArraySz(ElemData,"BendingAngle", &nl, &nc); check_error();
-        if (BendingAngle) {
-            int sz = nl*nc;
-            if (sz >= 2) bay = BendingAngle[1];
-            if (sz >= 1) bax = BendingAngle[0];
-        }
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -149,7 +126,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         ThinMPolePass(r_in, PolynomA, PolynomB, MaxOrder,
-            bax, bay,
             T1, T2, R1, R2, RApertures, EApertures,
             Scaling, num_particles);
     } else if (nrhs == 0) {
@@ -159,15 +135,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],1,mxCreateString("PolynomB"));
         mxSetCell(plhs[0],2,mxCreateString("MaxOrder"));
         if (nlhs>1) {    /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(8,1);
-            mxSetCell(plhs[1],0,mxCreateString("BendingAngle"));
-            mxSetCell(plhs[1],1,mxCreateString("T1"));
-            mxSetCell(plhs[1],2,mxCreateString("T2"));
-            mxSetCell(plhs[1],3,mxCreateString("R1"));
-            mxSetCell(plhs[1],4,mxCreateString("R2"));
-            mxSetCell(plhs[1],5,mxCreateString("RApertures"));
-            mxSetCell(plhs[1],6,mxCreateString("EApertures"));
-            mxSetCell(plhs[1],7,mxCreateString("FieldScaling"));
+            plhs[1] = mxCreateCellMatrix(7,1);
+            mxSetCell(plhs[1],0,mxCreateString("T1"));
+            mxSetCell(plhs[1],1,mxCreateString("T2"));
+            mxSetCell(plhs[1],2,mxCreateString("R1"));
+            mxSetCell(plhs[1],3,mxCreateString("R2"));
+            mxSetCell(plhs[1],4,mxCreateString("RApertures"));
+            mxSetCell(plhs[1],5,mxCreateString("EApertures"));
+            mxSetCell(plhs[1],6,mxCreateString("FieldScaling"));
         }
     }
     else {
