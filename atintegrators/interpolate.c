@@ -14,6 +14,8 @@
 #include <math.h>
 
 
+/* binarySearch returns the index of the array where array[index] <= value.
+ * If value is outside the range of the array, it returns the closest index. */
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
     if ((upper-lower)<=1){
@@ -33,9 +35,9 @@ int binarySearch(double *array,double value,int upper,int lower,int nStep){
 };
 
 
-double interpolTable(double *waketable,double *waketableT,double distance,int index){
-    double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
-          (waketableT[index+1]-waketableT[index]);
+/* interpolTable returns the linear interpolation of x(t0) using index and index+1 */
+double interpolTable(double *x, double *t, double t0, int index){
+    double w = x[index] + (t0-t[index]) * (x[index+1]-x[index]) / (t[index+1]-t[index]);
     if(atIsNaN(w)){
         return 0;
     }else{
