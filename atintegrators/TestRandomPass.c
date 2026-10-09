@@ -43,7 +43,7 @@ static void RandomPass(double *r_in,
     shared(r_in, num_particles, common_val, thread_rng)
     for (int c = 0; c<num_particles; c++) {	/*Loop over particles  */
         double *r6 = r_in+c*6;
-        r6[1] = atrandn_r(thread_rng, 0.0, 0.001);;
+        r6[1] = atrandn_r(thread_rng, 0.0, 0.001);
         r6[3] = common_val;
     }
 }

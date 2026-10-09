@@ -64,13 +64,11 @@ static void foc6(double *r, double L, double Kx, double Kz)
 
 void WiggLinearPass(double *r, double le, double invrho, double kxkz, double *T1, double *T2, double *R1, double *R2, int num_particles)
 {
-    int c;
-    double *r6;
     double kz = 0.5/(1.0+kxkz)*invrho*invrho;
     double kx = kxkz*kz;
     
-    for (c = 0;c<num_particles;c++) {
-        r6 = r+c*6;
+    for (int c = 0;c<num_particles;c++) {
+        double *r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
             /* Misalignment at entrance */
             if (T1 != NULL) ATaddvv(r6,T1);

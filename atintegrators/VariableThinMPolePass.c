@@ -7,7 +7,7 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "atrandom.c"
-#include "driftkick.c"
+#include "kick_kn.h"  /* kick */
 
 struct elemab {
     double* Amplitude;
@@ -60,7 +60,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double t, int turn, int order, int periodic, pcg32_random_t* rng)
 {
     int idx;
-    double ampt, freq, ph, sinval, val;
+    double ampt, freq, ph, sinval;
     double* func;
     double* amp = elem->Amplitude;
     if (!amp) {
@@ -97,8 +97,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     pcg32_random_t* rng)
 {
 
-    int i, c;
-    double* r6;
+    int i;
     double t = t0 * turn;
 
     int maxorder = Elem->MaxOrder;
@@ -128,8 +127,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
         };
     };
 
-    for (c = 0; c < num_particles; c++) {
-        r6 = r + c * 6;
+    for (int c = 0; c < num_particles; c++) {
+        double *r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
             if (mode == 0) {
                 double tpart = t + r6[5] / C0;
@@ -144,7 +143,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-            strthinkick(r6, pola, polb, 1.0, maxorder);
+            kick(r6, pola, polb, maxorder, 1.0);
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
