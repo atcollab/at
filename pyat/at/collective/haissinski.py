@@ -117,15 +117,15 @@ class Haissinski(object):
                           + self.ds, self.ds)
         res = numpy.zeros(len(sr))
 
-        topend = numpy.trapz(self.wtot_fun(numpy.arange(numpy.amax(sr),
-                             numpy.amax(self.s), self.ds)),
-                             x=numpy.arange(numpy.amax(sr),
-                             numpy.amax(self.s), self.ds))
+        topend = numpy.trapezoid(self.wtot_fun(numpy.arange(numpy.amax(sr),
+                                 numpy.amax(self.s), self.ds)),
+                                 x=numpy.arange(numpy.amax(sr),
+                                 numpy.amax(self.s), self.ds))
         for p, low in enumerate(sr):
             if p % 10000 == 0:
                 print(p, ' out of ', len(sr))
             rr = numpy.arange(low, numpy.amax(sr), self.ds)
-            val = numpy.trapz(self.wtot_fun(rr), x=rr) + topend
+            val = numpy.trapezoid(self.wtot_fun(rr), x=rr) + topend
             res[p] = val
         #  Not used except for plotting
         self.Sfun_range = sr
