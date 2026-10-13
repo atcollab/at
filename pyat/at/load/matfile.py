@@ -321,7 +321,7 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
     build_attrs = element_class._BUILD_ATTRIBUTES
     arguments = argsplit(line[left + 1 : right])
     legacy_attrs = getattr(element_class, "_LEGACY_M_BUILD_ATTRIBUTES", None)
-    if legacy_attrs and len(arguments) >= len(legacy_attrs):
+    if legacy_attrs and len(arguments) == len(legacy_attrs):
         pass_index = legacy_attrs.index("PassMethod")
         if arguments[pass_index].strip("'\"").endswith("Pass"):
             build_attrs = legacy_attrs

@@ -22,12 +22,7 @@ def idkm_file() -> str:
 @pytest.fixture()
 def idkm_elem(idkm_file: str) -> InsertionDeviceKickMap:
     """A base InsertionDeviceKickMap element created from the test file."""
-    return InsertionDeviceKickMap(
-        "idmap",
-        norm_energy=6.04,
-        nslice=10,
-        fname=idkm_file,
-    )
+    return InsertionDeviceKickMap("idmap", 10, idkm_file, 6.04)
 
 
 # ---------------------------------------------------------------------------
@@ -40,16 +35,27 @@ class TestKickmapStore:
     def test_constructor_has_explicit_arguments(self):
         """Required kickmap inputs are visible in the public signature."""
         parameters = signature(InsertionDeviceKickMap).parameters
-        assert {
+        assert list(parameters) == [
             "family_name",
-            "length",
-            "norm_energy",
             "nslice",
             "fname",
+            "norm_energy",
+            "length",
             "kickmaps",
-        } <= set(parameters)
-        assert parameters["nslice"].kind is Parameter.KEYWORD_ONLY
-        assert parameters["fname"].kind is Parameter.KEYWORD_ONLY
+            "kwargs",
+        ]
+        assert parameters["nslice"].default == 1
+        assert parameters["fname"].default is None
+        assert parameters["norm_energy"].default == 0.0
+        assert parameters["length"].default == 0.0
+        assert parameters["kickmaps"].default is None
+        assert parameters["nslice"].kind is Parameter.POSITIONAL_OR_KEYWORD
+        assert parameters["fname"].kind is Parameter.POSITIONAL_OR_KEYWORD
+        assert (
+            parameters["norm_energy"].kind
+            is Parameter.POSITIONAL_OR_KEYWORD
+        )
+        assert parameters["length"].kind is Parameter.KEYWORD_ONLY
         assert parameters["kickmaps"].kind is Parameter.KEYWORD_ONLY
         assert all(
             parameter.kind is not Parameter.VAR_POSITIONAL
@@ -127,7 +133,7 @@ class TestKickmapStore:
         fname.write_text(
             """function ring = idmap()
 ring = {...
-atinsertiondevicekickmap('idmap',1,6.04,'IdTablePass','Filename_in','','Nslice',10,'xkick',[1],'ykick',[2],'xkick1',[0],'ykick1',[0],'xtable',[0],'ytable',[0]);...
+atinsertiondevicekickmap('idmap','IdTablePass','Length',1,'Filename_in','','Normalization_energy',6.04,'Nslice',10,'xkick',[1],'ykick',[2],'xkick1',[0],'ykick1',[0],'xtable',[0],'ytable',[0]);...
 };
 end
 """,

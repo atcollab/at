@@ -96,10 +96,7 @@ def test_long_arrays_in_m_file() -> None:
     thepath = files(machine_data).as_posix()
     theidfname = "/kickmap_w150_20mm.txt"
     elem = InsertionDeviceKickMap(
-        "idmap",
-        norm_energy=6.04,
-        nslice=10,
-        fname=thepath + theidfname,
+        "idmap", 10, thepath + theidfname, 6.04
     )
 
     # check the block first value
