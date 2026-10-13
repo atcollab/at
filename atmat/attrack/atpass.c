@@ -9,6 +9,7 @@
 #include <omp.h>
 #endif /*_OPENMP*/
 #include "attypes.h"
+#include "atvelocity.h"
 #include "elempass.h"
 #include "atrandom.c"
 #include "ringproperties.c"
@@ -288,6 +289,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int ihist, lhist;
     mxDouble *histbuf = NULL;
     struct parameters param;
+    double gamma0, betagamma0;
 
     #ifdef _OPENMP
     int maxthreads;
@@ -410,16 +412,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     param.RingLength = lattice_length;
     if (param.rest_energy == 0.0) {
+        gamma0 = 0.0;
+        betagamma0 = 0.0;
         param.T0 = param.RingLength/C0;
     }
     else {
-        /*  Only relativistic tracking is implemented: keep everything consistent
-        double gamma0 = param.energy/param.rest_energy;
-        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
+        gamma0 = param.energy/param.rest_energy;
+        betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
         param.T0 = param.RingLength/beta0/C0;
-        */
-        param.T0 = param.RingLength/C0;
     }
 
     if (nrhs >= 5) {    /* subtract 1 for C numbering: 0 to num_elements-1 */
@@ -522,6 +523,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (mxPre) {                            /* Pre-tracking optional function */
                 drin=passhook(mxPassArg1, *element, mxPre);
             }
+            /* non-relativistic time of flight, entrance half */
+            atVelocityShift(drin, num_particles, 0.5*(*elem_length), gamma0, betagamma0);
             if (*integrator) {                      /* pointer to a TrackFunction */
 				*elemdata = (*integrator)(*element,*elemdata,drin,num_particles,&param);
 			}
@@ -531,6 +534,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             else {                                  /* M-File */
                 drin=passmfile(mxPassArg1+1, *element);
             }
+            /* non-relativistic time of flight, exit half */
+            atVelocityShift(drin, num_particles, 0.5*(*elem_length), gamma0, betagamma0);
             if (mxPost) {                           /* Post-tracking optional function */
                 drin=passhook(mxPassArg1, *element, mxPost);
             }

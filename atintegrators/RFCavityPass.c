@@ -38,6 +38,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     int nturn=Param->nturn;
     double T0=Param->T0;
     double energy = Param->energy;
+    double gamma0;
     if (!Elem) {
         double Length, Voltage, Energy, Frequency, TimeLag, PhaseLag;
         Length=atGetDouble(ElemData,"Length"); check_error();
@@ -61,9 +62,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->PhaseLag=PhaseLag;
     }
     energy = atEnergy(energy, Elem->Energy); check_error();
+    /* gamma0 = 0 for ultra-relativistic tracking */
+    gamma0 = (Param->rest_energy > 0.0) ? atGamma(Param->energy, Elem->Energy, Param->rest_energy) : 0.0;
+    check_error();
 
     RFCavityPass(r_in, Elem->Length, Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
-                 Elem->PhaseLag, nturn, T0, 0.0, num_particles);
+                 Elem->PhaseLag, nturn, T0, gamma0, num_particles);
     return Elem;
 }
 
@@ -91,13 +95,15 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double T0=1.0/Frequency;      /* Does not matter since nturns == 0 */
       double HarmNumber=round(Frequency*T0);
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+      /* gamma0 = 0 for ultra-relativistic tracking */
+      double gamma0 = (rest_energy > 0.0) ? atGamma(Energy, Energy, rest_energy) : 0.0;
 
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
 
-      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, 0.0, num_particles);
+      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, gamma0, num_particles);
 
     }
   else if (nrhs == 0)

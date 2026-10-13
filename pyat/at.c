@@ -13,6 +13,7 @@
 #include <mpi.h>
 #endif /* MPI */
 #include "attypes.h"
+#include "atvelocity.h"
 #include <stdbool.h> 
 #include <math.h>
 #include <float.h>
@@ -354,6 +355,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     PyArrayObject *refs;
     PyObject *rout;
     double *drin, *drout;
+    double gamma0, betagamma0;
     PyObject *xnturn = NULL;
     PyObject *xnelem = NULL;
     PyObject *xlost = NULL;
@@ -539,15 +541,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     set_energy_particle(lattice, energy, particle, &param);
     param.RingLength = lattice_length;
     if (param.rest_energy == 0.0) {
+        gamma0 = 0.0;
+        betagamma0 = 0.0;
         param.T0 = param.RingLength/C0;
     } else {
-        /*  Only relativistic tracking is implemented: keep everything consistent
-        double gamma0 = param.energy/param.rest_energy;
-        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
+        gamma0 = param.energy/param.rest_energy;
+        betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
         param.T0 = param.RingLength/(beta0*C0);
-        */
-        param.T0 = param.RingLength/C0;
     }
 
     /* Memory allocation for outputs */
@@ -624,6 +625,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 drout += np6; /*  shift the location to write to in the output array */
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
+            /* non-relativistic time of flight, entrance half */
+            atVelocityShift(drin, num_particles, 0.5*(*elem_length), gamma0, betagamma0);
             /* the actual integrator call */
             if (*pyintegrator) {
                 PyObject *res = PyObject_CallFunctionObjArgs(*pyintegrator, rin, *element, NULL);
@@ -633,6 +636,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
                 if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
             }
+            /* non-relativistic time of flight, exit half */
+            atVelocityShift(drin, num_particles, 0.5*(*elem_length), gamma0, betagamma0);
             if (losses) {
                 checkiflost(drin, num_particles, elem_index, param.nturn, ixnturn, ixnelem, bxlost, dxlostcoord);
             } else {
@@ -693,6 +698,8 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     track_function integrator;
     PyObject *pyintegrator;
     double *drin;
+    double gamma0, betagamma0, length;
+    PyObject *pylength;
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
@@ -721,6 +728,22 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 
     set_energy_particle(NULL, energy, particle, &param);
+    if (param.rest_energy == 0.0) {
+        gamma0 = 0.0;
+        betagamma0 = 0.0;
+    } else {
+        gamma0 = param.energy/param.rest_energy;
+        betagamma0 = sqrt(gamma0*gamma0 - 1.0);
+    }
+    pylength = PyObject_GetAttrString(element, "Length");
+    if (pylength) {
+        length = PyFloat_AsDouble(pylength);
+        Py_DECREF(pylength);
+    }
+    else {
+        length = 0.0;
+        PyErr_Clear();
+    }
 
     num_particles = (PyArray_SIZE(rin)/6);
     drin = PyArray_DATA(rin);
@@ -739,6 +762,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     if (!LibraryListPtr) return NULL;
     integrator = LibraryListPtr->FunctionHandle;
     pyintegrator = LibraryListPtr->PyFunctionHandle;
+    atVelocityShift(drin, num_particles, 0.5*length, gamma0, betagamma0);
     if (pyintegrator) {
         PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
         if (!res) return NULL;
@@ -748,6 +772,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
         if (!elem_data) return NULL;
         free(elem_data);
     }
+    atVelocityShift(drin, num_particles, 0.5*length, gamma0, betagamma0);
     Py_INCREF(rin);
     return (PyObject *) rin;
 }
