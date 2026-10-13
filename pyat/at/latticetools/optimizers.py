@@ -1,6 +1,10 @@
-"""Jacobian (damped Gauss-Newton) matching.
+"""Optimizers for observable matching.
 
-The solver is adapted from the ``JacobianSolver`` of Xsuite's
+* :py:func:`least_squares_match`: matching with
+  :py:func:`~scipy.optimize.least_squares`,
+* :py:func:`jacobian_match`: Jacobian (damped Gauss-Newton) matching.
+
+The Jacobian solver is adapted from the ``JacobianSolver`` of Xsuite's
 ``xdeps`` optimizer
 (https://github.com/xsuite/xdeps/blob/main/xdeps/optimize/jacobian.py,
 Apache License 2.0).
@@ -13,10 +17,10 @@ Newton step.
 
 from __future__ import annotations
 
-__all__ = ["jacobian_match"]
+__all__ = ["jacobian_match", "least_squares_match"]
 
 import numpy as np
-from scipy.optimize import OptimizeResult
+from scipy.optimize import OptimizeResult, least_squares
 
 from .observablelist import ObservableList
 from .response_matrix import ResponseMatrix
@@ -481,4 +485,91 @@ def jacobian_match(
         message=_TERMINATION_MESSAGES[status],
         nfev=merit.nfev,
         fun=fbest,
+    )
+
+
+def least_squares_match(
+    variables: VariableList,
+    constraints: ObservableList,
+    *,
+    verbose: int = 0,
+    method: str | None = None,
+    jac: str = "2-point",
+    ftol: float | None = 1e-8,
+    xtol: float | None = 1e-8,
+    gtol: float | None = 1e-8,
+    x_scale: float | np.ndarray | str | None = None,
+    loss: str = "linear",
+    f_scale: float = 1.0,
+    diff_step: float | np.ndarray | None = None,
+    tr_solver: str | None = None,
+    tr_options: dict | None = None,
+    jac_sparsity: np.ndarray | None = None,
+    max_nfev: int | None = None,
+    err: float = 1.0e6,
+    **eval_kw,
+) -> OptimizeResult:
+    r"""Observable matching using :py:func:`~scipy.optimize.least_squares`.
+
+    Args:
+        variables:  Variable parameters.
+        constraints: Constraints to fulfill.
+        verbose:    Level of verbosity.
+        method:     Minimisation algorithm, 'trf', 'dogbox' or 'lm'. If
+          :py:obj:`None`, use 'lm' for unbounded problems, 'trf' otherwise.
+        jac, ftol, xtol, gtol, loss, f_scale, diff_step, tr_solver, tr_options,
+          jac_sparsity, max_nfev: see :py:func:`~scipy.optimize.least_squares`.
+        x_scale:    Characteristic scale of each variable. If :py:obj:`None`,
+          use the variable steps.
+        err:        Value substituted for a constraint's deviation when it
+          cannot be evaluated.
+
+    Keyword Args:
+        \*\*eval_kw:  Evaluation keywords provided to :py:meth:`.VariableList.set`
+          and :py:meth:`.ObservableList.evaluate` (e.g. *ring*, *dp*, *dct*,
+          *orbit*, *twiss_in*...).
+
+    Returns:
+        :class:`scipy.optimize.OptimizeResult` returned by
+        :py:func:`~scipy.optimize.least_squares`.
+    """
+
+    def fun(vals) -> np.ndarray:
+        """Evaluation function for the minimiser."""
+        variables.set(vals, **eval_kw)
+        constraints.evaluate(**eval_kw)
+        return constraints.get_flat_weighted_deviations(err=err)
+
+    vini = variables.get(initial=True, check_bounds=True, **eval_kw)
+    bounds = np.array([var.bounds for var in variables])
+    if x_scale is None:
+        x_scale = np.array([var.delta for var in variables])
+    if method is None:
+        ntargets = fun(vini).size
+        if np.any(np.isfinite(bounds)) or ntargets < len(variables):
+            method = "trf"
+        else:
+            method = "lm"
+    options = {
+        "diff_step": diff_step,
+        "tr_solver": tr_solver,
+        "tr_options": tr_options,
+        "jac_sparsity": jac_sparsity,
+    }
+
+    return least_squares(
+        fun,
+        vini,
+        jac=jac,
+        bounds=(bounds[:, 0], bounds[:, 1]),
+        method=method,
+        ftol=ftol,
+        xtol=xtol,
+        gtol=gtol,
+        x_scale=x_scale,
+        loss=loss,
+        f_scale=f_scale,
+        max_nfev=max_nfev,
+        verbose=verbose,
+        **{k: v for k, v in options.items() if v is not None},
     )

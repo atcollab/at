@@ -13,22 +13,36 @@ Examples of matching are given in :doc:`/p/notebooks/matching`.
 
 from __future__ import annotations
 
-__all__ = ["match", "ring_match"]
+__all__ = ["MatchingMethod", "match", "ring_match"]
+
+import inspect
+from enum import Enum
 
 import numpy as np
-from scipy.optimize import least_squares
 
-from .jacobian import jacobian_match
+from .optimizers import jacobian_match, least_squares_match
 from .observablelist import ObservableList
 from ..lattice import Lattice, VariableList, AtError
 from ..lattice.lattice_variables import ElementVariable
+
+
+class MatchingMethod(Enum):
+    """Methods for the matching algorithm.
+
+    * ``LSTSQ``: :py:func:`least_squares_match`, based on
+      :py:func:`~scipy.optimize.least_squares`,
+    * ``JACOBIAN``: :py:func:`.jacobian_match`.
+    """
+
+    LSTSQ = 0
+    JACOBIAN = 1
 
 
 def match(
     variables: VariableList,
     constraints: ObservableList,
     *,
-    method: str | None = None,
+    method: MatchingMethod = MatchingMethod.LSTSQ,
     verbose: int = 2,
     max_nfev: int = 1000,
     optim_kw: dict | None = None,
@@ -36,22 +50,24 @@ def match(
 ) -> np.ndarray:
     r"""Observable matching.
 
-    Minimisation is performed by the :py:func:`~scipy.optimize.least_squares`
-    function.
+    Minimisation is performed by :py:func:`least_squares_match` or
+    :py:func:`.jacobian_match`, depending on *method*.
 
     Args:
         variables:      Variable parameters
         constraints:    Constraints to fulfill
-        method:         Minimisation algorithm (see
-          :py:func:`~scipy.optimize.least_squares`), or 'jacobian' for
-          :py:func:`.jacobian_match`. If :py:obj:`None`, use
-          'lm' for unbounded problems, 'trf' otherwise,
+        method:         Matching algorithm: :py:attr:`MatchingMethod.LSTSQ` for
+          :py:func:`least_squares_match` or :py:attr:`MatchingMethod.JACOBIAN`
+          for :py:func:`.jacobian_match`,
         verbose:        Level of verbosity,
         max_nfev:       Maximum number of function evaluation,
         optim_kw:       Dictionary of optimiser keyword arguments sent to
-          :py:func:`~scipy.optimize.least_squares` or
-          :py:func:`.jacobian_match`. The tolerances *ftol*, *xtol* and
-          *gtol* have the same meaning for both,
+          :py:func:`least_squares_match` or :py:func:`.jacobian_match`. For
+          :py:attr:`MatchingMethod.LSTSQ`, the
+          :py:func:`~scipy.optimize.least_squares` algorithm is selected with
+          the *method* keyword: if omitted, 'lm' is used for unbounded problems,
+          'trf' otherwise. The tolerances *ftol*, *xtol* and *gtol* have the
+          same meaning for both methods,
 
     Keyword Args:
         \*\*eval_kw:    Evaluation keywords provided to the
@@ -66,12 +82,6 @@ def match(
         RuntimeError: If optimisation fails
     """
 
-    def fun(vals) -> np.ndarray:
-        """Evaluation function for the minimiser."""
-        variables.set(vals, **eval_kw)
-        constraints.evaluate(**eval_kw)
-        return constraints.get_flat_weighted_deviations(err=1.0e6)
-
     if np.any(np.isnan(constraints.get_flat_targets())):
         msg = (
             "The targets are undefined for some constraints. "
@@ -83,46 +93,37 @@ def match(
     if optim_kw is None:
         optim_kw = {}
 
-    vini = variables.get(initial=True, check_bounds=True, **eval_kw)
-    bounds = np.array([var.bounds for var in variables])
-    x_scale = np.array([var.delta for var in variables])
-
     constraints.evaluate(initial=True, **eval_kw)
     constraints.check()
     ntargets = constraints.flat_values.size
 
-    if method is None:
-        if np.any(np.isfinite(bounds)) or ntargets < len(variables):
-            method = "trf"
-        else:
-            method = "lm"
-
     if verbose >= 1:
         print(
             f"\n{ntargets} constraints, {len(variables)} variables,"
-            f" using method {method!r}\n"
+            f" using method {method.name}\n"
         )
 
-    if method == "jacobian":
-        opt = jacobian_match(
-            variables,
-            constraints,
-            verbose=verbose,
-            max_nfev=max_nfev,
-            **optim_kw,
-            **eval_kw,
-        )
+    if method == MatchingMethod.JACOBIAN:
+        solver = jacobian_match
+    elif method == MatchingMethod.LSTSQ:
+        solver = least_squares_match
     else:
-        opt = least_squares(
-            fun,
-            vini,
-            bounds=(bounds[:, 0], bounds[:, 1]),
-            x_scale=x_scale,
-            verbose=verbose,
-            max_nfev=max_nfev,
-            method=method,
-            **optim_kw,
+        msg = f"Undefined matching method: {method}"
+        raise AtError(msg)
+    unknown = set(optim_kw) - set(inspect.signature(solver).parameters)
+    if unknown:
+        msg = (
+            f"Unexpected keyword(s) for {solver.__name__}: {', '.join(sorted(unknown))}"
         )
+        raise TypeError(msg)
+    opt = solver(
+        variables,
+        constraints,
+        verbose=verbose,
+        max_nfev=max_nfev,
+        **optim_kw,
+        **eval_kw,
+    )
 
     if verbose >= 1:
         print("\nConstraints:")
@@ -139,15 +140,15 @@ def ring_match(
     constraints: ObservableList,
     *,
     copy: bool = False,
-    method: str | None = None,
+    method: MatchingMethod = MatchingMethod.LSTSQ,
     verbose: int = 2,
     max_nfev: int = 1000,
     **kwargs,
 ) -> Lattice | None:
     r"""Match constraints by varying variables.
 
-    Minimisation is performed by the :py:func:`~scipy.optimize.least_squares`
-    function.
+    Minimisation is performed by :py:func:`least_squares_match` or
+    :py:func:`.jacobian_match`, depending on *method*.
 
     Args:
         ring:           Lattice description
@@ -155,9 +156,8 @@ def ring_match(
         constraints:    Constraints to fulfill
         copy:           If :py:obj:`True`, return a modified copy of *ring*, otherwise
           perform the match in-line
-        method:             Minimisation algorithm (see
-          :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
-          'lm' for unbounded problems, 'trf' otherwise,
+        method:             Matching algorithm: :py:attr:`MatchingMethod.LSTSQ`
+          or :py:attr:`MatchingMethod.JACOBIAN`, see :py:func:`match`,
         verbose:            Level of verbosity,
         max_nfev:           Maximum number of function evaluation,
 
@@ -174,8 +174,8 @@ def ring_match(
           Default taken from the ObservableList,
         r_in (Orbit | None): Initial trajectory, used for
           :py:class:`.TrajectoryObservable`. Default taken from the ObservableList,
-        \*\*kwargs:         The other keyword arguments sent to,
-          :py:func:`~scipy.optimize.least_squares`.
+        \*\*kwargs:         The other keyword arguments are sent to the
+          matching algorithm, see *optim_kw* in :py:func:`match`.
 
     Returns:
         Modified Lattice if copy=True, None otherwise
