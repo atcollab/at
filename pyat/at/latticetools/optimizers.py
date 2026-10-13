@@ -24,7 +24,7 @@ from scipy.optimize import OptimizeResult, least_squares
 
 from .observablelist import ObservableList
 from .response_matrix import ResponseMatrix
-from ..lattice import AtError, VariableList
+from ..lattice import AtError, Lattice, VariableList
 
 
 _TERMINATION_MESSAGES = {
@@ -67,6 +67,10 @@ class _JacobianSolver:
         broyden: If True, rank-1 (Broyden) update the Jacobian across
           steps instead of recomputing it by finite differences.
         verbose: If True, print per-step progress.
+
+    A trial point whose evaluation fails (for instance an unstable lattice) is
+    treated as having an infinite penalty, so that the line search reduces the
+    step. A failure at the starting point is raised.
     """
 
     def __init__(
@@ -108,8 +112,13 @@ class _JacobianSolver:
         self._penalty_best = np.inf
         self._xbest = None
 
-    def _evaluate(self, x):
-        y = self.func(x)
+    def _evaluate(self, x, catch=True):
+        try:
+            y = self.func(x)
+        except (AtError, ValueError, ArithmeticError, np.linalg.LinAlgError):
+            if not catch:
+                raise
+            return None, np.inf
         penalty_vec = self.func.penalty(y)
         penalty = float(np.sqrt(np.dot(penalty_vec, penalty_vec)))
         if penalty < self._penalty_best:
@@ -137,10 +146,11 @@ class _JacobianSolver:
             msg = "At least one variable should be present"
             raise AtError(msg)
         self._xbest = self.x.copy()
+        self._penalty_best = np.inf
         status = 0
         jac = x_jac = y_jac = None
 
-        y, penalty = self._evaluate(self.x)
+        y, penalty = self._evaluate(self.x, catch=False)
 
         for istep in range(self.n_steps_max):
             if self.tol is not None and penalty < self.tol:
@@ -234,10 +244,10 @@ class _MeritFunction:
         self,
         variables: VariableList,
         constraints: ObservableList,
-        ring,
+        ring: Lattice | None = None,
         *,
         err: float = 1.0e6,
-        rcond: float | None = None,
+        rcond: float = 1.0e-6,
         sing_val_cutoff: int | None = None,
         use_mp: bool = False,
         pool_size: int | None = None,
@@ -259,6 +269,7 @@ class _MeritFunction:
         self.nfev = 0
         self._last = None
         self._rm = ResponseMatrix(variables, constraints, ring=ring, **eval_kw)
+        self._weights = constraints.get_flat_weights()
 
     def close(self) -> None:
         """Shut down the multiprocessing pool, if any."""
@@ -285,7 +296,7 @@ class _MeritFunction:
         """Weighted deviations, used only for the solver's convergence
         checks.
         """
-        return y / self.constraints.get_flat_weights()
+        return y / self._weights
 
     def solve_step(
         self, jac: np.ndarray, y: np.ndarray, mask: np.ndarray
@@ -294,10 +305,11 @@ class _MeritFunction:
         ``mask``, using :meth:`.ResponseMatrix.correction_matrix`.
 
         ``sing_val_cutoff`` is the number of (largest) singular values to
-        keep. If not given, it is derived from the relative threshold
-        ``rcond``.
+        keep. If not given, singular values smaller than ``rcond`` times the
+        largest one are discarded.
         """
-        self._rm._varmask = mask
+        self._rm.reset_vars()
+        self._rm.exclude_vars(*np.flatnonzero(~mask))
         self._rm.response = jac
         self._rm.solve()
 
@@ -307,10 +319,7 @@ class _MeritFunction:
         if self.sing_val_cutoff is not None:
             nvals = int(self.sing_val_cutoff)
         else:
-            rcond = self.rcond
-            if rcond is None:
-                rcond = max(jac.shape) * np.finfo(float).eps
-            nvals = int(np.sum(s > rcond * s[0]))
+            nvals = int(np.sum(s > self.rcond * s[0]))
 
         return self._rm.correction_matrix(nvals=nvals) @ y
 
@@ -330,9 +339,26 @@ class _MeritFunction:
             if np.array_equal(xlast, x):
                 f0 = values
         nvars = len(self.variables)
-        columns = self._rm._columns(
-            np.arange(nvars), x=x, one_sided=self.one_sided, f0=f0
-        )
+        try:
+            columns = self._rm._columns(
+                np.arange(nvars), x=x, one_sided=self.one_sided, f0=f0
+            )
+        except (AtError, ValueError, ArithmeticError, np.linalg.LinAlgError) as exc:
+            checks = []
+            for v, xv in zip(self.variables, x, strict=True):
+                if xv == 0.0:
+                    cond = v.delta == v.DEFAULT_DELTA
+                else:
+                    cond = abs(v.delta) > 0.1 * abs(xv)
+                if cond:
+                    checks.append(f"{v.name} (delta={v.delta:g}, value={xv:g})")
+            if len(checks) == 0:
+                raise
+            msg = (
+                "Jacobian computation failed. The finite-difference step delta "
+                f"appears to be large for: {', '.join(checks)}. Consider reducing it."
+            )
+            raise AtError(msg) from exc
         if self.one_sided:
             self.nfev += nvars + (f0 is None)
         else:
@@ -352,7 +378,7 @@ def jacobian_match(
     max_nfev: int | None = None,
     n_bisections: int = 3,
     n_steps_max: int = 20,
-    rcond: float | None = None,
+    rcond: float = 1.0e-6,
     sing_val_cutoff: int | None = None,
     broyden: bool = False,
     max_step: float | np.ndarray | None = None,
@@ -372,7 +398,8 @@ def jacobian_match(
     reuse (``broyden=True``) is wanted.
 
     Args:
-        variables: Variable parameters.
+        variables: Variable parameters. The *delta* attribute of each variable
+          is the step used to compute the Jacobian by finite differences.
         constraints: Constraints to fulfill.
         verbose: 0 for silent, 1 for a summary, >=2 for per-step detail.
         ftol: Tolerance on the relative decrease of the cost
@@ -388,7 +415,8 @@ def jacobian_match(
           each Newton step. ``None`` means no limit.
         n_bisections: Maximum number of step-halvings in the line search.
         n_steps_max: Maximum number of outer (Newton) steps.
-        rcond: Relative singular-value cutoff for the Newton step, used
+        rcond: Relative singular-value cutoff for the Newton step: singular
+          values smaller than *rcond* times the largest one are discarded. Used
           only when ``sing_val_cutoff`` is not given.
         sing_val_cutoff: Number of (largest) singular values to keep for
           the Newton step; takes precedence over ``rcond``.
@@ -411,7 +439,8 @@ def jacobian_match(
         \*\*eval_kw: Evaluation keywords passed to
           :meth:`.VariableList.set`/`.get` and
           :meth:`.ObservableList.evaluate` (e.g. *ring*, *dp*, *dct*,
-          *df*...). *ring* is required.
+          *df*...). *ring* is needed if the variables or the constraints
+          require a lattice.
 
     Returns:
         :class:`scipy.optimize.OptimizeResult` with ``x``, ``success``,
@@ -439,6 +468,12 @@ def jacobian_match(
        * The variable bounds are respected at every step: a step that would
          cross a bound is scaled down to stop on it, and a variable on a bound
          is held fixed as long as the gradient pushes it outwards.
+       * The *delta* step of each variable must be small compared to its value
+         (for instance 1e-3 for quadrupole strengths): the default *delta*
+         (1.0) is usually far too large. A step that is too large gives an
+         inaccurate Jacobian and a poor or slow convergence; if it makes the
+         Jacobian computation fail, the error message lists the variables
+         whose step exceeds 10% of their value.
     """
     initial_values = variables.get(initial=True, check_bounds=True, **eval_kw)
 
@@ -493,7 +528,7 @@ def least_squares_match(
     constraints: ObservableList,
     *,
     verbose: int = 0,
-    method: str | None = None,
+    lstsq_method: str | None = None,
     jac: str = "2-point",
     ftol: float | None = 1e-8,
     xtol: float | None = 1e-8,
@@ -515,8 +550,9 @@ def least_squares_match(
         variables:  Variable parameters.
         constraints: Constraints to fulfill.
         verbose:    Level of verbosity.
-        method:     Minimisation algorithm, 'trf', 'dogbox' or 'lm'. If
-          :py:obj:`None`, use 'lm' for unbounded problems, 'trf' otherwise.
+        lstsq_method: :py:func:`~scipy.optimize.least_squares` algorithm,
+          'trf', 'dogbox' or 'lm'. If :py:obj:`None`, use 'lm' for unbounded
+          problems, 'trf' otherwise.
         jac, ftol, xtol, gtol, loss, f_scale, diff_step, tr_solver, tr_options,
           jac_sparsity, max_nfev: see :py:func:`~scipy.optimize.least_squares`.
         x_scale:    Characteristic scale of each variable. If :py:obj:`None`,
@@ -544,12 +580,12 @@ def least_squares_match(
     bounds = np.array([var.bounds for var in variables])
     if x_scale is None:
         x_scale = np.array([var.delta for var in variables])
-    if method is None:
+    if lstsq_method is None:
         ntargets = fun(vini).size
         if np.any(np.isfinite(bounds)) or ntargets < len(variables):
-            method = "trf"
+            lstsq_method = "trf"
         else:
-            method = "lm"
+            lstsq_method = "lm"
     options = {
         "diff_step": diff_step,
         "tr_solver": tr_solver,
@@ -562,7 +598,7 @@ def least_squares_match(
         vini,
         jac=jac,
         bounds=(bounds[:, 0], bounds[:, 1]),
-        method=method,
+        method=lstsq_method,
         ftol=ftol,
         xtol=xtol,
         gtol=gtol,

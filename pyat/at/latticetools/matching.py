@@ -65,9 +65,9 @@ def match(
           :py:func:`least_squares_match` or :py:func:`.jacobian_match`. For
           :py:attr:`MatchingMethod.LSTSQ`, the
           :py:func:`~scipy.optimize.least_squares` algorithm is selected with
-          the *method* keyword: if omitted, 'lm' is used for unbounded problems,
-          'trf' otherwise. The tolerances *ftol*, *xtol* and *gtol* have the
-          same meaning for both methods,
+          the *lstsq_method* keyword: if omitted, 'lm' is used for unbounded
+          problems, 'trf' otherwise. The tolerances *ftol*, *xtol* and *gtol*
+          have the same meaning for both methods,
 
     Keyword Args:
         \*\*eval_kw:    Evaluation keywords provided to the
