@@ -8,11 +8,13 @@ from pathlib import Path
 from tempfile import mkstemp
 from typing import Any
 
+import at
 import machine_data
 import pytest
 from at.lattice import Lattice
 from at.lattice import elements as elt
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
+from at.lattice.elements.variable_elements import VariableThinMultipole
 from at.load import load_xsuite, save_xsuite
 from numpy.testing import assert_allclose, assert_equal
 
@@ -111,6 +113,34 @@ def test_long_arrays_in_m_file() -> None:
     ring1 = Lattice.load(fname)
 
     assert_equal(ring1[0].xkick.shape, ring0[0].xkick.shape)  # act
+
+    # delete temporary file
+    temp_file = Path(fname)
+    temp_file.unlink()
+
+
+def test_save_variable_element() -> None:
+    elem = VariableThinMultipole(
+        "v",
+        at.ACMode.SINE,
+        AmplitudeA=1e-3,
+        AmplitudeB=2e-3,
+        FrequencyA=10,
+        FrequencyB=100,
+        PhaseA=0,
+        PhaseB=1.5707963267948966,
+    )
+
+    # save a ring with one element into a temporary file
+    ring0 = Lattice([elem], energy=6.04e9)
+    fhandle, fname = mkstemp(suffix=".m")
+    os.close(fhandle)
+    ring0.save(fname)
+
+    # retrieve the ring
+    ring1 = Lattice.load(fname)
+
+    assert_equal(ring1[0].Mode, ring0[0].Mode)  # act
 
     # delete temporary file
     temp_file = Path(fname)

@@ -1,8 +1,10 @@
 import warnings
 
+import at
 import numpy as np
 import pytest
 from at import (
+    AtWarning,
     element_pass,
     element_track,
     elements,
@@ -11,7 +13,6 @@ from at import (
     lattice,
     lattice_pass,
     lattice_track,
-    AtWarning,
 )
 from at.lattice.elements.conversions import _array, _array66
 
@@ -97,7 +98,9 @@ def test_quadrupole():
     assert len(q.PolynomA) == 3
     assert q.K == 0.0
     with pytest.warns(AtWarning):
-        q = elements.Quadrupole("quadrupole", 1.0, PolynomB=[0.0, 0.5, 0.005], MaxOrder=1)
+        q = elements.Quadrupole(
+            "quadrupole", 1.0, PolynomB=[0.0, 0.5, 0.005], MaxOrder=1
+        )
     assert q.MaxOrder == 1
     assert len(q.PolynomA) == 3
     assert q.K == 0.5
@@ -391,7 +394,8 @@ def test_dipole_bend_synonym(rin, dipole_class, func):
 def test_marker(rin, func):
     m = elements.Marker("marker")
     assert m.Length == 0
-    rin = np.array(np.random.rand(*rin.shape), order="F")
+    rng = np.random.default_rng()
+    rin = np.array(rng.random(rin.shape), order="F")
     rin_orig = np.array(rin, copy=True, order="F")
     if func == element_track:
         func(m, rin, in_place=True)
@@ -404,7 +408,8 @@ def test_marker(rin, func):
 def test_monitor(rin, func):
     mon = elements.Monitor("monitor")
     assert mon.Length == 0
-    rin = np.array(np.random.rand(*rin.shape), order="F")
+    rng = np.random.default_rng()
+    rin = np.array(rng.random(rin.shape), order="F")
     rin_orig = rin.copy()
     if func == element_track:
         func(mon, rin, in_place=True)
@@ -539,7 +544,8 @@ def test_rfcavity(rin: np.ndarray, func: any) -> None:
 @pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
 @pytest.mark.parametrize("n", (0, 1, 2, 3, 4, 5))
 def test_m66(rin, n, func):
-    m = np.random.rand(6, 6)
+    rng = np.random.default_rng()
+    m = rng.random((6, 6))
     m66 = elements.M66("m66", m)
     assert m66.Length == 0
     rin[n, 0] = 1e-6
@@ -585,6 +591,44 @@ def test_wiggler(rin, func):
     else:
         func(c, rin, energy=3e9)
     np.testing.assert_allclose(rin, expected, atol=1e-12)
+
+
+@pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
+def test_variable_thin_multipole(rin, func):
+    # mode SINE
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.SINE, AmplitudeA=1e-3, FrequencyA=1, PhaseA=2 * np.pi / 4
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, 0.125 * 299792458]))
+    np.testing.assert_equal(expected[3], 0.0007071067811865476)
+    # mode WHITENOISE
+    v = elements.VariableThinMultipole("v", at.ACMode.WHITENOISE, AmplitudeA=1e-3)
+    expected = v.track(np.zeros(6))
+    np.testing.assert_equal(expected[0], 0)
+    # mode ARBITRARY
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.ARBITRARY, AmplitudeB=[0, 1e-3], FuncB=[1, 2]
+    )
+    expected = v.track(np.array([1e-3, 0, 0, 0, 0, 0]))
+    np.testing.assert_equal(expected[1], -1e-6)
+    fakering = at.Lattice([v], energy=1e9)
+    expected, *_ = fakering.track(np.array([1e-3, 0, 0, 0, 0, 0]), nturns=2)
+    np.testing.assert_equal(expected[1, 0, 0, :], np.array([-1e-6, -3e-6]))
+    # mode INTERPOLATION_TABLE
+    f = np.array([[-1, 0, 1, 2], [2, 1, 0, 1]])
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, 0.5 * 299792458]))
+    np.testing.assert_equal(expected[3], 0.5e-3)
+    f = np.array([[-1, 0, 1, 2], [2, 1, 1, 2]])
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, -4.1 * 299792458]))
+    np.testing.assert_allclose(expected[3], 1.9e-3)
+    expected = v.track(np.array([0, 0, 0, 0, 0, 5.1 * 299792458]))
+    np.testing.assert_allclose(expected[3], 1.9e-3)
 
 
 def test_exit_entrance():
