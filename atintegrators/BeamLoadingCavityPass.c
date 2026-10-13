@@ -140,7 +140,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         
         
     /*Track RF cavity is always done. */
-    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
+    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, 0.0, num_particles);
     /*Only allocate memory if current is > 0*/
     if(tot_current>0 && rshunt>0){
         void *buffer = atMalloc(sz);

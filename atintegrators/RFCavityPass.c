@@ -21,14 +21,14 @@ struct elem
 };
 
 void RFCavityPass(double *r_in, double le, double nv, double freq, double h, double lag, double philag,
-                  int nturn, double T0, int num_particles)
+                  int nturn, double T0, double gamma0, int num_particles)
 /* le - physical length
    nv - peak voltage (V) normalized to the design enegy (eV)
    r is a 6-by-N matrix of initial conditions reshaped into
    1-d array of 6*N elements
 */
 {
-    trackRFCavity(r_in, le, nv, freq, h, lag, philag, nturn, T0, num_particles);
+    trackRFCavity(r_in, le, nv, freq, h, lag, philag, nturn, T0, gamma0, num_particles);
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -63,7 +63,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     energy = atEnergy(energy, Elem->Energy); check_error();
 
     RFCavityPass(r_in, Elem->Length, Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
-                 Elem->PhaseLag, nturn, T0, num_particles);
+                 Elem->PhaseLag, nturn, T0, 0.0, num_particles);
     return Elem;
 }
 
@@ -97,7 +97,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
 
-      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, num_particles);
+      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, 0.0, num_particles);
 
     }
   else if (nrhs == 0)
