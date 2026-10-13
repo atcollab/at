@@ -106,8 +106,7 @@ switch atclass
         [options,args]=doptions(elem,create,{'EnergyLoss'});
     case 'InsertionDeviceKickMap'
         create=@atinsertiondevicekickmap;
-        [options,args]=doptions(elem,create, ...
-            {'Length','Normalization_energy'});
+        [options,args]=doptions(elem,create);
     case 'VariableThinMultipole'
         create=@atvariablethinmultipole;
         [options,args]=doptions(elem,create);
