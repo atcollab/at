@@ -89,6 +89,7 @@ extend-select = [
   "E",  # pycodestyle
   "W",  # pycodestyle warning
   "UP",  # pyupgrade
+  "BLE",  # blind exceptions
   "B",  # bugbear
   "C4",  # comprehensions
   "SLOT",  # slot in str and tuple derivatives
@@ -102,10 +103,13 @@ extend-select = [
   "NPY",  # numpy
   "PERF",  # performance
   "PL",
+  "FURB",
   "RUF",
+  "TRY",
   "D415",  # period at the end of comments
 ]
 ignore = [
+  "I",  # unsorted imports
   "D417",  # undocumented param
   "PLW0603",  # global variables
   "PLR2004",  # magic value
@@ -113,7 +117,10 @@ ignore = [
   "PLR0911",  # too many
   "PLR0912",  # too many
   "PLR0913",  # too many
+  "PLR0914",  # too many
   "PLR0915",  # too many
+  "PLR0916",  # too many
+  "PLR0917",  # too many
 ]
 
 [tool.ruff.format]
