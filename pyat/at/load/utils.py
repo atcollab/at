@@ -337,8 +337,10 @@ def element_from_dict(
     try:
         elem = cls.from_file(elem_dict.copy())
     except AtError as err:
-        if cls.__name__ == "Quadrupole":
+        if cls.__name__ == "Dipole":
             elem_dict.pop('K', None)
+        if cls.__name__ == "Quadrupole":
+            elem_dict.pop('K', None)       
         if cls.__name__ == "Sextupole":
             elem_dict.pop('H', None)
         msg = f"{err}, positional argument ignored"

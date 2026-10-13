@@ -19,7 +19,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 from .observablelist import ObservableList
-from ..lattice import Lattice, VariableList
+from ..lattice import Lattice, VariableList, AtError
 from ..lattice.lattice_variables import ElementVariable
 
 
@@ -67,6 +67,14 @@ def match(
         variables.set(vals, **eval_kw)
         constraints.evaluate(**eval_kw)
         return constraints.get_flat_weighted_deviations(err=1.0e6)
+    
+    if np.any(np.isnan(constraints.get_flat_targets())):
+        msg = (
+            "The targets are undefined for some constraints. "
+            "The residual cannot be calculated. "
+            "Please set a value (float or None)"
+        )
+        raise AtError(msg)
 
     if optim_kw is None:
         optim_kw = {}

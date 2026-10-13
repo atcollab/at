@@ -1,0 +1,122 @@
+#include "atconstants.h"
+#include "atelem.c"
+#include <math.h>
+#include <float.h>
+#include <complex.h>
+#ifdef MPI
+#include <mpi.h>
+#include <mpi4py/mpi4py.h>
+#endif
+
+
+void roll_array(double *arr, int arr_len, int shift){
+    
+    memmove(arr + shift, arr, (arr_len-shift) * sizeof(*arr));
+    memset(arr, 0, shift * sizeof(*arr));
+}
+
+
+static void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
+
+    double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
+    double vbeami_meas = vbeam[0]*sin(vbeam[1]);
+    
+    double vgenr_meas = -vgen[0]*sin(vgen[1]);
+    double vgeni_meas = vgen[0]*cos(vgen[1]);      
+    
+    double vcavr_meas = vgenr_meas + vbeamr_meas;
+    double vcavi_meas = vgeni_meas + vbeami_meas;   
+
+    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
+    double phis_meas = -atan2(vcavr_meas, vcavi_meas);
+
+    double meas_psi = vgen[1] - phis_meas;
+    
+    // This part is needed to make sure there is not a 2pi
+    // phase difference (sometimes seen with harmonic cavity
+    if(meas_psi<-TWOPI/2){
+        meas_psi += TWOPI;
+    }else if(meas_psi > TWOPI/2){
+        meas_psi -= TWOPI;
+    }
+    
+    vgen_set[0] = vcav_meas;
+    vgen_set[1] = phis_meas;
+    vgen_set[2] = meas_psi;
+
+}
+static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
+                        double phasegain, double *VoltDelay, double *PhaseDelay, int delay){
+
+    double diff_Amp = VoltDelay[delay-1] - vcav[0];
+    double diff_Phase = PhaseDelay[delay-1] - vcav[1];
+    vgen[0] -= voltgain * diff_Amp;
+    vgen[1] -= phasegain * diff_Phase;
+    
+    roll_array(VoltDelay, delay, 1);
+    roll_array(PhaseDelay, delay, 1);
+    
+    VoltDelay[0] = vcav_meas[0];
+    PhaseDelay[0] = vcav_meas[1];    
+}
+
+static void compute_tuner(double *vcav_meas, double *vgen_arr,
+                          double *TunerParams, double TunerGain, double TunerAveragingPeriod,
+                          double TunerOffset){
+
+    TunerParams[0] += 1; // TunerCount        
+    TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
+    
+    if(TunerParams[0]==TunerAveragingPeriod){
+        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
+        vgen_arr[2] += TunerGain * TunerParams[1];
+        TunerParams[0] = 0.0; //TunerCount
+        TunerParams[1] = 0.0; //TunerDiff
+    }
+}
+
+static void update_passive_frequency(double *vbeam, double *vcav, double *vgen,
+                                     double *TunerParams, double TunerGain, double TunerAveragingPeriod){
+    /* The cavity voltage is
+    V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
+    We save the amplitude of vbeam, so the exponent goes to 1.
+    Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
+    */
+    double vset = vcav[0]; /* desired vbeam */
+    double psi = vgen[2]; /*current psi */
+    double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
+    
+    /*vbeam amp contains cos(psi). So replace with sin(psi)
+    to get get the gradient */
+    double grad = vpeak*sin(psi)/cos(psi); 
+    double delta_psi = 0.0;
+
+    /* If the cavity is detuned positively, the psi needs to
+    be increased to reduce the voltage. Likewise, if the cavity
+    is detuned negatively, the psi needs to be decreased to reduce
+    the voltage.
+    */
+        
+    int sg = (psi<0) - (psi>0);
+
+    TunerParams[0] += 1; // TunerCount        
+    TunerParams[1] += vset - vpeak; //DeltaV
+    if(TunerParams[0]==TunerAveragingPeriod){
+        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod);
+
+        delta_psi = TunerParams[1] / grad; /*linear extrapolation*/
+
+        /* This is to avoid setting a value if grad is 0, as then
+        delta_psi is inf, which even when multiplied by 0 gives nan
+        */
+        if (grad!=0.0){
+            vgen[2] += sg*delta_psi*TunerGain;
+        }
+        
+        TunerParams[0] = 0.0; //TunerCount
+        TunerParams[1] = 0.0; //TunerDiff
+    }   
+}
+
+
+
