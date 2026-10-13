@@ -104,7 +104,7 @@ def _load_at(root: dict[str, Any], **kwargs) -> Lattice:
         for k, v in properties.items():
             params.setdefault(k, v)
         for idx, elem_dict in enumerate(elements):
-            yield element_from_dict(elem_dict, index=idx, check=False)
+            yield element_from_dict(elem_dict, index=idx)
 
     return Lattice(root, iterator=json_generator, **kwargs)
 

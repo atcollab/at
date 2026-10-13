@@ -246,7 +246,7 @@ class ThinMultipole(Element):
         super().__init__(
             family_name,
             Length=kwargs.pop("Length", 0),
-            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass")
+            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass"),
         )
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super().__setattr__("MaxOrder", maxorder)
@@ -257,7 +257,7 @@ class ThinMultipole(Element):
         # Set the rest of attributes
         self.update(kwargs)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, attrname: str, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB."""
 
         def maxord(poly):
@@ -269,16 +269,16 @@ class ThinMultipole(Element):
             return maxord(poly)
 
         polys = ("PolynomA", "PolynomB")
-        if key in polys:
+        if attrname in polys:
             lmin = self.MaxOrder
             lenp, ordp = maxord(np.asarray(value))
             if not lenp > lmin:
-                msg = f"Length of {key} must be larger than {lmin}"
+                msg = f"Length of {attrname} must be larger than {lmin}"
                 raise ValueError(msg)
             if ordp > lmin:
-                msg = f"Some values of {key} are truncated by MaxOrder={lmin}"
+                msg = f"Some values of {attrname} are truncated by MaxOrder={lmin}"
                 warnings.warn(AtWarning(msg), stacklevel=2)
-        elif key == "MaxOrder":
+        elif attrname == "MaxOrder":
             intval = int(value)
             lens, ords = zip(*(ck(k) for k in polys), strict=True)
             if intval >= (lmin := min(lens)):
@@ -287,7 +287,7 @@ class ThinMultipole(Element):
             if intval < max(ords):
                 msg = f"Some values are truncated by MaxOrder={intval}"
                 warnings.warn(AtWarning(msg), stacklevel=2)
-        super().__setattr__(key, value)
+        super().__setattr__(attrname, value)
 
     # noinspection PyPep8Naming
     @property
@@ -397,6 +397,7 @@ class ThinMultipole(Element):
     @VKick.setter
     def VKick(self, value: float) -> None:
         self.Ks0L = value
+
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element."""
@@ -585,6 +586,11 @@ class Dipole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
+    @classmethod
+    def from_file(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().from_file(**elem_dict)
+
     def _part(self, fr, sumfr):
         pp = super()._part(fr, sumfr)
         pp.BendingAngle = fr / sumfr * self.BendingAngle
@@ -662,6 +668,11 @@ class Quadrupole(Radiative, Multipole):
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
         yield "K", self.K
+
+    @classmethod
+    def from_file(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().from_file(**elem_dict)
 
 
 class Sextupole(Multipole):

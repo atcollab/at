@@ -70,7 +70,6 @@ class Element:
     # _drop_attr = ["T1", "T2", "R1", "R2"]
     _drop_attr: ClassVar[list[str]] = [
         "_enable_passmethod",
-        "_disable_passmethod",
     ]
     _convert_attr: ClassVar[dict] = {
         "_dx": "dx",
@@ -80,7 +79,7 @@ class Element:
         "_yaw": "yaw",
         "_tilt": "tilt",
         "_tilt_frame": "tilt_frame",
-        "_referencepoint": "reference"
+        "_referencepoint": "reference",
     }
 
     def __init__(self, family_name: str, **kwargs):
@@ -94,11 +93,6 @@ class Element:
         self.FamName = family_name
         self.Length = kwargs.pop("Length", 0.0)
         self.PassMethod = kwargs.pop("PassMethod", "IdentityPass")
-        self._enable_passmethod = self.PassMethod
-        if self.Length==0.0:
-            self._disable_passmethod = "IdentityPass"
-        else:
-            self._disable_passmethod = "DriftPass"
         self.update(kwargs)
 
     def __setattr__(self, attrname: str, value: Any) -> None:
@@ -120,8 +114,7 @@ class Element:
     def __str__(self):
         return "\n".join(
             [self.__class__.__name__ + ":"]
-            + [f"{k:>14}: {v!s}" for k, v in self.items()
-               if k not in self._drop_attr]
+            + [f"{k:>14}: {v!s}" for k, v in self.items() if k not in self._drop_attr]
         )
 
     def __repr__(self):
@@ -149,23 +142,25 @@ class Element:
         for subclass in cls.__subclasses__():
             yield from subclass.subclasses()
         yield cls
-        
+
     def enable(self):
         """Function to enable an element in the lattice.
-        Convert DriftPass / IdentityPass to the standard
-        or user defined element pass method
-        """          
-        self.PassMethod = self._enable_passmethod
-        
+
+        Restore the element PassMethod.
+        """
+        if hasattr(self, "_enable_passmethod"):
+            self.PassMethod = self._enable_passmethod
+            del self._enable_passmethod
+
     def disable(self):
         """Function to disable an element in the lattice.
-        Convert the element passmethod to either a DrifPass
-        is the length is not zero or IdentityPass otherwise
-        """ 
-        if self.PassMethod != self._disable_passmethod:
+
+        Set the element PassMethod to DriftPass or IdentityPass depending on its length.
+        """
+        if not hasattr(self, "_enable_passmethod"):
             self._enable_passmethod = self.PassMethod
-            self.PassMethod = self._disable_passmethod   
-        
+            self.PassMethod = "IdentityPass" if self.Length == 0.0 else "DriftPass"
+
     def to_dict(self):
         return vars(self).copy()
 
@@ -295,16 +290,26 @@ class Element:
             dct (dict):     Dictionary of :py:class:`.Element` attributes
         """
         dct = {
+            # Rename some of the attributes for file compatibility
             self._convert_attr.get(k, k): encoder(v)
             for k, v in self.items()
-            if k not in self._drop_attr
         }
         dct["Class"] = getattr(self, "_file_classname", self.__class__.__name__)
         return dct
 
     @classmethod
-    def from_file(cls, elem_dict: dict[str, Any]) -> Element:
+    def from_file(
+        cls,
+        FamName: str = "-",
+        Length: float = 0.0,
+        PassMethod: str = "DriftPass",
+        **elem_dict,
+    ) -> Element:
         """Generate an Element from a dictionary of attributes.
+
+        This creates an instance of the class without calling the constructor,
+        sets the attributes from the provided dictionary, and applies any specified
+        transformations.
 
         Parameters:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
@@ -312,12 +317,33 @@ class Element:
         Returns:
             elem(Element):       :py:class:`.Element`
         """
-        # Separate the positional arguments
-        elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
+        # Create the element
+        element = cls.__new__(cls)
+        # Remove the transformation attributes
+        trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
+        # Set the attributes, skipping element-specific controls
+        Element.__setattr__(element, "FamName", FamName)
+        Element.__setattr__(element, "Length", Length)
+        Element.__setattr__(element, "PassMethod", PassMethod)
+        for key, value in elem_dict.items():
+            Element.__setattr__(element, key, value)
+        # Transform the element if necessary
+        if not all(v is None for v in trs.values()):
+            refval = trs.pop("reference", transform_options.referencepoint.value)
+            element.transform(reference=ReferencePoint(refval), **trs)
+        return element
+
+    @classmethod
+    def from_args(cls, *elem_args, **elem_dict) -> Element:
+        """Generate an Element from a list of arguments.
+
+        Returns:
+            elem(Element):       :py:class:`.Element`
+        """
         # Remove the transformation attributes
         trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
         # Create the element
-        element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
+        element = cls(*elem_args, **elem_dict)
         # Transform the element if necessary
         if not all(v is None for v in trs.values()):
             refval = trs.pop("reference", transform_options.referencepoint.value)
