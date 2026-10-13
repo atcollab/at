@@ -148,7 +148,9 @@ class _JacobianSolver:
         self._xbest = self.x.copy()
         self._penalty_best = np.inf
         status = 0
-        jac = x_jac = y_jac = None
+        jac = None
+        x_jac = None
+        y_jac = None
 
         y, penalty = self._evaluate(self.x, catch=False)
 
