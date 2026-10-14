@@ -56,7 +56,15 @@ def get_mcf(
     fp = np.stack(fp_i, axis=0).T  # generate a Fortran contiguous array
     b = np.squeeze(internal_lpass(ring, fp, keep_lattice=True), axis=(2, 3))
     ring_length = get_s_pos(ring, len(ring))
-    p = np.polynomial.Polynomial.fit(b[4], b[5], deg=fit_order).convert().coef
+    if ring.particle.rest_energy == 0.0:
+        dl = b[5]
+    else:
+        gamma0 = ring.gamma
+        betgam0 = np.sqrt(gamma0 * gamma0 - 1.0)
+        p = 1.0 + b[4]
+        gamma = np.sqrt(1.0 + (betgam0 * p) ** 2)
+        dl = b[5] + ring_length[0] * b[4] * (1.0 + p) / (gamma * (gamma + p * gamma0))
+    p = np.polynomial.Polynomial.fit(b[4], dl, deg=fit_order).convert().coef
     alphac = p[1:] / ring_length[0]
     return alphac[0] if len(alphac) < 2 else alphac
 
@@ -104,7 +112,12 @@ def get_revolution_frequency(
         rnorad = ring.disable_6d(copy=True) if ring.is_6d else ring
         orbit = internal_lpass(rnorad, rnorad.find_orbit4(dp=dp)[0])
         dct = np.squeeze(orbit)[5]
-        cell_frev *= lcell / (lcell + dct)
+        if ring.particle.rest_energy == 0.0:
+            beta = 1.0
+        else:
+            betgam = np.sqrt(ring.gamma * ring.gamma - 1.0) * (1.0 + dp)
+            beta = betgam / np.sqrt(1.0 + betgam * betgam)
+        cell_frev = clight / (lcell / ring.beta + dct / beta)
     elif df is not None:
         cell_frev += df / ring.cell_harmnumber
     return cell_frev / ring.periodicity
