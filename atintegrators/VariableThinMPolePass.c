@@ -34,11 +34,11 @@ struct elemab {
     double Phase;
     double Sinmin, Sinmax;
     int NSamples;
-    int DOrder;
     double* Func;
-    double* FuncDelay;
     double* Finterpolate;
     double* Tinterpolate;
+    int DOrder;
+    double FuncDelay;
 };
 
 
@@ -159,6 +159,7 @@ double get_val(struct elemab* elem, double* ramps, int mode,
            */
            tpow = tpow * t;
            functot = functot + tpow * func[idx + allorders*turnidx];
+         };
        };
        return ampt * functot;
     default:
