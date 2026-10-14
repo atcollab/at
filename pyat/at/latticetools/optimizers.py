@@ -471,8 +471,8 @@ def jacobian_match(
        * The variable bounds are respected at every step: a step that would
          cross a bound is scaled down to stop on it, and a variable on a bound
          is held fixed as long as the gradient pushes it outwards.
-       * The *delta* step of each variable must be small compared to its value
-         (for instance 1e-3 for quadrupole strengths): the default *delta*
+       * The *delta* must be small enough that observables are not strongly
+         affected or the lattice becomes unstable: the default *delta*
          (1.0) is usually far too large. A step that is too large gives an
          inaccurate Jacobian and a poor or slow convergence; if it makes the
          Jacobian computation fail, the error message lists the variables
