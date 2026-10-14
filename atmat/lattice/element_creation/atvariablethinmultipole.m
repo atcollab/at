@@ -111,7 +111,8 @@ rsrc = setparams(rsrc,modename,'A');
 rsrc = setparams(rsrc,modename,'B');
 rsrc = setmaxorder(rsrc);
 
-m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2,'INTERPOLATION_TABLE',3);
+m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2,'INTERPOLATION_TABLE',3,...
+         'DERIVATIVE_TABLE',4);
 
 % Build the element
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
