@@ -147,6 +147,7 @@ double get_val(struct elemab* elem, double* ramps, int mode,
        if (turnidx >= nsamples){
          return 0;
        }else{
+         func = elem->Func;
          allorders = 1 + elem->DOrder; // first order + derivatives
          functot = func[allorders*turnidx]; //first order
          /* Add derivatives for the sample turnidx mod NSamples */
