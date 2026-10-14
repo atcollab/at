@@ -166,9 +166,11 @@ class ParamArray(np.ndarray):
             return repr(self.view(np.ndarray))
 
     def __new__(
-        cls, value: Any, dtype: npt.DTypeLike = float
+        cls, value: Any, shape: tuple[int, ...] | None = None, dtype: npt.DTypeLike = float
     ):
         obj = np.asfortranarray(value, dtype="O").view(cls)
+        if shape is not None:
+            obj = obj.reshape(shape, order="F")
         obj._dtype = dtype
         return obj
 

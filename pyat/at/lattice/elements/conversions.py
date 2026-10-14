@@ -9,11 +9,11 @@ from ..parameters import AttributeArray as _anyarray
 
 
 def _array(value, shape: tuple[int, ...] = (-1,), dtype=float):
-    return _anyarray(value, dtype=dtype).reshape(shape)
+    return _anyarray(value, shape=shape, dtype=dtype)
 
 
 def _array66(value):
-    return _array(value, shape=(6, 6))
+    return _anyarray(value, shape=(6, 6))
 
 
 def _float(value) -> float:
