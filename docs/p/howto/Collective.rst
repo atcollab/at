@@ -94,7 +94,7 @@ First we can call the fast_ring function to reduce significantly the number of e
 
 .. code:: python
 
-    fring, _ = at.fast_ring(ring)
+    fring = at.fast_ring(ring)
 
 We must define an srange for the wake function. The wake_function will be computed at the values of the srange array, and an interpolation will be made during the tracking if the required dz of the 2 slices falls in between 2 data points. As a way of saving memory, the wake_object contains a function for computing the srange such that is is finely sampled only around where the bunches are expected to be. We must also specify how many turns we would like the wake memory to be
 
@@ -120,11 +120,11 @@ Now we can define a longitudinal resonator by calling the LongResonatorElement f
     from at.collective.wake_elements import LongResonatorElement
 
     current = 0.1   # A
-    ring.beam_current = current
+    ring.set_beam_current(current)
 
     f_resonator = ring.get_rf_frequency() - 5e4
     qfactor = 4500
-    rshunt = 6e6
+    rshunt = 6e6 #Ohms
 
     Nslice = 1
     welem = LongResonatorElement('LongitudinalResonator', ring, srange, f_resonator, qfactor, rshunt, Nturns=wturns, Nslice=Nslice)
@@ -259,11 +259,11 @@ First, the filling pattern must be set
 .. code:: python
 
     Nbunches = 992
-    ring.beam_current = 200e-3 #Set total beam current to 200mA
+    ring.set_beam_current(200e-3) #Set total beam current to 200mA
     ring.set_fillpattern(Nbunches) #Set uniform filling. Here the harmonic number is equal to 992. 
 
 The number of particles in the beam, must be an integer harmonic of the number of bunches. This is because
-in the pass method, the coordinates are accessed according to :math:`parts[bunch_id::Nbunches]`. This means all particles for all bunches are in series, and to access the particles for the nth bunch, you simply start at particle n, and take the particle at every Nbunches step. In PyAT we are able to do single slice per bunch, and 1 particle per bunch. Particles can be generated using the standard at.beam functionality.
+in the pass method, the coordinates are accessed according to **parts[bunch_id::Nbunches]**. This means all particles for all bunches are in series, and to access the particles for the nth bunch, you simply start at particle n, and take the particle at every Nbunches step. In PyAT we are able to do single slice per bunch, and 1 particle per bunch. Particles can be generated using the standard at.beam functionality.
 
 Two examples of multi bunch collective effects can be found, one for the Longitudinal Coupled Bunch Instability: at/pyat/examples/CollectiveEffects/LCBI_run.py and at/pyat/examples/CollectiveEffects/LCBI_analyse.py, and another for the Transverse Resistive Wall Instability: at/pyat/examples/CollectiveEffects/TRW_run.py and at/pyat/examples/CollectiveEffects/TRW_analyse.py.
 
@@ -303,7 +303,7 @@ As mentioned above, the number of particles must be an integer multiple of the n
     bm_elem = at.BeamMoments('monitor')
     ring.append(bm_elem)
     
-This monitor works in parallel computations, and the data can be accessed by :math:`bm_elem.means` and :math:`bm_elem.stds`. If the user wishes to write their own data collation, in order to perform some more advanced analysis, functionalities within the MPI4PY package can be used. For example, to compute yourself the centroid position of each bunch in one turn
+This monitor works in parallel computations, and the data can be accessed by **bm_elem.means** and **bm_elem.stds**. If the user wishes to write their own data collation, in order to perform some more advanced analysis, functionalities within the MPI4PY package can be used. For example, to compute yourself the centroid position of each bunch in one turn
 
 .. code:: python
 
@@ -315,9 +315,9 @@ This monitor works in parallel computations, and the data can be accessed by :ma
         comm.Barrier()
         return centroid 
 
-Each thread passes the particles it has to this function. Through the :math:`comm` object, the threads can communicate. The sum of each plane is computed, and this sum information is transmitted. Then by dividing with size and Nparts, the mean is computed. The comm.Barrier() functions blocks all threads until they have all reached this point. 
+Each thread passes the particles it has to this function. Through the **comm** object, the threads can communicate. The sum of each plane is computed, and this sum information is transmitted. Then by dividing with size and Nparts, the mean is computed. The comm.Barrier() functions blocks all threads until they have all reached this point. 
 
-A final note of importants, when parallelising, Nslice refers to the number of slices per bunch. The total number of slices used in the computation will there be Nslice*Nbunches
+A final note of importantce, when running multi-bunch simulations, Nslice refers to the number of slices per bunch. The total number of slices used in the computation will there be Nslice*Nbunches
 
 
 Beam Loading
@@ -329,27 +329,20 @@ In order to compensate for the beam induced voltage (which is an additional volt
 
 To consider beam loading in an rf cavity, a loaded shunt impedance :math:`R_{s}` and a loaded quality factor :math:`Q_{L}` must be provided. The phasor model is used to compute the amplitude and phase of the beam induced voltage :math:`V_{b}`. The amplitude and phase are first initialised by computing the optimum detuning :math:`\psi` according to the formula found in [5]_. From this detuning, the :math:`V_{g}` can be easily computed. This is done in the function **_init_bl_params** found in **beam_loading.py**. 
 
-An important thing to consider for the functions found in the **BeamLoadingCavityPass.c** and all related functions is the slightly different definition compared to other codes like **mbtrack**. In PyAT, the RF cavity definition is :math:`V_{rf}=-sin(k*(z-z_{lag}))` as opposed to :math:`V_{rf}=cos(k*(z-z_{lag}))`. This means that when computing the real and imaginary parts of the beam induced voltage from the amplitude and phase of :math:`V_{b}`, the following conversion must be used: 
+An important thing to consider for the functions found in the **BeamLoadingCavityPass.c** and all related functions is the slightly different definition compared to other codes like **mbtrack**. In PyAT, the RF cavity definition is :math:`V_{rf}=-sin(k*(z-z_{lag}))` as opposed to :math:`V_{rf}=cos(k*(z-z_{lag}))`. This means that when computing the real and imaginary parts of the generator voltage from the amplitude and phase of :math:`V_{g}`, the following conversion must be used: 
 
-.. math:: V_{b,real}=-|\tilde{V}_{b}|sin(\theta_{b})
-.. math:: V_{b,imag}=|\tilde{V}_{b}|cos(\theta_{b})
+.. math:: V_{g,real}=-|\tilde{V}_{g}|sin(\theta_{g})
+.. math:: V_{g,imag}=|\tilde{V}_{g}|cos(\theta_{g})
 
-By default, for a single RF system, the cavity will restore the energy loss per :math:`U_{0}` at :math:`\phi_{s}=-arcsin(U_{0}/V_{rf})` and the beam will oscillate around **ts** (the **ct** coordinate associated to :math:`\phi_{s}`). It is possible to change the reference of the time coordinate using the attribute **TimeLag** from the cavity. For example setting this **TimeLag** to ts will shift the origin back to zero. In the beamloading element the equilibrium **ct** coordinate is automatically calculated and the feedback loops will adjust the voltage and phase of the RF wave such that the energy loss due to synchrotron radiation is restored at the equilibrium **ct** coordinate calculated with the function **get_timelag_fromU0**.
+By default, for a single RF system, the cavity will restore the energy loss per :math:`U_{0}` at :math:`\phi_{s}=-arcsin(U_{0}/V_{rf})` and the beam will oscillate around **ts** (the **ct** coordinate associated to :math:`\phi_{s}`). It is possible to change the reference of the time coordinate using the attribute **TimeLag** from the cavity. For example setting this **TimeLag** to **ts** will shift the origin back to zero. In the beamloading element the equilibrium **-ct** coordinate is automatically calculated and the feedback loops will adjust the voltage and phase of the RF wave such that the energy loss due to synchrotron radiation is restored at the equilibrium **ct** coordinate calculated with the function **get_timelag_fromU0**. In the presence of some additional ring losses, the user can also provide **ts** manually to improve the accuracy of the beam loading compensation.
 
-The phasor model is updated with each slice. At the end of each bucket (filled or empty) the beam induced voltage is back tracked to the expected beam location in the bucket (:math:`t=ts/clight` for that bucket). This is why the ts is important, as it allows the feedback to ensure the cavity setpoints are fulfilled at the expected beam position. The final value of :math:`V_{b}` at the end of the turn is the mean of all the beam induced voltage from all buckets, measured at :math:`t=0` after the bunch has been tracked. The :math:`V_{b}` used for the compuation of the :math:`V_{g}` can either be taken from the most recent turn, or it can be the mean of a buffer of a specified length.
+The phasor model is updated with each slice. At the end of each bucket (filled or empty) the beam induced voltage is back tracked to the expected beam location in the bucket (:math:`t=ts/clight` for that bucket). This is why the ts is important, as it allows the feedback to ensure the cavity setpoints are fulfilled at the expected beam position. For a well set RF system, the ts should equal 0 with some non-zero TimeLag. The final value of :math:`V_{b}` at the end of the turn is the mean of all the beam induced voltage from all buckets, measured at :math:`t=ts` after the bunch has been tracked.
 
-There are 4 main parameters stored in the beam loading element under the **BeamLoadingElement.Vgen**. These parameters are :math:`[V_{gen}, \theta_{g}, \psi, V_{gr}]`, where :math:`V_{gen}` is the amplitude of the generator voltage, :math:`\theta_{g}` is the total generator phase and is typically equal to :math:`\theta_{g}=\phi_{s}+\psi`, :math:`\psi` is the cavity detuning, and :math:`V_{gr}=V_{gen}/cos(\psi)` is the generator voltage on resonance. 
+There are 3 main parameters stored in the beam loading element under the **BeamLoadingElement.Vgen**. These parameters are :math:`[V_{gen}, \theta_{g}, \psi]`, where :math:`V_{gen}` is the amplitude of the generator voltage, :math:`\theta_{g}` is the total generator phase and :math:`\psi` is the cavity detuning.
 
-The computation of the new :math:`V_{gen}` is very straight forward. First, the total cavity voltage is computed from the real part of :math:`V_{b}` as :math:`V_{c,meas}=V_{gen}+V_{b}`. Then the correction is computed with :math:`V_{gr}*={\frac{V_{c,set}}{V_{c,meas}}}^{VoltGain}`. Rather than applying the modification to :math:`V_{gen}`, it is preferable to apply it by modfying the :math:`V_{gr}` as it is independant of the cavity phase.
+The computation of the new :math:`V_{gen}` is very straight forward. First, the total cavity voltage is computed from the real part of :math:`V_{b}` as :math:`V_{c,meas}=V_{gen}+V_{b}`. The generator phase is computed by :math:`\theta_{g} -= (-arctan2(V_{c,real}/V_{c,imag}))`. Then the correction is made with a specified Phase and Voltage gain. 
 
-The phase is slightly more complicated and requires two steps. First to compute to the new detuning, the contribution of the detuning to the total phase shift is extracted with :math:`\psi += (\theta_{g} - \psi - \phi_{s,set})*PhaseGain`. 
-
-This detuning change induces a phase shift which must also be compensated. So the new synchronous phase is computed with the measured real and imaginary cavity voltages :math:`\theta_{g} -= (-arctan2(V_{c,real}/V_{c,imag}))*PhaseGain`. 
-
-Then finally :math:`V_{gen}` is updated by :math:`V_{gen}=V_{gr}cos(\psi)`. 
-
-
-.. math:: V_{gr}=-|\tilde{V}_{b}|sin(\theta_{b})
+The phase is slightly more complicated and requires two steps. First to compute to the new detuning, the contribution of the detuning to the total phase shift is extracted with :math:`\psi += (\theta_{g} - \psi - \phi_{s,set})*PhaseGain`. This is then added to a buffer with a length given by **TunerAveragingPeriod**. When the buffer is full, the mean value of the buffer is applied with a gain and the buffer is reset to 0. This is therefore a stepwise tuner implementation. Preferable averaging periods should be at least 1 synchrotron frequency.
  
 
 To intialise the beam loading element, the function **add_beamloading** must be applied to a lattice object. This will convert the specified Cavity Element to a **BeamLoadingElement**. This can be done as follows
@@ -358,9 +351,10 @@ To intialise the beam loading element, the function **add_beamloading** must be 
 
     from at.collective import add_beamloading
     
-    add_beamloading(ring, qfactor, rshunt,
-                    cavpts=[0], Nslice=1,
-                    VoltGain=0.01, PhaseGain=0.01)
+    add_beamloading(ring, qfactor_unloaded, rshunt_unloaded, coupling_beta,
+                    cavpts=[0], cavitymode=at.CavityMode.ACTIVE, fbmode=at.FeedbackMode.PROP, 
+                    Nslice=1, Gain=[0.01, 0.01],
+                    TunerAveragingPeriod=500, TunerOffset=0.0, TunerGain=0.01)
     
 An additional keyword argument **cavpts** can be given to specifically transfer one cavity element to a beam loading element. The **VoltGain** and **PhaseGain** are parameters to be tuned for the feedback. 
 

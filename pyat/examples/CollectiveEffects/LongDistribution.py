@@ -6,14 +6,14 @@ from at.collective.haissinski import Haissinski
 
 # First we define the ring, the BB resonator, the current and the wake element
 ring = at.load_m('../../../machine_data/esrf.m')
-
+ring.enable_6d()
 
 
 freq = 10e9
 qfactor = 1
 Rs = 1e4
 current = 5e-4
-m = 60  # 30 is quite coarse, 70 or 80 is very fine. 50 is middle
+m = 46  # 30 is quite coarse, 70 or 80 is very fine. 50 is middle
 kmax = 8
 
 
@@ -29,7 +29,7 @@ ha.solve()
 
 ha_x_tmp = ha.q_array*ha.sigma_l
 ha_prof = ha.res/ha.Ic
-ha_prof /= numpy.trapz(ha_prof, x=ha_x_tmp)
+ha_prof /= numpy.trapezoid(ha_prof, x=ha_x_tmp)
 ha_cc = numpy.average(ha_x_tmp, weights=ha_prof)
 ha_x = (ha_x_tmp - ha_cc)
 
@@ -57,16 +57,15 @@ welem = LongResonatorElement('wake', ring,
 
 
 Nbunches = 1
-ring.beam_current = current
+ring.set_beam_current(current)
 ring.set_fillpattern(Nbunches)
 
-ring.enable_6d()
 ring.set_cavity_phase()
-_, fring = at.fast_ring(ring)
+fring = at.fast_ring(ring)
 fring.append(welem)
 
 
-sigm = at.sigma_matrix(ring.radiation_on(copy=True))
+sigm = at.sigma_matrix(ring)
 Nparts = 10000
 Nturns = 20000
 nbins = 60
@@ -105,7 +104,7 @@ for t in numpy.arange(Nturns):
 # Identical post processing of tracking distribution (to the Haissinski)
 zr_tmp = allData[:, 0]
 prof = numpy.mean(allData[:, 1:], axis=1)
-prof /= numpy.trapz(prof, x=zr_tmp)
+prof /= numpy.trapezoid(prof, x=zr_tmp)
 
 cc = numpy.average(zr_tmp, weights=prof)
 zr = zr_tmp - cc
