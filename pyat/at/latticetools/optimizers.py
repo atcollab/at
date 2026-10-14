@@ -61,9 +61,9 @@ class _JacobianSolver:
           disables it.
         n_bisections: Maximum number of step-halvings in the line search.
         max_rel_penalty_increase: Once ``n_bisections`` step-halvings
-          have been tried, keep bisecting only while the penalty found
-          so far is within this factor of the previous value; ``None``
-          disables the extra allowance.
+          have been tried, keep halving the step while the trial penalty is
+          at least this factor times the current one (for instance when the
+          evaluation fails). ``None`` disables these extra halvings.
         broyden: If True, rank-1 (Broyden) update the Jacobian across
           steps instead of recomputing it by finite differences.
         verbose: If True, print per-step progress.
@@ -172,7 +172,8 @@ class _JacobianSolver:
             mask = ~((at_lower & (grad > 0)) | (at_upper & (grad < 0)))
             grad[~mask] = 0.0
 
-            if self.gtol is not None and np.linalg.norm(grad, ord=np.inf) < self.gtol:
+            grad_norm = np.linalg.norm(grad, ord=np.inf)
+            if grad_norm == 0.0 or (self.gtol is not None and grad_norm < self.gtol):
                 status = 1
                 break
 
@@ -188,7 +189,7 @@ class _JacobianSolver:
             alpha = -1
             new_penalty = np.inf
             while new_penalty >= penalty:
-                if alpha > self.n_bisections and (
+                if alpha >= self.n_bisections and (
                     self.max_rel_penalty_increase is None
                     or new_penalty < self.max_rel_penalty_increase * penalty
                 ):
@@ -427,9 +428,9 @@ def jacobian_match(
         max_step: Maximum change of each variable in a single step. The whole
           step is scaled down if needed, keeping its direction.
         max_rel_penalty_increase: Once ``n_bisections`` step-halvings
-          have been tried, keep bisecting only while the penalty found so
-          far is within this factor of the previous value; ``None``
-          disables the extra allowance.
+          have been tried, keep halving the step while the trial penalty is
+          at least this factor times the current one (for instance when the
+          evaluation fails). ``None`` disables these extra halvings.
         err: Value substituted for a constraint's deviation when it
           cannot be evaluated.
         use_mp, pool_size, start_method: Compute the Jacobian with
@@ -554,7 +555,9 @@ def least_squares_match(
         verbose:    Level of verbosity.
         lstsq_method: :py:func:`~scipy.optimize.least_squares` algorithm,
           'trf', 'dogbox' or 'lm'. If :py:obj:`None`, use 'lm' for unbounded
-          problems, 'trf' otherwise.
+          problems with at least as many constraints as variables, 'trf'
+          otherwise. 'lm' supports neither bounds nor fewer constraints than
+          variables.
         jac, ftol, xtol, gtol, loss, f_scale, diff_step, tr_solver, tr_options,
           jac_sparsity, max_nfev: see :py:func:`~scipy.optimize.least_squares`.
         x_scale:    Characteristic scale of each variable. If :py:obj:`None`,
@@ -608,6 +611,6 @@ def least_squares_match(
         loss=loss,
         f_scale=f_scale,
         max_nfev=max_nfev,
-        verbose=verbose,
+        verbose=min(verbose, 2),
         **{k: v for k, v in options.items() if v is not None},
     )

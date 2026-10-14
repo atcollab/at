@@ -12,7 +12,9 @@ from at.latticetools import EmittanceObservable, ObservableList, ring_match
 from at.latticetools import MatchingMethod
 
 methods = pytest.mark.parametrize(
-    "method", (MatchingMethod.LSTSQ, MatchingMethod.JACOBIAN), ids=lambda m: m.name
+    "method",
+    (MatchingMethod.LEASTSQUARES, MatchingMethod.JACOBIAN),
+    ids=lambda m: m.name,
 )
 
 

@@ -29,12 +29,12 @@ from ..lattice.lattice_variables import ElementVariable
 class MatchingMethod(Enum):
     """Methods for the matching algorithm.
 
-    * ``LSTSQ``: :py:func:`least_squares_match`, based on
+    * ``LEASTSQUARES``: :py:func:`least_squares_match`, based on
       :py:func:`~scipy.optimize.least_squares`,
     * ``JACOBIAN``: :py:func:`.jacobian_match`.
     """
 
-    LSTSQ = 0
+    LEASTSQUARES = 0
     JACOBIAN = 1
 
 
@@ -42,9 +42,10 @@ def match(
     variables: VariableList,
     constraints: ObservableList,
     *,
-    method: MatchingMethod = MatchingMethod.LSTSQ,
+    method: MatchingMethod = MatchingMethod.LEASTSQUARES,
     verbose: int = 2,
     max_nfev: int = 1000,
+    lstsq_method: str | None = None,
     optim_kw: dict | None = None,
     **eval_kw,
 ) -> np.ndarray:
@@ -56,18 +57,20 @@ def match(
     Args:
         variables:      Variable parameters
         constraints:    Constraints to fulfill
-        method:         Matching algorithm: :py:attr:`MatchingMethod.LSTSQ` for
+        method:         Matching algorithm: :py:attr:`MatchingMethod.LEASTSQUARES` for
           :py:func:`least_squares_match` or :py:attr:`MatchingMethod.JACOBIAN`
           for :py:func:`.jacobian_match`,
         verbose:        Level of verbosity,
         max_nfev:       Maximum number of function evaluation,
+        lstsq_method: :py:func:`~scipy.optimize.least_squares` algorithm,
+          'trf', 'dogbox' or 'lm'. If :py:obj:`None`, use 'lm' for unbounded
+          problems with at least as many constraints as variables, 'trf'
+          otherwise. 'lm' supports neither bounds nor fewer constraints than
+          variables.
         optim_kw:       Dictionary of optimiser keyword arguments sent to
-          :py:func:`least_squares_match` or :py:func:`.jacobian_match`. For
-          :py:attr:`MatchingMethod.LSTSQ`, the
-          :py:func:`~scipy.optimize.least_squares` algorithm is selected with
-          the *lstsq_method* keyword: if omitted, 'lm' is used for unbounded
-          problems, 'trf' otherwise. The tolerances *ftol*, *xtol* and *gtol*
-          have the same meaning for both methods,
+          :py:func:`least_squares_match` or :py:func:`.jacobian_match`. The
+          tolerances *ftol*, *xtol* and *gtol* have the same meaning for both
+          methods,
 
     Keyword Args:
         \*\*eval_kw:    Evaluation keywords provided to the
@@ -98,15 +101,19 @@ def match(
     ntargets = constraints.flat_values.size
 
     if verbose >= 1:
-        print(
+        msg = (
             f"\n{ntargets} constraints, {len(variables)} variables,"
-            f" using method {method.name}\n"
+            f" using method {method.name}"
         )
+        if method == MatchingMethod.LEASTSQUARES and lstsq_method is not None:
+            msg += f" ({lstsq_method})"
+        print(msg + "\n")
 
     if method == MatchingMethod.JACOBIAN:
         solver = jacobian_match
-    elif method == MatchingMethod.LSTSQ:
+    elif method == MatchingMethod.LEASTSQUARES:
         solver = least_squares_match
+        optim_kw = {"lstsq_method": lstsq_method, **optim_kw}
     else:
         msg = f"Undefined matching method: {method}"
         raise AtError(msg)
@@ -140,9 +147,10 @@ def ring_match(
     constraints: ObservableList,
     *,
     copy: bool = False,
-    method: MatchingMethod = MatchingMethod.LSTSQ,
+    method: MatchingMethod = MatchingMethod.LEASTSQUARES,
     verbose: int = 2,
     max_nfev: int = 1000,
+    lstsq_method: str | None = None,
     **kwargs,
 ) -> Lattice | None:
     r"""Match constraints by varying variables.
@@ -156,7 +164,7 @@ def ring_match(
         constraints:    Constraints to fulfill
         copy:           If :py:obj:`True`, return a modified copy of *ring*, otherwise
           perform the match in-line
-        method:             Matching algorithm: :py:attr:`MatchingMethod.LSTSQ`
+        method:             Matching algorithm: :py:attr:`MatchingMethod.LEASTSQUARES`
           or :py:attr:`MatchingMethod.JACOBIAN`, see :py:func:`match`,
         verbose:            Level of verbosity,
         max_nfev:           Maximum number of function evaluation,
@@ -174,6 +182,11 @@ def ring_match(
           Default taken from the ObservableList,
         r_in (Orbit | None): Initial trajectory, used for
           :py:class:`.TrajectoryObservable`. Default taken from the ObservableList,
+        lstsq_method: :py:func:`~scipy.optimize.least_squares` algorithm,
+          'trf', 'dogbox' or 'lm'. If :py:obj:`None`, use 'lm' for unbounded
+          problems with at least as many constraints as variables, 'trf'
+          otherwise. 'lm' supports neither bounds nor fewer constraints than
+          variables.
         \*\*kwargs:         The other keyword arguments are sent to the
           matching algorithm, see *optim_kw* in :py:func:`match`.
 
@@ -210,6 +223,7 @@ def ring_match(
             method=method,
             verbose=verbose,
             max_nfev=max_nfev,
+            lstsq_method=lstsq_method,
             optim_kw=kwargs,
             **eval_kw,
         )
@@ -222,6 +236,7 @@ def ring_match(
             method=method,
             verbose=verbose,
             max_nfev=max_nfev,
+            lstsq_method=lstsq_method,
             optim_kw=kwargs,
             **eval_kw,
         )
