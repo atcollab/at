@@ -1,6 +1,7 @@
 """
 Closed orbit related functions
 """
+import math
 import numpy
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant, Orbit
@@ -316,6 +317,19 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
     if len(rem) > 0:
         raise AtError(f'Unexpected keywords for orbit6: {", ".join(rem)}')
 
+    if ring.particle.rest_energy == 0.0:
+        # noinspection PyUnusedLocal
+        def beta(r):
+            return 1.0
+    else:
+        gamma0 = ring.gamma
+        bg0 = math.sqrt(gamma0 * gamma0 - 1.0)
+
+        def beta(r):
+            bg = bg0 * (1.0+r[4])
+            bet = bg/math.sqrt(1.0 + bg*bg)
+            return bet
+
     l0 = get_s_pos(ring, len(ring))[0]
     f_rf = ring.get_rf_frequency()
     harm_number = round(f_rf*l0/ring.beta/clight)
@@ -331,7 +345,6 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
         ref_in = numpy.copy(guess)
 
     theta = numpy.zeros((6,))
-    theta[5] = ring.beta * clight * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
         dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
@@ -342,6 +355,7 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
     change = 1
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
+        theta[5] = beta(ref_in) * (clight * harm_number / f_rf - l0 / ring.beta)
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
         _ = internal_lpass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
         # the reference particle after one turn
