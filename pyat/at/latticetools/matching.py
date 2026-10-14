@@ -29,7 +29,7 @@ from ..lattice.lattice_variables import ElementVariable
 class MatchingMethod(Enum):
     """Methods for the matching algorithm.
 
-    * ``LEASTSQUARES``: :py:func:`least_squares_match`, based on
+    * ``LEASTSQUARES``: :py:func:`.least_squares_match`, based on
       :py:func:`~scipy.optimize.least_squares`,
     * ``JACOBIAN``: :py:func:`.jacobian_match`.
     """
@@ -51,14 +51,14 @@ def match(
 ) -> np.ndarray:
     r"""Observable matching.
 
-    Minimisation is performed by :py:func:`least_squares_match` or
+    Minimisation is performed by :py:func:`.least_squares_match` or
     :py:func:`.jacobian_match`, depending on *method*.
 
     Args:
         variables:      Variable parameters
         constraints:    Constraints to fulfill
         method:         Matching algorithm: :py:attr:`MatchingMethod.LEASTSQUARES` for
-          :py:func:`least_squares_match` or :py:attr:`MatchingMethod.JACOBIAN`
+          :py:func:`.least_squares_match` or :py:attr:`MatchingMethod.JACOBIAN`
           for :py:func:`.jacobian_match`,
         verbose:        Level of verbosity,
         max_nfev:       Maximum number of function evaluation,
@@ -68,7 +68,7 @@ def match(
           otherwise. 'lm' supports neither bounds nor fewer constraints than
           variables.
         optim_kw:       Dictionary of optimiser keyword arguments sent to
-          :py:func:`least_squares_match` or :py:func:`.jacobian_match`. The
+          :py:func:`.least_squares_match` or :py:func:`.jacobian_match`. The
           tolerances *ftol*, *xtol* and *gtol* have the same meaning for both
           methods,
 
@@ -155,7 +155,7 @@ def ring_match(
 ) -> Lattice | None:
     r"""Match constraints by varying variables.
 
-    Minimisation is performed by :py:func:`least_squares_match` or
+    Minimisation is performed by :py:func:`.least_squares_match` or
     :py:func:`.jacobian_match`, depending on *method*.
 
     Args:

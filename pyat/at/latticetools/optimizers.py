@@ -440,20 +440,20 @@ def jacobian_match(
 
     Keyword Args:
         \*\*eval_kw: Evaluation keywords passed to
-          :meth:`.VariableList.set`/`.get` and
+          :meth:`.VariableList.set`/:meth:`~.VariableList.get` and
           :meth:`.ObservableList.evaluate` (e.g. *ring*, *dp*, *dct*,
           *df*...). *ring* is needed if the variables or the constraints
           require a lattice.
 
     Returns:
-        :class:`scipy.optimize.OptimizeResult` with ``x``, ``success``,
-        ``status``, ``message``, ``nfev`` and ``fun`` (the raw,
-        unweighted deviations at ``x``). ``status`` follows
-        :func:`scipy.optimize.least_squares` (0: maximum number of
-        steps/evaluations, 1: ``gtol``, 2: ``ftol``, 3: ``xtol``, 4: both
-        ``ftol`` and ``xtol``), with in addition 5: ``tol`` and 6: no
-        decrease found in the line search. ``success`` is
-        ``status > 0``.
+        result: :class:`scipy.optimize.OptimizeResult` with ``x``,
+          ``success``, ``status``, ``message``, ``nfev`` and ``fun`` (the
+          raw, unweighted deviations at ``x``). ``status`` follows
+          :func:`scipy.optimize.least_squares` (0: maximum number of
+          steps/evaluations, 1: ``gtol``, 2: ``ftol``, 3: ``xtol``, 4: both
+          ``ftol`` and ``xtol``), with in addition 5: ``tol`` and 6: no
+          decrease found in the line search. ``success`` is
+          ``status > 0``.
 
     .. note::
 
@@ -558,8 +558,10 @@ def least_squares_match(
           problems with at least as many constraints as variables, 'trf'
           otherwise. 'lm' supports neither bounds nor fewer constraints than
           variables.
-        jac, ftol, xtol, gtol, loss, f_scale, diff_step, tr_solver, tr_options,
-          jac_sparsity, max_nfev: see :py:func:`~scipy.optimize.least_squares`.
+        jac, ftol, xtol, gtol, loss, f_scale: see
+          :py:func:`~scipy.optimize.least_squares`.
+        diff_step, tr_solver, tr_options, jac_sparsity, max_nfev: see
+          :py:func:`~scipy.optimize.least_squares`.
         x_scale:    Characteristic scale of each variable. If :py:obj:`None`,
           use the variable steps.
         err:        Value substituted for a constraint's deviation when it
@@ -571,8 +573,8 @@ def least_squares_match(
           *orbit*, *twiss_in*...).
 
     Returns:
-        :class:`scipy.optimize.OptimizeResult` returned by
-        :py:func:`~scipy.optimize.least_squares`.
+        result: :class:`scipy.optimize.OptimizeResult` returned by
+          :py:func:`~scipy.optimize.least_squares`.
     """
 
     def fun(vals) -> np.ndarray:
