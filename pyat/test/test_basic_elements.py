@@ -637,7 +637,7 @@ def test_variable_thin_multipole(rin, func):
         AmplitudeA=1e-3,
         FuncA=f,
         FuncDelay=0.005,
-        Periodic=False,
+        Periodic=0,
     )
     expected = v.track(np.array([0, 0, 0, 0, 0, 0.1]))
     np.testing.assert_allclose(expected[3], 4.0305e-05)
