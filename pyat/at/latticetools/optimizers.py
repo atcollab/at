@@ -593,6 +593,7 @@ def least_squares_match(
             lstsq_method = "trf"
         else:
             lstsq_method = "lm"
+    print(f"The least square method is {lstsq_method}\n")
     options = {
         "diff_step": diff_step,
         "tr_solver": tr_solver,

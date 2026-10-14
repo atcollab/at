@@ -105,8 +105,6 @@ def match(
             f"\n{ntargets} constraints, {len(variables)} variables,"
             f" using method {method.name}"
         )
-        if method == MatchingMethod.LEASTSQUARES and lstsq_method is not None:
-            msg += f" ({lstsq_method})"
         print(msg + "\n")
 
     if method == MatchingMethod.JACOBIAN:
