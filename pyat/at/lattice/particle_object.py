@@ -15,7 +15,7 @@ class Particle:
         "electron": {"rest_energy": e_mass, "charge": -1.0},
         "positron": {"rest_energy": e_mass, "charge": 1.0},
         "proton": {"rest_energy": p_mass, "charge": 1.0},
-        "antiproton": {"rest_energy": mu_mass, "charge": -1.0},
+        "antiproton": {"rest_energy": p_mass, "charge": -1.0},
         "posmuon": {"rest_energy": mu_mass, "charge": 1.0},
         "negmuon": {"rest_energy": mu_mass, "charge": -1.0},
     }

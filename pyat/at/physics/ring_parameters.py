@@ -151,8 +151,9 @@ def radiation_parameters(
         rp.sigma_l = nan
     else:
         rp.voltage = voltage
-        rp.phi_s = (pi - asin(U0 / voltage)) if U0 <= voltage else nan
-        nu_s = sqrt(abs(etac * ring.harmonic_number * voltage * cos(rp.phi_s)
+        egain = abs(ring.particle.charge) * voltage
+        rp.phi_s = (pi - asin(U0 / egain)) if U0 <= egain else nan
+        nu_s = sqrt(abs(etac * ring.harmonic_number * egain * cos(rp.phi_s)
                         / E0 / 2.0 / pi)) / beta
         rp.f_s = nu_s / revolution_period
         rp.sigma_l = beta * abs(etac) * circumference / 2.0 / pi / nu_s * rp.sigma_e
@@ -216,7 +217,7 @@ def envelope_parameters(
     alpha = 1.0 / rp.Tau
     rp.J = 4.0 * alpha / np.sum(alpha)
     rp.tunes6, _ = np.modf(ring.periodicity * beamdata.tunes)
-    rp.phi_s = pi - np.arcsin(rp.U0 / voltage)
+    rp.phi_s = pi - np.arcsin(rp.U0 / (abs(ring.particle.charge) * voltage))
     rp.voltage = voltage
     rp.f_s = rp.tunes6[2] * rev_freq
     rp.emittances = beamdata.mode_emittances

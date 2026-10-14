@@ -83,7 +83,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
     if (energy == 0.0) energy = Elem->Energy;
 
-    CavityPass(r_in,Elem->Length,Elem->Voltage/energy,Elem->Frequency,
+    CavityPass(r_in,Elem->Length,fabs(Param->charge)*Elem->Voltage/energy,Elem->Frequency,
             Elem->TimeLag,Elem->PhaseLag,num_particles);
     return Elem;
 }

@@ -246,8 +246,7 @@ def test_madx_parser(Parser, data: str, energy: float, particle: str, radiate: b
 
     assert sequences == ["cell_1", "ring_1"]
 
-    with pytest.warns(AtWarning):
-        ring = parser.lattice(use="ring.1")
+    ring = parser.lattice(use="ring.1")
     assert len(ring) == 22
     assert ring.energy == energy
     assert str(ring.particle) == particle
@@ -255,8 +254,7 @@ def test_madx_parser(Parser, data: str, energy: float, particle: str, radiate: b
     assert ring.is_6d is radiate
     assert_close(ring.get_s_pos(), expected_ring_pos)
 
-    with pytest.warns(AtWarning):
-        cell = parser.lattice(use="cell.1")
+    cell = parser.lattice(use="cell.1")
     assert len(cell) == 5
     assert cell.energy == 2.0e09
     assert str(cell.particle) == "positron"
@@ -281,8 +279,7 @@ def test_elegant_parser():
 
     assert sequences == ["CELL_1", "RING_1"]
 
-    with pytest.warns(AtWarning):
-        ring = parser.lattice(use="ring.1", particle="electron", energy=6.0e9)
+    ring = parser.lattice(use="ring.1", particle="electron", energy=6.0e9)
     assert len(ring) == 23
     assert ring.energy == 6.0e9
     assert str(ring.particle) == "electron"
@@ -290,8 +287,7 @@ def test_elegant_parser():
     assert ring.is_6d is False
     assert_close(ring.get_s_pos(), expected_ring_pos)
 
-    with pytest.warns(AtWarning):
-        cell = parser.lattice(use="cell.1", particle="positron", energy=2.0e9)
+    cell = parser.lattice(use="cell.1", particle="positron", energy=2.0e9)
     assert len(cell) == 5
     assert cell.energy == 2.0e09
     assert str(cell.particle) == "positron"

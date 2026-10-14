@@ -193,7 +193,9 @@ def get_timelag_fromU0(
     sgn = -1.0 if below else 1.0
     u0 = get_energy_loss(ring, method=method) / ring.periodicity
     freq = np.array([cav.Frequency for cav in ring.select(cavpts)])
-    rfv = np.array([cav.Voltage for cav in ring.select(cavpts)])
+    rfv = abs(ring.particle.charge) * np.array(
+        [cav.Voltage for cav in ring.select(cavpts)]
+    )
     tl0 = np.array([cav.TimeLag for cav in ring.select(cavpts)])
     try:
         frf = singlev(freq)

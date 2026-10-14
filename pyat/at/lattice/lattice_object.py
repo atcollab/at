@@ -754,12 +754,6 @@ class Lattice(list):
     def particle(self, particle: str | Particle):
         if isinstance(particle, str):
             particle = Particle(particle)
-        if particle.rest_energy != 0.0:
-            msg = (
-                "AT tracking still assumes beta==1\n"
-                "Make sure your particle is ultra-relativistic"
-            )
-            warnings.warn(AtWarning(msg), stacklevel=2)
         self._particle = particle
 
     def set_wake_turnhistory(self):
@@ -926,7 +920,8 @@ class Lattice(list):
         rest_energy = self.particle.rest_energy
         if rest_energy == 0.0:
             rest_energy = e_mass
-        return math.sqrt(self.energy**2 - rest_energy**2) / clight
+        pc = math.sqrt(self.energy**2 - rest_energy**2)
+        return pc / clight / abs(self.particle.charge)
 
     @property
     def is_6d(self) -> bool:

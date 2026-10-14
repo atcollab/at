@@ -66,7 +66,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     gamma0 = (Param->rest_energy > 0.0) ? atGamma(Param->energy, Elem->Energy, Param->rest_energy) : 0.0;
     check_error();
 
-    RFCavityPass(r_in, Elem->Length, Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
+    RFCavityPass(r_in, Elem->Length, fabs(Param->charge)*Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
                  Elem->PhaseLag, nturn, T0, gamma0, num_particles);
     return Elem;
 }
@@ -103,7 +103,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
 
-      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, gamma0, num_particles);
+      RFCavityPass(r_in, Length, fabs(charge)*Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, gamma0, num_particles);
 
     }
   else if (nrhs == 0)

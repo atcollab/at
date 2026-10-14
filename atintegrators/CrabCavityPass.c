@@ -122,8 +122,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         SigVV=Elem->SigVV;
     }
     energy = atEnergy(Param->energy, Elem->Energy); check_error(); check_error();
-    nvx = Elem->Vx;
-    nvy = Elem->Vy;
+    nvx = fabs(Param->charge)*Elem->Vx;
+    nvy = fabs(Param->charge)*Elem->Vy;
 
     if (SigPhi > 0.0)
         PhaseLag += atrandn_r(Param->common_rng, 0.0, SigPhi);
