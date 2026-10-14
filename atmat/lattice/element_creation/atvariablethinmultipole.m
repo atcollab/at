@@ -27,7 +27,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    FUNCA          turn-by-turn excitation kick list for PolynomA
 %    FUNCB          turn-by-turn excitation kick list for PolynomB
 %    FUNCDELAY      Value to substract from the particles 6th coordinate
-%    PERIODIC       If true (default) the user input kick list is repeated
+%    PERIODIC       If 1 (default) the user input kick list is repeated, otherwise, set to 0
 %    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
 %                   * t<t0: excitation amlpitude is zero
 %                   * t0<t<t1: exciation amplitude is linearly ramped up
@@ -96,7 +96,7 @@ modename = char(modename);
 [method,rsrc]   = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]       = getoption(rsrc,'Class','VariableThinMultipole');
 [maxorder,rsrc] = getoption(rsrc,'MaxOrder',0);
-[periodic,rsrc] = getoption(rsrc,'Periodic',true);
+[periodic,rsrc] = getoption(rsrc,'Periodic',1);
 [pola,rsrc]     = getoption(rsrc,'PolynomA',[]);
 [polb,rsrc]     = getoption(rsrc,'PolynomB',[]);
 rsrc            = struct(rsrc{:});
