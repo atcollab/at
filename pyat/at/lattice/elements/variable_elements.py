@@ -18,6 +18,7 @@ class ACMode(IntEnum):
     WHITENOISE = 1
     ARBITRARY = 2
     INTERPOLATION_TABLE = 3
+    DERIVATIVE_TABLE = 4
 
 
 class VariableThinMultipole(Element):
@@ -40,6 +41,7 @@ class VariableThinMultipole(Element):
         NSamplesB=int,
         FuncA=_anyarray,
         FuncB=_anyarray,
+        FuncDelay=float,
         FinterpolateA=_array,
         FinterpolateB=_array,
         TinterpolateA=_array,
@@ -105,6 +107,11 @@ class VariableThinMultipole(Element):
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
             >>> fvst = at.VariableThinMultipole(
             ...     "FvsT", at.ACMode.INTERPOLATION_TABLE, AmplitudeB=amp, FuncB=func, ...)
+            >>> derivative_table = at.VariableThinMultiple(
+            ...     "FUNC", at.ACMoode.DERIVATIVE_TABLE, AmplitudA=amp, ...
+            ...     FuncA=np.array([[1,.1,0.01],[0.2,0.02,0.002]]), ...
+            ...     FuncDelay=0.2)
+
 
         .. note::
 
@@ -116,6 +123,15 @@ class VariableThinMultipole(Element):
             * For ``mode=at.ACMode.INTERPOLATION_TABLE`` the ``Fnc(A,B)`` corresponding to the
               ``Amplitude(A,B)`` needs to be of shape (2, n) with n >= 2. The first row
               is time in seconds, and the second row is the function value.
+            * For ``mode=at.ACMode.DERIVATIVE_TABLE`` Func(A,B) could be an array of size
+              (m,n) where the n coefficients in the first row are the function values n turns,
+              and the other m-1 rows are higher order derivatives with respect to ct,
+              i.e. on the kth turn the ith component of the Polynom(A/B) seen by a particle
+              with 6th coordinate ct is calculated as,
+                .. math:: \begin{equation}
+                          Amp_i(A/B)[f(0,k) + (ct-delay) f(1,k) + ...
+                                            + (ct-delay)^m f(m,k) ]
+                          \end{equation}
         """
 
         def _default_amplitudes(ampa, ampb):
@@ -183,6 +199,8 @@ class VariableThinMultipole(Element):
                 self._set_arb(ab, **kwargs)
             if self.Mode == ACMode.INTERPOLATION_TABLE:
                 self._set_interpolate(ab, **kwargs)
+            if self.Mode == ACMode.DERIVATIVE_TABLE:
+                self._set_derivative(ab, **kwargs)
 
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop("Frequency" + ab, 0)
@@ -235,3 +253,16 @@ class VariableThinMultipole(Element):
         setattr(self, "Tinterpolate" + ab, tsort)
         setattr(self, "Finterpolate" + ab, fsort)
         setattr(self, "NSamples" + ab, nsamp)
+
+    def _set_derivative(self, ab, **kwargs):
+        func = np.array(kwargs.pop("Func" + ab))
+        ndim = np.ndim(func)
+        if ndim == 1:
+            nsamp = len(func)
+            dorder = 0
+        else:
+            rows, nsamp = np.shape(func)
+            dorder = rows - 1
+        setattr(self, "NSamples" + ab, nsamp)
+        setattr(self, "Dorder" + ab, dorder)
+        self.FuncDelay = kwargs.setdefault("FuncDelay", 0)
