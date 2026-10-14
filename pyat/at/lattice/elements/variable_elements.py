@@ -48,7 +48,7 @@ class VariableThinMultipole(Element):
         TinterpolateA=_array,
         TinterpolateB=_array,
         Ramps=_array,
-        Periodic=bool,
+        Periodic=int,
     )
 
     def __init__(
@@ -81,7 +81,7 @@ class VariableThinMultipole(Element):
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
             FuncA(list|array): User defined tbt kick list for PolynomA
             FuncB(list|array): User defined tbt kick list for PolynomB
-            Periodic(bool): If True (default) the user defined kick is repeated
+            Periodic(int): If 1 (default) the user defined kick is repeated, otherwise, set to 0
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
                          of the excitation
 
@@ -167,7 +167,7 @@ class VariableThinMultipole(Element):
         self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
         # after the definition of MaxOrder we can create Amplitudes
         self._set_amplitudes(AmplitudeA, AmplitudeB)
-        self.Periodic = kwargs.pop("Periodic", True)
+        self.Periodic = kwargs.pop("Periodic", 1)
         self._set_params(AmplitudeB, "B", **kwargs)
         self._set_params(AmplitudeA, "A", **kwargs)
         self.PolynomA = kwargs.get("PolynomA", np.zeros(self.MaxOrder + 1))
