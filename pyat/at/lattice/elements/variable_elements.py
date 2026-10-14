@@ -107,7 +107,7 @@ class VariableThinMultipole(Element):
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
             >>> fvst = at.VariableThinMultipole(
             ...     "FvsT", at.ACMode.INTERPOLATION_TABLE, AmplitudeB=amp, FuncB=func, ...)
-            >>> derivative_table = at.VariableThinMultiple(
+            >>> derivative_table = at.VariableThinMultipole(
             ...     "FUNC", at.ACMode.DERIVATIVE_TABLE, AmplitudA=amp, ...
             ...     FuncA=np.array([[1,.1,0.01],[0.2,0.02,0.002]]), ...
             ...     FuncDelay=0.2)
