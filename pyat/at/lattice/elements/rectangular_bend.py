@@ -30,11 +30,11 @@ def rbendtune(self: Dipole) -> None:
 
     """
 
-    def cross(x0r: float):
+    def cross(x0r):
         """Return the horizontal exit angle of the reference particle."""
-        elem.X0ref = x0r
+        elem.X0ref = float(x0r[0])
         out = elem.track(np.zeros(6))
-        return out[1]
+        return out[1:2]
 
     def checkmul(el):
         """Check if there are multipoles."""
@@ -53,7 +53,7 @@ def rbendtune(self: Dipole) -> None:
 
         # Search if there are multipoles
         if checkmul(self):
-            x0ref = float(fsolve(cross, x0ref))
+            x0ref = float(fsolve(cross, [x0ref])[0])
 
         elem.X0ref = x0ref
         elem.RefDZ = 0.0
