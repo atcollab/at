@@ -42,6 +42,7 @@ class VariableThinMultipole(Element):
         FuncA=_anyarray,
         FuncB=_anyarray,
         FuncDelay=float,
+        DOrder=float,
         FinterpolateA=_array,
         FinterpolateB=_array,
         TinterpolateA=_array,
@@ -264,5 +265,5 @@ class VariableThinMultipole(Element):
             rows, nsamp = np.shape(func)
             dorder = rows - 1
         setattr(self, "NSamples" + ab, nsamp)
-        setattr(self, "Dorder" + ab, dorder)
+        setattr(self, "DOrder" + ab, dorder)
         self.FuncDelay = kwargs.setdefault("FuncDelay", 0)
