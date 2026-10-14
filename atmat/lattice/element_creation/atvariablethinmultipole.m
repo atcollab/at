@@ -191,7 +191,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         if isfield(rsrc,funcarg)
           [rows, nsamples] = size(rsrc.(funcarg));
           rsrc.(strcat('NSamples',ab)) = nsamples;
-          rsrc.(strcat('Dorder', ab)) = rows-1;
+          rsrc.(strcat('DOrder', ab)) = rows-1;
         end
         if ~isfield(rsrc,'FuncDelay')
           rsrc.FuncDelay = 0;
