@@ -171,13 +171,13 @@ def get_timelag_fromU0(
         return vals[0]
 
     def eq(x, freq, rfv, tl0, u0):
-        omf = 2 * np.pi * freq / clight
+        omf = 2 * np.pi * freq / bclight
         if u0 > 0.0:
             eq1 = (np.sum(-rfv * np.sin(omf * (x - tl0))) - u0) / u0
         else:
             eq1 = np.sum(-rfv * np.sin(omf * (x - tl0)))
         eq2 = np.sum(-omf * rfv * np.cos(omf * (x - tl0)))
-        if eq2 > 0:
+        if sgn * eq2 > 0:
             return np.sqrt(eq1**2 + eq2**2)
         else:
             return abs(eq1)
@@ -186,6 +186,11 @@ def get_timelag_fromU0(
         cavpts = get_bool_index(ring, RFCavity)
     if ts_tol is None:
         ts_tol = DConstant.TStol
+    bclight = ring.beta * clight
+    below = False
+    if ring.particle.rest_energy != 0.0:
+        below = ring.disable_6d(copy=True).slip_factor > 0.0
+    sgn = -1.0 if below else 1.0
     u0 = get_energy_loss(ring, method=method) / ring.periodicity
     freq = np.array([cav.Frequency for cav in ring.select(cavpts)])
     rfv = np.array([cav.Voltage for cav in ring.select(cavpts)])
@@ -194,7 +199,7 @@ def get_timelag_fromU0(
         frf = singlev(freq)
         tml = singlev(tl0)
     except AtError:
-        ctmax = clight / np.amin(freq) / 2
+        ctmax = bclight / np.amin(freq) / 2
         tt0 = tl0[np.argmin(freq)]
         bounds = (-ctmax, ctmax)
         args = (freq, rfv, tl0, u0)
@@ -235,7 +240,10 @@ def get_timelag_fromU0(
             )
             raise AtError(err_string)
 
-        timelag = clight / (2 * np.pi * frf) * np.arcsin(u0 / vrf)
+        phis = np.arcsin(u0 / vrf)
+        if below:
+            phis = np.pi - phis
+        timelag = bclight / (2 * np.pi * frf) * phis
         ts = timelag - tml
         timelag *= np.ones(ring.refcount(cavpts))
     return timelag, ts
