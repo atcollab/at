@@ -54,7 +54,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    m-1 rows with higher order derivatives with respect to ct, i.e. on the kth turn
 %    the ith component of the Polynom(A/B) seen by a particle with 6th coordinate ct
 %    is calculated as,
-%          amp(A/B)[i] * func(0,k) + (ct-delay) * func(1,k) + ...
+%          amp(A/B)[i] * func(1,k) + (ct-delay) * func(2,k) + ...
 %                                      + (ct-delay)**m * func(m,k)
 %
 %  EXAMPLES
