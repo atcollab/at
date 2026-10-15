@@ -1,46 +1,48 @@
-function Elem = atinsertiondevicekickmap( fname, ...
-                                          method, ...
-                                          filename, ...
-                                          Normalization_energy, ...
-                                          Nslice, ...
-                                          length, ...
-                                          xkick, ...
-                                          ykick, ...
-                                          xkick1, ...
-                                          ykick1, ...
-                                          xtable, ...
-                                          ytable ...
-                                        )
-% atinsertiondevicekickmap creates an insertion device kick-map element
-% Elem = atinsetiondevicekickmap( fname, ...
-%                                 method, ...
-%                                 filename, ...
-%                                 Normalization_energy, ...
-%                                 Nslice, ...
-%                                 length, ...
-%                                 xkick, ...
-%                                 ykick, ...
-%                                 xkick1, ...
-%                                 ykick1, ...
-%                                 xtable, ...
-%                                 ytable ...
-%                               )
+function Elem = atinsertiondevicekickmap(fname,varargin)
+%ATINSERTIONDEVICEKICKMAP Create an insertion device kick-map element
 %
-% fname     family name
-% method    'IdTablePass'
-% filename  name of the file used to create the element
-% Normalization_energy    energy to which the field table was scaled
-% Nslice    number of slices (1 means the wiggler is represented by a
-%           single kick in the center of the device).
-% length    length of the element
-% NumX      number of horizontal points
-% NumY      number of vertical points
-% xkick     list of x positions
-% ykick     list of y positions
-% xkick1    ---
-% ykick1    ---
-% xtable    horizontal plane table
-% ytable    vertical plane table
+% ELEM=ATINSERTIONDEVICEKICKMAP(FAMNAME)
+%   Create an empty zero-length insertion device normalized at 0 GeV, with
+%   PASSMETHOD='DriftPass'.
+%
+% ELEM=ATINSERTIONDEVICEKICKMAP(FAMNAME,NSLICE,FILENAME,...
+%   NORMALIZATION_ENERGY,[PASSMETHOD],'FIELD1',VALUE1,...)
+%   Create an element using the same positional metadata order as pyAT.
+%   PASSMETHOD defaults to 'DriftPass'. The kick tables and all other
+%   element attributes are supplied as field/value pairs.
+%
+% ELEM=ATINSERTIONDEVICEKICKMAP(FAMNAME,[PASSMETHOD],...
+%   'FIELD1',VALUE1,...)
+%   Reconstruct an element entirely from field/value pairs, as used by
+%   lattice serialization.
+%
+% Inputs:
+%   FAMNAME              Family name
+%   NSLICE               Number of integration slices
+%   FILENAME             Source kick-map file name
+%   NORMALIZATION_ENERGY Energy in GeV used to normalize the kick map
+%   PASSMETHOD           Tracking function. Default: 'DriftPass'
+%
+% Field/value pairs:
+%   'Length'             Insertion device length [m]
+%   'xkick', 'ykick'     Second-order horizontal and vertical kick tables
+%   'xkick1', 'ykick1'   First-order horizontal and vertical kick tables
+%   'xtable', 'ytable'   Horizontal and vertical table coordinates
+%   'KickmapStore'       Structure of named kick maps. Each entry contains
+%                        Filename_in, Normalization_energy, Nslice, Length,
+%                        xkick, ykick, xkick1, ykick1, xtable and ytable
+%   'ActiveKickmap'      Name of the KickmapStore entry currently copied to
+%                        the element tracking fields
+%
+% Additional standard AT element fields may also be supplied as field/value
+% pairs. PassMethod may equivalently be supplied as a 'PassMethod' field.
+%
+% Examples:
+%   emptyid = atinsertiondevicekickmap('ID');
+%   id = atinsertiondevicekickmap('ID',25,'id_kicks.txt',2.75,...
+%       'IdTablePass','Length',2.0,...
+%       'xkick',xkick,'ykick',ykick,...
+%       'xkick1',xkick1,'ykick1',ykick1,'xtable',x,'ytable',y);
 %
 % The tracking method is described in
 % P. Elleaume, "A new approach to the electron beam dynamics in undulators
@@ -54,18 +56,25 @@ function Elem = atinsertiondevicekickmap( fname, ...
 % 24-05-2023:  blanco-garcia, added for compatibility with pyat
 %---------------------------------------------------------------------------
 
-Elem.FamName = fname;
-Elem.PassMethod = method;
-Elem.Filename_in = filename;
-Elem.Normalization_energy = Normalization_energy;
-Elem.Nslice = Nslice;
-Elem.Length= length;
-Elem.xtable = xtable;
-Elem.ytable = ytable;
-Elem.xkick = xkick;
-Elem.ykick = ykick;
-Elem.xkick1 = xkick1;
-Elem.ykick1 = ykick1;
-Elem.Class = 'InsertionDeviceKickMap';
+nslice = 1;
+kickmapFilename = '';
+normalizationEnergy = 0.0;
+args = varargin;
 
-return
+if ~isempty(args) && isnumeric(args{1})
+    if length(args) < 3
+        error('AT:WrongArgument', ...
+            ['NSLICE, FILENAME and NORMALIZATION_ENERGY must be ' ...
+             'supplied together']);
+    end
+    nslice = args{1};
+    kickmapFilename = args{2};
+    normalizationEnergy = args{3};
+    args(1:3) = [];
+end
+
+[rsrc,method] = decodeatargs({'DriftPass'},args);
+Elem = atbaselem(fname,method,'Class','InsertionDeviceKickMap', ...
+    'Filename_in',kickmapFilename, ...
+    'Normalization_energy',normalizationEnergy, ...
+    'Nslice',nslice,rsrc{:});
