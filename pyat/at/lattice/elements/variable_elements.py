@@ -256,7 +256,11 @@ class VariableThinMultipole(Element):
         setattr(self, "NSamples" + ab, nsamp)
 
     def _set_derivative(self, ab, **kwargs):
-        func = np.array(kwargs.pop("Func" + ab))
+        func = kwargs.pop("Func" + ab, None)
+        if func is None:
+            msg = "Please provide a value for Func" + ab
+            raise TypeError(msg)
+        func = np.array(func)
         ndim = np.ndim(func)
         if ndim == 1:
             nsamp = len(func)
