@@ -728,10 +728,10 @@ class Cavity(XsElement):
         "frequency": "Frequency",
     }
 
-    def _set_xs_lag(self, atparams: dict):
+    def _set_xs_lag(self, atparams: dict, beta0: float = 1.0):
         freq = atparams["Frequency"]
         tl = atparams.get("TimeLag", 0.0)
-        pl = 180.0 - 360.0 * tl * freq / cst.clight
+        pl = 180.0 - 360.0 * tl * freq / (beta0 * cst.clight)
         self["lag"] = pl
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
@@ -941,8 +941,8 @@ class XsLine:
                 lag = getattr(cav, "_phaselag", 0.0)
                 with contextlib.suppress(AttributeError):
                     delattr(cav, "_phaselag")
-                tl = (180.0 - lag) * cst.clight / 360.0 / cav.Frequency
-                cav.Timelag = tl
+                tl = (180.0 - lag) * beta0 * cst.clight / 360.0 / cav.Frequency
+                cav.TimeLag = tl
 
         if in_file := getattr(self, "in_file", ""):
             kwargs["in_file"] = in_file
@@ -1069,11 +1069,15 @@ class XsLine:
             return names
 
         element_names = unique_names([el.FamName for el in ring])
+        elements = {
+            nm: XsElement.static_from_at(el, match_model=match_model)
+            for nm, el in zip(element_names, ring, strict=True)
+        }
+        for nm, el in zip(element_names, ring, strict=True):
+            if isinstance(elements[nm], Cavity):
+                elements[nm]._set_xs_lag(el.to_file(), beta0=ring.beta)
         return cls(
-            elements={
-                nm: XsElement.static_from_at(el, match_model=match_model)
-                for nm, el in zip(element_names, ring, strict=True)
-            },
+            elements=elements,
             element_names=element_names,
             particle_ref=refpart(ring),
             name=ring.name,
