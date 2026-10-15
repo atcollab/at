@@ -308,6 +308,10 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
             result = makearray(value)
         elif value.startswith("struct"):
             result = dict(makedir(argsplit(value[7:-1])))
+        elif value == "false":
+            result = False
+        elif value == "true":
+            result = True
         else:
             result = eval(value)
         return result
