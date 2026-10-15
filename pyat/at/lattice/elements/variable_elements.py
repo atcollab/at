@@ -42,7 +42,7 @@ class VariableThinMultipole(Element):
         FuncA=_anyarray,
         FuncB=_anyarray,
         FuncDelay=float,
-        DOrder=float,
+        DOrder=int,
         FinterpolateA=_array,
         FinterpolateB=_array,
         TinterpolateA=_array,
