@@ -5,6 +5,7 @@
 *.mexa64 binary
 *.mexw64 binary
 *.mexmaci64 binary
+*.mexmaca64 binary
 *.mlapp binary
 *.mldatx binary
 *.mlproj binary

@@ -12,7 +12,7 @@ import at
 # set point for the passive cavity
 volt_set = 1e5
 
-parking_detune = 50e3  # initial detuning for the passive cavity
+parking_detune = 35e3  # initial detuning for the passive cavity
 
 I0 = 400e-3  # Total Current [A]
 
@@ -30,8 +30,9 @@ ring_dict = {
 
 # main cavity resonator parameters
 beta_main = 1.9
-QL = 3688
-Rsl = 0.32e6
+
+Q0 = 3688*(1+beta_main)
+Rs0 = 0.32e6*(1+beta_main)
 Nmain = 4
 
 
@@ -41,7 +42,7 @@ Nslice = 1
 nparts_per_bunch = 1
 Nparts = int(Nbunches * nparts_per_bunch)
 
-Nturns = 50000
+Nturns = 100000
 
 sigma_matrix = at.sigma_matrix(
     betax=1,
@@ -85,7 +86,7 @@ simple_ring.set_cavity_phase()
 ## setup parked cavity
 psi_parked = np.arctan(
     2
-    * QL
+    * Q0 / (1 + beta_main)
     * (1 - simple_ring.rf_frequency / (simple_ring.rf_frequency + parking_detune))
 )
 parked_cav = at.RFCavity(
@@ -102,29 +103,32 @@ simple_ring.insert(1, parked_cav)
 # add beamloading
 at.add_beamloading(
     simple_ring,
-    QL,
-    Nmain * Rsl,
+    Q0,
+    Nmain * Rs0,
+    beta_main,
     cavpts=[0],
     Nslice=Nslice,
-    VoltGain=1.0,
-    PhaseGain=0.001,
+    Gain=[1e-4,1e-4],
     cavitymode=at.CavityMode.ACTIVE,
-    fbmode=at.FeedbackMode.ONETURN,
+    fbmode=at.FeedbackMode.PROP,
+    TunerGain=0.01,
+    TunerAveragingPeriod=500,
+    TuneOffset=0.0
 )
 
 at.add_beamloading(
     simple_ring,
-    QL,
-    Rsl,
+    Q0,
+    Rs0,
+    beta_main,
     detune=parking_detune,
     cavpts=[1],
     Nslice=Nslice,
     cavitymode=at.CavityMode.PASSIVE_SETVOLTAGE,
-    PhaseGain=0.00,
     passive_voltage=volt_set,
-    buffersize=1000,
-    windowlength=1000,
-    fbmode=at.FeedbackMode.WINDOW,
+    TunerGain=0.0,
+    TunerAveragingPeriod=500,
+    TunerOffset=0.0
 )
 
 # at.add_beamloading(simple_ring, QL, Rsl, detune=parking_detune, cavpts=[1],
@@ -142,7 +146,7 @@ all_dp_means = np.zeros((Nbunches, Nturns))
 all_z_stds = np.zeros((Nbunches, Nturns))
 all_dp_stds = np.zeros((Nbunches, Nturns))
 
-all_Vg_main = np.zeros((4, Nturns))
+all_Vg_main = np.zeros((3, Nturns))
 all_Vb_main = np.zeros((2, Nturns))
 
 all_Vb_park = np.zeros((2, Nturns))
@@ -157,7 +161,7 @@ for iturn in np.arange(Nturns):
 
     _ = simple_ring.track(parts, in_place=True, refpts=None, nturns=1)
     if iturn == turn_passive_fb_on:
-        simple_ring[1].PhaseGain = 0.001
+        simple_ring[1].TunerGain = 0.05
 
     all_z_means[:, iturn] = bmon.means[5, :, 0]
     all_dp_means[:, iturn] = bmon.means[4, :, 0]

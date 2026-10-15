@@ -7,7 +7,7 @@ from __future__ import annotations
 __all__ = ["load_m", "load_mat", "load_var", "save_m", "save_mat"]
 
 import sys
-from collections.abc import Generator, Sequence, Mapping, Iterator, Iterable
+from collections.abc import Generator, Iterable, Iterator, Mapping, Sequence
 from math import isfinite
 from pathlib import Path
 from typing import Any
@@ -19,8 +19,8 @@ import scipy.io
 
 # imports necessary in 'globals()' for 'eval'
 from numpy import array  # noqa: F401
-from numpy import nan as NaN  # noqa: F401
 from numpy import uint8  # noqa: F401
+from numpy import nan as NaN  # noqa: F401
 
 from ..lattice import (
     AtError,
@@ -37,9 +37,9 @@ from .utils import (
     _CLASS_MAP,
     RingParam,
     _drop_attrs,
+    element_from_dict,
     keep_elements,
     split_ignoring_parentheses,
-    element_from_dict,
 )
 
 # Translation of RingParam attributes
@@ -308,6 +308,10 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
             result = makearray(value)
         elif value.startswith("struct"):
             result = dict(makedir(argsplit(value[7:-1])))
+        elif value == "false":
+            result = False
+        elif value == "true":
+            result = True
         else:
             result = eval(value)
         return result
