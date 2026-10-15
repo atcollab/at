@@ -42,12 +42,7 @@ class WakeElement(Collective, Element):
             NormFact (Tuple[float,...]):    Normalization for the 3 planes,
               to account for beta function at the observation point for
               example. Default: (1,1,1)
-            QuadWake_Offset (Tuple[float,float]): Defines the offset used for
-              the generation of the quadrupolar wake for QX and QY. This value
-              is then removed from the slice offset before computing the kick.
-              This is needed if the generated wake was at (e.g.) 10mm horizontal
-              offset and the beam has an orbit offset at this element. 
-              Default: [0.0, 0.0] for [QX_Offset, QY_Offset]. 
+            
                
 """
         kwargs.setdefault('PassMethod', self.default_pass[True])
