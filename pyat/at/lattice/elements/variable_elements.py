@@ -131,7 +131,7 @@ class VariableThinMultipole(Element):
               with 6th coordinate ct is calculated as,
                 .. math:: \begin{equation}
                           Amp_i(A/B)[f(0,k) + (ct-delay) f(1,k) + ...
-                                            + (ct-delay)^m f(m-1,k) ]
+                                            + (ct-delay)^(m-1) f(m-1,k) ]
                           \end{equation}
         """
 
