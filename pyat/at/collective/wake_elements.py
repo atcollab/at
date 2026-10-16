@@ -54,7 +54,6 @@ class WakeElement(Collective, Element):
         self._turnhistory = None    # Defined here to avoid warning
         self.clear_history(ring=ring)
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
-        self.QuadWake_Offset = kwargs.pop('QuadWake_Offset', [0.0,0.0])
         self._build(wake)
         if zcuts is not None:
             self.ZCuts = zcuts
