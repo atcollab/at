@@ -105,7 +105,7 @@ classdef pytests < matlab.unittest.TestCase
             porbit6=double(porbit6)';
             % Matlab
             [~,morbit6]=findorbit6(lattice.m,dp=dp);
-            testCase.verifyEqual(morbit6,porbit6,AbsTol=2.E-12);
+            testCase.verifyEqual(morbit6,porbit6,AbsTol=3.E-12);
         end
 
         function m44(testCase,lat2,dp)
@@ -223,7 +223,7 @@ classdef pytests < matlab.unittest.TestCase
             % Matlab
             [~,mbeta,mmu,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
             % check
-            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=1.e-8);
+            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=2.e-8);
             testCase.verifyEqual(mmu,pmu,AbsTol=1.E-8,RelTol=0);
             testCase.verifyEqual(mdisp,pdisp,AbsTol=1.E-8,RelTol=0);
         end

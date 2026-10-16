@@ -13,12 +13,9 @@ void LongtAperturePass(double *r_in, double *limits, int num_particles)
      * arrays
      * limits has 4 elements: (MinDP, MaxDP, MinCT, MaxCT)
      */
-    int c;
-    double *r6;
-    for (c=0; c<num_particles; c++) {
-        r6 = r_in+c*6;
-        if (!atIsNaN(r6[0]))
-        {
+    for (int c=0; c<num_particles; c++) {
+        double *r6 = r_in+c*6;
+        if (!atIsNaN(r6[0])) {
             /*  check if this particle is already marked as lost */
             checkiflostLongtRectangularAp(r6, limits);
         }
