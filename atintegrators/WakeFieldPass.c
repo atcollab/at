@@ -28,6 +28,13 @@ struct elem
   double *T2;
 };
 
+void test_apply_all(double *r_in, int num_particles, double *T_arr){
+    int c=0;
+    for(c=0; c<num_particles; c++){
+       double *r6 = r_in+c*6;
+       ATaddvv(r6, T_arr);
+    }
+}
 
 void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunch,
                    double *bunch_spos,double *bunch_currents,struct elem *Elem) {
@@ -80,6 +87,8 @@ void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunc
     iptr = (int *) dptr;
     pslice = iptr; iptr += num_particles;
 
+    if (T1) test_apply_all(r_in, num_particles, T1);
+    
     /*slices beam and compute kick*/
     rotate_table_history(nturns,nslice*nbunch,turnhistory,circumference);
     slice_bunch(r_in,num_particles,nslice,nturns,nbunch,bunch_spos,bunch_currents,
@@ -97,16 +106,16 @@ void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunc
         double *r6 = r_in+c*6;
         int islice=pslice[c];
         
-        if (T1) ATaddvv(r6, T1);
-        
+       
         if (!atIsNaN(r6[0])) {
             r6[4] += kz[islice];
             r6[1] += (kx[islice]+r6[0]*kx2[islice]+kcx[islice])*(1+r6[4]);
             r6[3] += (ky[islice]+r6[2]*ky2[islice]+kcy[islice])*(1+r6[4]);
         }
         
-        if (T2) ATaddvv(r6, T2);
     }
+    
+    if (T2) test_apply_all(r_in, num_particles, T2);
     atFree(buffer);
 }
 
