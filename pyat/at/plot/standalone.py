@@ -304,10 +304,10 @@ def plot_RF_bucket_hamiltonian(
 
     hamiltonian = T
     # Iteration over all lattice cavities
-    for rfcav in ring[RFCavity]:
+    for rfcav in ring.select(RFCavity):
         Voltage = rfcav.Voltage
         HarmNumber = rfcav.HarmNumber
-        TimeLag = rfcav.TimeLag
+        TimeLag = getattr(rfcav, "TimeLag", 0.0)
 
         phi_s = TimeLag * 2 * np.pi * rfcav.Frequency / ring.beta / clight
         phi = (np.pi - phi_s) + \
