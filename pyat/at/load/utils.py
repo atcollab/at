@@ -184,12 +184,11 @@ def keep_elements(ring: Lattice) -> Generator[Element, None, None]:
 def find_class(elem: dict, *, index: int | None = None, quiet: bool = True) -> str:
     """Deduce the class of an element from its attributes.
 
-    `find_class` looks first at the "Class" field, if existing. It then tries to deduce
-    the class from "FamName", from "PassMethod", and finally form the element contents.
+    `find_class` tries to deduce the class from "FamName", from "PassMethod",
+    and finally form the element contents.
 
     Args:
-        elem:           The dictionary of keyword arguments passed to the
-                        Element constructor.
+        elem:           Dictionary of element attributes.
         quiet:          Suppress the warning for non-standard classes
         index:          Element index in the lattice
 
@@ -254,7 +253,8 @@ def find_class(elem: dict, *, index: int | None = None, quiet: bool = True) -> s
     elif _hasattrs(elem, "GCR"):
         return "Monitor"
     else:
-        _warn(index, "No class found, using 'Marker'.", elem)
+        if not quiet:
+            _warn(index, "No class found, using 'Marker'.", elem)
         return "Marker"
 
 
@@ -267,6 +267,8 @@ def element_from_dict(
 
     Parameters:
         elem_dict:      Dictionary of element attributes
+        index:          Element index in the lattice
+        quiet:          Suppress the warning for undefined classes
 
     Returns:
         elem (Element): new :py:class:`.Element`

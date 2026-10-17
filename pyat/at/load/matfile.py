@@ -415,8 +415,9 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
+        quiet = params.pop("quiet", False)
         for index, elem in enumerate(latt):
-            yield element_from_dict(elem, index=index)
+            yield element_from_dict(elem, index=index, quiet=quiet)
 
     return Lattice(
         ringparam_filter, var_generator, matlat, iterator=params_filter, **kwargs
