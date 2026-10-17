@@ -116,8 +116,6 @@ def test_find_Aperture():
         {"Voltage": 2.5e6, "FamName": "fam"},
         {"Frequency": 5.0e8, "FamName": "fam"},
         {"HarmNumber": 1000, "FamName": "fam"},
-        {"PhaseLag": 0, "FamName": "fam"},
-        {"TimeLag": 0.0, "FamName": "fam"},
     ),
 )
 def test_find_RFCavity(elem_kwargs):
@@ -132,10 +130,7 @@ def test_find_Monitor():
 @pytest.mark.parametrize(
     "elem_kwargs",
     (
-        {"FullGap": 0.05, "FamName": "fam"},
-        {"FringeInt1": 0.5, "FamName": "fam"},
-        {"FringeInt2": 0.5, "FamName": "fam"},
-        {"gK": 0.03, "FamName": "fam"},
+        {"BendingAngle": 0.05, "FamName": "fam"},
         {"EntranceAngle": 0.05, "FamName": "fam"},
         {"ExitAngle": 0.05, "FamName": "fam"},
     ),

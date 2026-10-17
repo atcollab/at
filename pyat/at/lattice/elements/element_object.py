@@ -292,13 +292,13 @@ class Element:
         dct = {
             # Rename some of the attributes for file compatibility
             self._convert_attr.get(k, k): encoder(v)
-            for k, v in self.items()
+            for k, v in vars(self).items()
         }
         dct["Class"] = getattr(self, "_file_classname", self.__class__.__name__)
         return dct
 
     @classmethod
-    def from_file(
+    def new_from_dict(
         cls,
         FamName: str = "-",
         Length: float = 0.0,
@@ -334,12 +334,18 @@ class Element:
         return element
 
     @classmethod
-    def from_args(cls, *elem_args, **elem_dict) -> Element:
-        """Generate an Element from a list of arguments.
+    def init_from_dict(cls, **elem_dict) -> Element:
+        """Generate an Element from a dictionary of attributes.
 
         Returns:
             elem(Element):       :py:class:`.Element`
         """
+        # Separate the positional arguments
+        elem_args = [
+            arg
+            for attr in cls._BUILD_ATTRIBUTES
+            if (arg := elem_dict.pop(attr, None)) is not None
+        ]
         # Remove the transformation attributes
         trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
         # Create the element

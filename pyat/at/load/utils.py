@@ -141,7 +141,7 @@ def hide_under(key: str) -> str:
     """Hide leading underscores in attribute names.
 
     Leading underscores are not allowed in Matlab field names, so they are prepended
-    with a x when saving to file.
+    with an x when saving to file.
     """
     return f"x{key}" if key.startswith("_") else key
 
@@ -188,7 +188,7 @@ def find_class(elem: dict, *, index: int | None = None, quiet: bool = True) -> s
     the class from "FamName", from "PassMethod", and finally form the element contents.
 
     Args:
-        elem_dict:      The dictionary of keyword arguments passed to the
+        elem:           The dictionary of keyword arguments passed to the
                         Element constructor.
         quiet:          Suppress the warning for non-standard classes
         index:          Element index in the lattice
@@ -223,14 +223,11 @@ def find_class(elem: dict, *, index: int | None = None, quiet: bool = True) -> s
 
     if not quiet:  # try from element contents
         _warn(index, "No class found, looking at the element contents.", elem)
-    if _hasattrs(
-        elem, "FullGap", "FringeInt1", "FringeInt2", "gK", "EntranceAngle", "ExitAngle"
-    ):
+    if _hasattrs(elem, "BendingAngle", "EntranceAngle", "ExitAngle"):
         return "Dipole"
-    elif _hasattrs(elem, "Voltage", "Frequency", "HarmNumber", "PhaseLag", "TimeLag"):
+    elif _hasattrs(elem, "Voltage", "Frequency", "HarmNumber"):
         return "RFCavity"
     elif _hasattrs(elem, "Periodicity"):
-        # noinspection PyProtectedMember
         return "RingParam"
     elif _hasattrs(elem, "Limits"):
         return "Aperture"
@@ -293,7 +290,7 @@ def element_from_dict(
             elem_dict["PassMethod"] = "IdentityPass"
         msg = f"Class '{classname}' does not exist, using `{cls.__name__}` instead."
         _warn(index, msg, elem_dict, stacklevel=3)
-    return cls.from_file(**dct)
+    return cls.new_from_dict(**dct)
 
 
 def split_ignoring_parentheses(

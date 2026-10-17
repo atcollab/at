@@ -307,6 +307,10 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
             result = makearray(value)
         elif value.startswith("struct"):
             result = dict(makedir(argsplit(value[7:-1])))
+        elif value == "false":
+            result = False
+        elif value == "true":
+            result = True
         else:
             result = eval(value)
         return result
@@ -321,14 +325,15 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
     elem_args = [convert(v) for v in arguments[:ll]]
-    elem_kwargs = dict(makedir(arguments[ll:]))
+    elem_kwargs = dict(zip(build_attrs, elem_args, strict=True))
+    elem_kwargs.update(makedir(arguments[ll:]))
     if matcls == "rbend":
         # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
         # necessary for using the python sector bend
         halfangle = 0.5 * elem_args[2]
         elem_kwargs.setdefault("EntranceAngle", halfangle)
         elem_kwargs.setdefault("ExitAngle", halfangle)
-    return cls.from_args(*elem_args, **elem_kwargs)
+    return cls.init_from_dict(**elem_kwargs)
 
 
 def load_m(filename: str | Path, **kwargs) -> Lattice:

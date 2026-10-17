@@ -283,13 +283,7 @@ class XsElement(dict):
         """
         elem_kwargs = self._params_to_at()
         cls = self._class_to_at(elem_kwargs)
-        # Separate the positional arguments
-        elem_args = [
-            arg
-            for attr in cls._BUILD_ATTRIBUTES
-            if (arg := elem_kwargs.pop(attr, None)) is not None
-        ]
-        return [cls.from_args(*elem_args, **elem_kwargs)]
+        return [cls.init_from_dict(**elem_kwargs)]
 
     # noinspection PyUnusedLocal
     @classmethod

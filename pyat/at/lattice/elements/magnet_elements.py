@@ -53,7 +53,7 @@ import numpy as np
 from .abstract_elements import Radiative, _Radiative
 from .basic_elements import LongElement
 from .conversions import _float, _array
-from .element_object import Element
+from .element_object import Element, _no_encoder
 from ..exceptions import AtError, AtWarning
 
 # AtWarning from this module should always be issued (not only on the first occurrence)
@@ -586,10 +586,15 @@ class Dipole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
+    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
+        elem_dict = super().to_file(encoder)
+        elem_dict["K"] = self.K
+        return elem_dict
+
     @classmethod
-    def from_file(cls, K=0.0, **elem_dict) -> Element:
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
         # Remove the K attribute to avoid conflicts with PolynomB
-        return super().from_file(**elem_dict)
+        return super().new_from_dict(**elem_dict)
 
     def _part(self, fr, sumfr):
         pp = super()._part(fr, sumfr)
@@ -669,10 +674,15 @@ class Quadrupole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
+    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
+        elem_dict = super().to_file(encoder)
+        elem_dict["K"] = self.K
+        return elem_dict
+
     @classmethod
-    def from_file(cls, K=0.0, **elem_dict) -> Element:
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
         # Remove the K attribute to avoid conflicts with PolynomB
-        return super().from_file(**elem_dict)
+        return super().new_from_dict(**elem_dict)
 
 
 class Sextupole(Multipole):
