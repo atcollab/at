@@ -139,7 +139,7 @@ def _matfile_generator(
         return params, key
 
     # noinspection PyUnresolvedReferences
-    check = params.pop("check", True)  # noqa: F841# kept for compatibility
+    check = params.pop("check", True)  # noqa: F841 # kept for compatibility
     quiet = params.pop("quiet", False)
     params.setdefault("in_file", str(mat_file))
     matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)

@@ -445,7 +445,7 @@ class RFCavity(LongtMotion, LongElement):
 
     @classmethod
     def new_from_dict(cls, **elem_dict) -> Element:
-        # Remove the K attribute to avoid conflicts with PolynomB
+        # Ensure that the optional TimeLag is set
         elem_dict.setdefault("TimeLag", 0.0)
         return super().new_from_dict(**elem_dict)
 
