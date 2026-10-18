@@ -710,6 +710,11 @@ class Sextupole(Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
+    @classmethod
+    def new_from_dict(cls, H=0.0, **elem_dict) -> Element:
+        # Remove the H attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
+
 
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present."""

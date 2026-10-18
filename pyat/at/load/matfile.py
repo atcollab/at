@@ -530,16 +530,17 @@ def _element_to_m(elem: Element) -> str:
         classname = elclass.__name__
         return _mat_constructor.get(classname, f"at{classname.lower()}")
 
-    _, args, kwds = elem.definition
-    argstrs = [convert(arg) for arg in args]
-    if "PassMethod" in kwds:
-        argstrs.append(convert(kwds.pop("PassMethod")))
+    elem_clsname, elem_args, elem_kwargs = elem.definition
+    argstrs = [convert(arg) for arg in elem_args]
+    if "PassMethod" in elem_kwargs:
+        argstrs.append(convert(elem_kwargs.pop("PassMethod")))
     argstrs.extend(
         ", ".join((repr(elem._convert_attr.get(k, k)), convert(v)))
-        for k, v in kwds.items()
+        for k, v in elem_kwargs.items()
         if k not in elem._drop_attr
     )
-    return "{:>15}({});...".format(m_name(elem.__class__), ", ".join(argstrs))
+    clsname = _mat_constructor.get(elem_clsname, f"at{elem_clsname.lower()}")
+    return f"{clsname:>15}({', '.join(argstrs)});..."
 
 
 def save_m(ring: Lattice, filename: str | Path | None = None) -> None:

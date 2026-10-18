@@ -230,7 +230,6 @@ class XsElement(dict):
 
     # Class attributes
     _atClass: ClassVar[type[elt.Element]] = elt.Marker
-    _atPass: ClassVar[str] = "IdentityPass"
     _xsuite2at_attr: ClassVar[dict[str, str]] = {"length": "Length"}
     _at2xsuite_model: ClassVar[dict[str | None, str]] = {}
     _xsuite2at_model: ClassVar[dict[str, str | None]] = {}
@@ -264,8 +263,8 @@ class XsElement(dict):
 
     def _model_to_at(self) -> dict[str, str]:
         """Get the AT passmethod."""
-        passmethod = self._xsuite2at_model.get(self.get("model"), self._atPass)
-        return {"PassMethod": passmethod}
+        passmethod = self._xsuite2at_model.get(self.get("model"), None)
+        return {} if passmethod is None else {"PassMethod": passmethod}
 
     def to_dict(self) -> dict[str, Any]:
         """Build a dictionary representation of the XsElement.
@@ -383,7 +382,6 @@ class Marker(XsElement):
 
     # Class variables
     _atClass: ClassVar[type[elt.Element]] = elt.Marker
-    _atPass: ClassVar[str] = "IdentityPass"
 
 
 class Drift(XsElement):
@@ -391,8 +389,7 @@ class Drift(XsElement):
 
     # Class variables
     _atClass = elt.Drift
-    _atPass: ClassVar[str] = "DriftPass"
-    _at2xsuite_model = {"ExactDriftPass": "exact"}
+    _at2xsuite_model = {"ExactDriftPass": "exact", None: "expanded"}
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
 
 
@@ -401,10 +398,10 @@ class Multipole(XsElement):
 
     # Class variables
     _atClass: ClassVar[type[elt.Element]] = elt.Multipole
-    _atPass: ClassVar[str] = "StrMPoleSymplectic4Pass"
     _at2xsuite_model = {
         "ExactMultipoleRadPass": "drift-kick-drift-exact",
         "ExactMultipolePass": "drift-kick-drift-exact",
+        None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
     _at_integrator = "yoshida4"
@@ -609,10 +606,10 @@ class Bend(Multipole):
 
     # Class variables
     _atClass = elt.Bend
-    _atPass = "BndMPoleSymplectic4Pass"
     _at2xsuite_model = {
         "ExactSectorBendRadPass": "bend-kick-bend",
         "ExactSectorBendPass": "bend-kick-bend",
+        None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
     _xsuite2at_attr = Multipole._xsuite2at_attr | {
@@ -668,7 +665,6 @@ class Bend(Multipole):
 class RBend(Bend):
     """Xsuite RBend element."""
 
-    _atPass = "ExactRectangularBendPass"
     _at2xsuite_model = {
         "ExactRectangularBendRadPass": "drift-kick-drift-exact",
         "ExactRectangularBendPass": "drift-kick-drift-exact",
@@ -679,10 +675,10 @@ class RBend(Bend):
         """Get the AT passmethod."""
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         if straight:
-            passmethod = self._xsuite2at_model.get(self.get("model"), self._atPass)
+            passmethod = self._xsuite2at_model.get(self.get("model"), None)
         else:
-            passmethod = Bend._xsuite2at_model.get(self.get("model"), Bend._atPass)
-        return {"PassMethod": passmethod}
+            passmethod = Bend._xsuite2at_model.get(self.get("model"), None)
+        return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(**atparams)
