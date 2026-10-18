@@ -312,7 +312,15 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
         elif value == "true":
             result = True
         else:
-            result = eval(value)
+            try:
+                result = eval(value)
+            except (NameError, SyntaxError):
+                msg = (
+                    f"In element {index}:\n"
+                    f"Cannot convert '{value}' to a Python object, replacing by None"
+                )
+                warn(AtWarning(msg), stacklevel=4)
+                result = None
         return result
 
     left = line.index("(")
@@ -371,17 +379,20 @@ def load_m(filename: str | Path, **kwargs) -> Lattice:
                 if line.startswith("};"):
                     break
                 try:
-                    elem = _element_from_m(line, index=lineno)
+                    elem = _element_from_m(line, index=lineno-offset)
                 except ValueError:
-                    warn(AtWarning(f"Invalid line {lineno} skipped."), stacklevel=2)
+                    msg = f"Invalid line {lineno} skipped:\n{line!r}"
+                    warn(AtWarning(msg), stacklevel=2)
                     continue
                 except KeyError:
-                    warn(AtWarning(f"Line {lineno}: Unknown class."), stacklevel=2)
+                    msg = f"Line {lineno}: Unknown class:\n{line!r}"
+                    warn(AtWarning(msg), stacklevel=2)
                     continue
                 else:
                     yield elem
 
     filepath = Path(filename)
+    offset = 1-int(kwargs.get("keep_all", False))
     return Lattice(
         ringparam_filter,
         mfile_generator,
