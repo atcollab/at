@@ -21,6 +21,7 @@ def _matlab_scanner(element_list, **kwargs):
     return vars(latt)
 
 
+# noinspection pep8-naming
 def test_lattice_gets_attributes_from_RingParam():
     p = RingParam("lattice_name", 3.0e6, Periodicity=32)
     params = _matlab_scanner([p])
@@ -92,22 +93,24 @@ def test_more_than_one_RingParam_in_ring_raises_warning():
 
 
 def test_family_mapping():
-    elem_kwargs = {}
     for class_name, cls in _CLASS_MAP.items():
-        elem_kwargs["FamName"] = class_name
-        assert find_class(elem_kwargs) == cls.__name__
+        with pytest.warns(AtWarning):
+            cls_name = find_class({"FamName": class_name})
+        assert cls_name == cls.__name__
 
 
 def test_PassMethod_mapping():
-    elem_kwargs = {"FamName": "fam"}
     for pass_method, class_name in _PASS_MAP.items():
-        elem_kwargs["PassMethod"] = pass_method
-        assert find_class(elem_kwargs) == class_name
+        with pytest.warns(AtWarning):
+            cls_name = find_class({"FamName": "fam", "PassMethod": pass_method})
+        assert cls_name == class_name
 
 
 def test_find_Aperture():
     elem_kwargs = {"Limits": [-0.5, 0.5, -0.5, 0.5], "FamName": "fam"}
-    assert find_class(elem_kwargs) == "Aperture"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Aperture"
 
 
 @pytest.mark.parametrize(
@@ -119,12 +122,16 @@ def test_find_Aperture():
     ),
 )
 def test_find_RFCavity(elem_kwargs):
-    assert find_class(elem_kwargs) == "RFCavity"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "RFCavity"
 
 
 def test_find_Monitor():
     elem_kwargs = {"GCR": [1, 1, 0, 0], "FamName": "fam"}
-    assert find_class(elem_kwargs) == "Monitor"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Monitor"
 
 
 @pytest.mark.parametrize(
@@ -136,22 +143,30 @@ def test_find_Monitor():
     ),
 )
 def test_find_Dipole(elem_kwargs):
-    assert find_class(elem_kwargs) == "Dipole"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Dipole"
 
 
 def test_find_Corrector():
     elem_kwargs = {"KickAngle": [0, 0], "FamName": "fam"}
-    assert find_class(elem_kwargs) == "Corrector"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Corrector"
 
 
 def test_find_RingParam():
     elem_kwargs = {"Periodicity": 1, "FamName": "fam"}
-    assert find_class(elem_kwargs) == "RingParam"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "RingParam"
 
 
 def test_find_M66():
     elem_kwargs = {"M66": numpy.eye(6), "FamName": "fam"}
-    assert find_class(elem_kwargs) == "M66"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "M66"
 
 
 @pytest.mark.parametrize(
@@ -159,7 +174,9 @@ def test_find_M66():
     ({"K": -0.5, "FamName": "fam"}, {"PolynomB": [0, 1, 0, 0], "FamName": "fam"}),
 )
 def test_find_Quadrupole(elem_kwargs):
-    assert find_class(elem_kwargs) == "Quadrupole"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Quadrupole"
 
 
 @pytest.mark.parametrize(
@@ -174,22 +191,30 @@ def test_find_Quadrupole(elem_kwargs):
     ),
 )
 def test_find_Multipole(elem_kwargs):
-    assert find_class(elem_kwargs) == "Multipole"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Multipole"
 
 
 def test_find_Drift():
     elem_kwargs = {"Length": 1, "FamName": "fam"}
-    assert find_class(elem_kwargs) == "Drift"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Drift"
 
 
 def test_find_Sextupole():
     elem_kwargs = {"PolynomB": [0, 0, 1, 0], "FamName": "fam"}
-    assert find_class(elem_kwargs) == "Sextupole"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Sextupole"
 
 
 def test_find_Octupole():
     elem_kwargs = {"PolynomB": [0, 0, 0, 1], "FamName": "fam"}
-    assert find_class(elem_kwargs) == "Octupole"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Octupole"
 
 
 @pytest.mark.parametrize(
@@ -201,7 +226,9 @@ def test_find_Octupole():
     ),
 )
 def test_find_ThinMultipole(elem_kwargs):
-    assert find_class(elem_kwargs) == "ThinMultipole"
+    with pytest.warns(AtWarning):
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "ThinMultipole"
 
 
 @pytest.mark.parametrize(
@@ -213,7 +240,8 @@ def test_find_ThinMultipole(elem_kwargs):
 )
 def test_find_Marker(elem_kwargs):
     with pytest.warns(AtWarning):
-        assert find_class(elem_kwargs) == "Marker"
+        cls_name = find_class(elem_kwargs)
+    assert cls_name == "Marker"
 
 
 @pytest.mark.parametrize(

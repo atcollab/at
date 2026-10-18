@@ -158,6 +158,7 @@ class Element:
         Set the element PassMethod to DriftPass or IdentityPass depending on its length.
         """
         if not hasattr(self, "_enable_passmethod"):
+            # noinspection attribute-outside-init
             self._enable_passmethod = self.PassMethod
             self.PassMethod = "IdentityPass" if self.Length == 0.0 else "DriftPass"
 
@@ -313,6 +314,9 @@ class Element:
 
         Parameters:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
+            FamName:    Name of the element
+            Length:     Length of the element
+            PassMethod: Pass method for the element
 
         Returns:
             elem(Element):       :py:class:`.Element`

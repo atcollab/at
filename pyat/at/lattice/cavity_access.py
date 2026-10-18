@@ -104,7 +104,7 @@ def _fundmask(cavities: list[RFCavity]):
 def _get_cavity(ring: Lattice, attr, fsingle, cavpts=None, array=False):
     cavpts = _selected_cavities(ring, cavpts)
     cavities = list(ring.select(cavpts))
-    vcell = np.array([getattr(cav, attr, 0.0) for cav in cavities])
+    vcell = np.array([getattr(cav, attr) for cav in cavities])
     if array:
         return vcell
     else:
@@ -284,7 +284,7 @@ def set_cavity(
 
     # noinspection PyShadowingNames
     def getv(cavities: list[RFCavity], attr: str):
-        values = np.array([getattr(el, attr, 0.0) for el in cavities])
+        values = np.array([getattr(el, attr) for el in cavities])
         valfund = values[fundmask]
         return values, valfund
 

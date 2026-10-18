@@ -181,7 +181,7 @@ def keep_elements(ring: Lattice) -> Generator[Element, None, None]:
             yield elem
 
 
-def find_class(elem: dict, *, index: int | None = None, quiet: bool = True) -> str:
+def find_class(elem: dict, *, index: int | None = None, quiet: bool = False) -> str:
     """Deduce the class of an element from its attributes.
 
     `find_class` tries to deduce the class from "FamName", from "PassMethod",

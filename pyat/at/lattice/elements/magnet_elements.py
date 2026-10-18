@@ -62,16 +62,13 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 def _warn(doc: str) -> str:
     """Add a notice on AT / PALS field expansion."""
-    return "\n".join(
-        (
-            doc,
-            "",
-            "The AT field expansion differs from the MAD expansion by a factor n!. "
-            "See :ref:`here <at-field-expansion>` for the definition of the AT field "
-            "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
-            "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
-            "for the MAD/PALS field expansion.",
-        )
+    return (
+        f"{doc}\n\n"
+        "The AT field expansion differs from the MAD expansion by a factor n!. "
+        "See :ref:`here <at-field-expansion>` for the definition of the AT field "
+        "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
+        "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
+        "for the MAD/PALS field expansion."
     )
 
 

@@ -34,7 +34,7 @@ def _merge_cavs(all_cavs: Sequence) -> Sequence[RFCavity]:
             fr,
             cavf[0].HarmNumber,
             cavf[0].Energy,
-            TimeLag=getattr(cavf[0], "TimeLag", 0.0)
+            TimeLag=cavf[0].TimeLag,
         )
         m_cavs.append(cavl)
     return m_cavs

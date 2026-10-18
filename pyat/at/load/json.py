@@ -22,19 +22,19 @@ from .._version import __version_tuple__
 class _AtEncoder(json.JSONEncoder):
     """JSON encoder for specific AT types."""
 
-    def default(self, obj):
-        if isinstance(obj, Element):
-            return obj.to_file()
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, Particle):
-            return obj.to_dict()
-        elif isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
+    def default(self, o: Any):
+        if isinstance(o, Element):
+            return o.to_file()
+        elif isinstance(o, np.ndarray):
+            return o.tolist()
+        elif isinstance(o, Particle):
+            return o.to_dict()
+        elif isinstance(o, np.integer):
+            return int(o)
+        elif isinstance(o, np.floating):
+            return float(o)
         else:
-            return super().default(obj)
+            return super().default(o)
 
 
 def save_json(
@@ -116,15 +116,15 @@ def load_json(
     from_xsuite: bool = False,
     **kwargs,
 ) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a AT or Xsuite JSON file.
+    """Create a :py:class:`.Lattice`  from an AT or Xsuite JSON file.
 
     The kind of file is derived from its contents. In case of ambiguity, the file
     kind can be explicitly selected with the *from_at* or *from_xsuite* keywords.
 
     Parameters:
         filename:           Name of a JSON file
-        from_at:            Force the selection of AT json file
-        from_xsuite:        Force the selection of Xsuite json file
+        from_at:            Force the selection of AT JSON file
+        from_xsuite:        Force the selection of Xsuite JSON file
         use:                Line name, for Xsuite files containing several lines.
           Default: ``ring``
 

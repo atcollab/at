@@ -602,7 +602,7 @@ def _mat_key(ring):
     return mat_key
 
 
-# noinspection PyUnusedLocal
+# noinspection unused-parameter
 def _ignore(ring, value):
     pass
 
