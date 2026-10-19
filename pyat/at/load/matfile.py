@@ -476,7 +476,9 @@ def save_mat(ring: Lattice, filename: str | Path, **kwargs) -> None:
     use = kwargs.pop("mat_key", "RING")  # For backward compatibility
     use = kwargs.pop("use", use)
     lring = [element_to_dict(el, _mat_encoder) for el in matlab_ring(ring)]
-    scipy.io.savemat(filename, {use: lring}, long_field_names=True)
+    # Ensure that the lattice is a column cell array
+    aring = np.array(lring).reshape((-1, 1))
+    scipy.io.savemat(filename, {use: aring}, long_field_names=True)
 
 
 def _element_to_m(elem: Element) -> str:
