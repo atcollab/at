@@ -40,7 +40,7 @@ from .utils import (
     keep_elements,
     split_ignoring_parentheses,
     element_from_dict,
-    hide_under,
+    element_to_dict,
 )
 
 # Translation of RingParam attributes
@@ -379,7 +379,7 @@ def load_m(filename: str | Path, **kwargs) -> Lattice:
                 if line.startswith("};"):
                     break
                 try:
-                    elem = _element_from_m(line, index=lineno-offset)
+                    elem = _element_from_m(line, index=lineno - offset)
                 except ValueError:
                     msg = f"Invalid line {lineno} skipped:\n{line!r}"
                     warn(AtWarning(msg), stacklevel=2)
@@ -392,7 +392,7 @@ def load_m(filename: str | Path, **kwargs) -> Lattice:
                     yield elem
 
     filepath = Path(filename)
-    offset = 1-int(kwargs.get("keep_all", False))
+    offset = 1 - int(kwargs.get("keep_all", False))
     return Lattice(
         ringparam_filter,
         mfile_generator,
@@ -473,14 +473,9 @@ def save_mat(ring: Lattice, filename: str | Path, **kwargs) -> None:
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
-
-    def elem_dict(el: Element) -> dict[str, Any]:
-        return {hide_under(k): v for k, v in el.to_file(encoder=_mat_encoder).items()}
-
-    # Ensure the lattice is a Matlab column vector: list(list)
     use = kwargs.pop("mat_key", "RING")  # For backward compatibility
     use = kwargs.pop("use", use)
-    lring = [elem_dict(el) for el in matlab_ring(ring)]
+    lring = [element_to_dict(el, _mat_encoder) for el in matlab_ring(ring)]
     scipy.io.savemat(filename, {use: lring}, long_field_names=True)
 
 

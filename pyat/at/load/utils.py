@@ -7,8 +7,8 @@ from __future__ import annotations
 __all__ = [
     "RingParam",
     "element_from_dict",
+    "element_to_dict",
     "find_class",
-    "hide_under",
     "keep_attributes",
     "keep_elements",
     "protect",
@@ -19,9 +19,9 @@ __all__ = [
 
 import collections
 import re
-from typing import ClassVar
+from typing import ClassVar, Any
 from warnings import warn, filterwarnings
-from collections.abc import Generator
+from collections.abc import Generator, Callable
 
 import numpy as np
 
@@ -147,8 +147,7 @@ def hide_under(key: str) -> str:
 
 
 def show_under(key: str) -> str:
-    """Restore leading underscores in attribute names.
-    """
+    """Restore leading underscores in attribute names."""
     return key[1:] if key.startswith("x_") else key
 
 
@@ -293,6 +292,14 @@ def element_from_dict(
         msg = f"Class '{classname}' does not exist, using `{cls.__name__}` instead."
         _warn(index, msg, elem_dict, stacklevel=3)
     return cls.new_from_dict(**dct)
+
+
+def element_to_dict(
+    el: Element, encoder: Callable[[Any], Any] = lambda v: v
+) -> dict[str, Any]:
+    dct = {hide_under(k): encoder(v) for k, v in el.to_dict().items()}
+    dct["Class"] = getattr(el, "_file_classname", el.__class__.__name__)
+    return dct
 
 
 def split_ignoring_parentheses(

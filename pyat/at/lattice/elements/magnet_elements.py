@@ -583,9 +583,9 @@ class Dipole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
-    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
+    def to_dict(self) -> dict:
         # Add a K field used by Matlab
-        elem_dict = super().to_file(encoder)
+        elem_dict = super().to_dict()
         elem_dict["K"] = self.K
         return elem_dict
 
@@ -672,9 +672,9 @@ class Quadrupole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
-    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
+    def to_dict(self) -> dict:
         # Add a K field used by Matlab
-        elem_dict = super().to_file(encoder)
+        elem_dict = super().to_dict()
         elem_dict["K"] = self.K
         return elem_dict
 

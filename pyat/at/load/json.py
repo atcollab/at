@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 
 from .allfiles import register_format
-from .utils import keep_elements, keep_attributes, element_from_dict
+from .utils import keep_elements, keep_attributes, element_from_dict, element_to_dict
 from ..lattice import Element, Lattice, Particle
 from .xsuite import XsLine
 from .._version import __version_tuple__
@@ -24,7 +24,7 @@ class _AtEncoder(json.JSONEncoder):
 
     def default(self, o: Any):
         if isinstance(o, Element):
-            return o.to_file()
+            return element_to_dict(o)
         elif isinstance(o, np.ndarray):
             return o.tolist()
         elif isinstance(o, Particle):

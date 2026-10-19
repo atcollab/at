@@ -5,7 +5,7 @@ from __future__ import annotations
 __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from enum import Enum
 from copy import copy, deepcopy
 from typing import Any, ClassVar
@@ -281,23 +281,6 @@ class Element:
     def _get_collective(self):
         return False
 
-    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
-        """Convert a :py:class:`.Element` to a :py:class:`dict`.
-
-        Parameters:
-            encoder:        data converter
-
-        Returns:
-            dct (dict):     Dictionary of :py:class:`.Element` attributes
-        """
-        dct = {
-            # Rename some of the attributes for file compatibility
-            self._convert_attr.get(k, k): encoder(v)
-            for k, v in vars(self).items()
-        }
-        dct["Class"] = getattr(self, "_file_classname", self.__class__.__name__)
-        return dct
-
     @classmethod
     def new_from_dict(
         cls,
@@ -323,18 +306,12 @@ class Element:
         """
         # Create the element
         element = cls.__new__(cls)
-        # Remove the transformation attributes
-        trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
         # Set the attributes, skipping element-specific controls
         Element.__setattr__(element, "FamName", FamName)
         Element.__setattr__(element, "Length", Length)
         Element.__setattr__(element, "PassMethod", PassMethod)
         for key, value in elem_dict.items():
             Element.__setattr__(element, key, value)
-        # Transform the element if necessary
-        if not all(v is None for v in trs.values()):
-            refval = trs.pop("reference", transform_options.referencepoint.value)
-            element.transform(reference=ReferencePoint(refval), **trs)
         return element
 
     @classmethod

@@ -370,7 +370,7 @@ class XsElement(dict):
             xselement:  new :py:class:`XsElement` object
         """
         xsclass = _at2xsclass.get(type(atelem), NotInXsuite)
-        return xsclass.from_at(match_model=match_model, **atelem.to_file())
+        return xsclass.from_at(match_model=match_model, **atelem.to_dict())
 
     @property
     def _l_anchor(self) -> float:
