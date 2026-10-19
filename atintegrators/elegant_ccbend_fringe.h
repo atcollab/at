@@ -4,12 +4,12 @@
  * Copyright (c) 2018 The Regents of the University of California, as
  * Operator of Los Alamos National Laboratory.
  * This file is distributed subject to a Software License Agreement found
- * in the file LICENSE that is included with this distribution.
+ * in doc/licenseFiles/ElegantLicense.txt.
 \*************************************************************************/
 
 /* Modified for AT, 2026: isolated the two end-map functions, made them static;
  * formulas and USE_NEW_SWITCH_CODE=0 retained verbatim.
- * License agreement: elegant.LICENSE (distributed with this source).
+ * License agreement: doc/licenseFiles/ElegantLicense.txt.
  * Original ccbend.c SHA256: eb4f0dd128ff74efdb880cedf1eed9f11ac5283375817a4d9161ce5060147039
  */
 #ifndef AT_ELEGANT_CCBEND_FRINGE_H

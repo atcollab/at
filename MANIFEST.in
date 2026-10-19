@@ -7,5 +7,3 @@ prune docs
 prune developer
 global-exclude *.prj *.mltbx
 global-include *.c *.h *.cc
-include atintegrators/elegant.LICENSE
-recursive-include pyat/at/integrators elegant.LICENSE

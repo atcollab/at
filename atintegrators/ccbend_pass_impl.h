@@ -1,5 +1,5 @@
 /* AT interface to the elegant CCBEND deterministic orbital model, 2026.
- * See ccbend_core.h, elegant_ccbend_fringe.h and elegant.LICENSE.
+ * See ccbend_core.h, elegant_ccbend_fringe.h and doc/licenseFiles/ElegantLicense.txt.
  * Adaptation: AT canonical coordinates, per-element optimization/cache,
  * normal/skew AT polynomials and AT alignment/aperture interfaces. */
 #include "atelem.c"

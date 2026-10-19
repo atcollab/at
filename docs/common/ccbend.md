@@ -108,5 +108,4 @@ Separate radiation checks cover loss, diffusion and sampled ISR variance.
 
 The fringe and plane-switch functions derive from elegant `src/ccbend.c`.
 See `atintegrators/elegant_ccbend_fringe.h` for copyright and adaptation notices,
-and `atintegrators/elegant.LICENSE` for the original license. The license is
-also included in the Python integrator package.
+and the existing `doc/licenseFiles/ElegantLicense.txt` for the license.

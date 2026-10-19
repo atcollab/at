@@ -12,7 +12,7 @@ function elem=atccbend(fname,L,angle,K,varargin)
 % loss and Gaussian ISR. Supply Energy [eV] or use ring energy properties.
 % This model does not include spin, SDDS multipole files or
 % elegant-specific 3D misalignment. Use AT R1/R2/T1/T2 and apertures.
-% See docs/common/ccbend.md and atintegrators/elegant.LICENSE.
+% See docs/common/ccbend.md and doc/licenseFiles/ElegantLicense.txt.
 if nargin<4, K=0; end
 defaults={'NumIntSteps',4,'IntegrationOrder',4,'FringeModel',0,'EdgeOrder',3, ...
     'OptimizeFSE',1,'OptimizeDX',1,'CompensateKN',0,'ReferenceCorrection',1};

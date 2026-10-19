@@ -1,4 +1,5 @@
-/* CCBEND adapter, 2026. See elegant_ccbend_fringe.h and elegant.LICENSE.
+/* CCBEND adapter, 2026. See elegant_ccbend_fringe.h and
+ * doc/licenseFiles/ElegantLicense.txt.
  * Portions adapted from elegant ccbend.c:
  * Copyright (c) 2018 The University of Chicago, as Operator of Argonne
  * National Laboratory, and The Regents of the University of California,
