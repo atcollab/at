@@ -32,6 +32,7 @@ from __future__ import annotations
 
 __all__ = [
     "Bend",
+    "CCBend",
     "Corrector",
     "Dipole",
     "Multipole",
@@ -612,6 +613,44 @@ class Dipole(Radiative, Multipole):
 # Bend is a synonym of Dipole.
 Bend = Dipole
 
+
+class CCBend(Dipole):
+    """Straight-axis bend using elegant's CCBEND orbital and end maps.
+
+    ``FringeModel=0`` uses legacy edges; ``FringeModel=1`` uses Lindberg
+    ``fringeInt1/2=[K0,K2,K4,K5,K6,K7,I0,I1]``. Normal polynomials
+    use AT coefficients, e.g. ``PolynomB=[0,K1,K2/2]``. Select
+    ``CCBendRadPass`` for radiation loss or ``CCBendQuantPass`` for loss and ISR.
+    Reference strength and offset optimization default to enabled.
+    """
+
+    _conversions = dict(
+        Dipole._conversions,
+        fringeInt1=lambda v: _array(v, (8,)),
+        fringeInt2=lambda v: _array(v, (8,)),
+        FringeModel=int, EdgeOrder=int, IntegrationOrder=int,
+        OptimizeFSE=int, OptimizeDX=int, ReferenceCorrection=int,
+        CompensateKN=int, EdgeFlip=int,
+        QuantumSingleParticle=int,
+    )
+
+    def __init__(self, family_name, length, bending_angle, k=0.0, **kwargs):
+        kwargs.setdefault("PassMethod", "CCBendPass")
+        kwargs.setdefault("NumIntSteps", 4)
+        kwargs.setdefault("IntegrationOrder", 4)
+        kwargs.setdefault("FringeModel", 0)
+        kwargs.setdefault("EdgeOrder", 3)
+        kwargs.setdefault("OptimizeFSE", 1)
+        kwargs.setdefault("OptimizeDX", 1)
+        kwargs.setdefault("ReferenceCorrection", 1)
+        kwargs.setdefault("CompensateKN", 0)
+        super().__init__(family_name, length, bending_angle, k, **kwargs)
+
+    def divide(self, *args, **kwargs):
+        raise AtError("CCBEND cannot be split: its end geometry and reference optimization apply to the whole magnet")
+
+    def merge(self, other):
+        raise AtError("CCBEND cannot be merged without changing its end maps")
 
 class Quadrupole(Radiative, Multipole):
     """Quadrupole element."""

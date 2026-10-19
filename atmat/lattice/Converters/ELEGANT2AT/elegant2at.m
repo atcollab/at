@@ -211,6 +211,23 @@ while i<length(SXSTRING)-2
                      '.(''BendingAngle'')/2); \n'...
                   SXSTRING{i}(1:end-1) '.(''MaxOrder'')=length(' SXSTRING{i}(1:end-1) '.(''PolynomB''))-1; \n'];
               
+            case {'CCBEND','ccbend'}
+                name=SXSTRING{i}(1:end-1);
+                def=[def '\n' name '=atccbend(''' name ''',0,0,0);\n' ...
+                    name '.CCBSynchRad=0; ' name '.CCBISR=0;\n'];
+                elemcount=elemcount+1;
+                while nwel~=':'
+                    def=ParseCCBendAttributes(def,name,SXSTRING{i+j},SXSTRING{i+j+1});
+                    j=j+1;
+                    nwel=SXSTRING{i+j}(end);
+                end
+                def=[def name '.MaxOrder=length(' name '.PolynomB)-1;\n' ...
+                    name '.PolynomA=zeros(size(' name '.PolynomB));\n' ...
+                    'if ' name '.CCBISR && ~' name '.CCBSynchRad, error(''AT:CCBendUnsupported'',''ISR without loss is unsupported''); end\n' ...
+                    'if ' name '.CCBSynchRad, ' name '.PassMethod=''CCBendRadPass''; end\n' ...
+                    'if ' name '.CCBISR, ' name '.PassMethod=''CCBendQuantPass''; end\n' ...
+                    name '=rmfield(' name ',{''CCBSynchRad'',''CCBISR''});\n'];
+
             case {'SBEN','sbend','SBEND','CSBEND'}
                 def=[def '\n'];
                 

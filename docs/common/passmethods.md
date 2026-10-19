@@ -14,4 +14,5 @@ add a custom passmethod.
 
    "Small angle" passmethods <sa_passmethods>
    "Exact" passmethods <ex_passmethods>
+   CCBEND and radiation modes <ccbend>
 ```

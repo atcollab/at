@@ -191,10 +191,14 @@ at_source = join("pyat", "at.c")
 
 def integrator_ext(pass_method, flags):
     name, _ = splitext(basename(pass_method))
+    dependencies = [join(integrator_src_orig, header) for header in (
+        "ccbend_pass_impl.h", "ccbend_core.h", "elegant_ccbend_fringe.h"
+    )] if name.startswith("CCBend") else []
     name = ".".join(("at", "integrators", name))
     return Extension(
         name=name,
         sources=[pass_method],
+        depends=dependencies,
         include_dirs=[np.get_include(), mpi_includes, integrator_src_orig],
         define_macros=macros + omp_macros + mpi_macros,
         extra_compile_args=flags + omp_cflags,

@@ -1,0 +1,5 @@
+{
+    "cmake.sourceDirectory": "D:/AcceleratorCodes/AT_latest/atgpu",
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda"
+}

@@ -250,12 +250,86 @@ class CSBEND(_ElegantElement):
 
     @classmethod
     def from_at(cls, kwargs):
+        if kwargs.get("PassMethod") in ("CCBendPass", "CCBendRadPass", "CCBendQuantPass"):
+            return CCBEND.from_at(kwargs)
         el = super().from_at(kwargs)
         el.update(p_dict(["K0", "K1", "K2", "K3"], kwargs.pop("PolynomB", ())))
         return el
 
 
 # noinspection PyPep8Naming
+class CCBEND(_ElegantElement):
+    """CCBEND orbital model; unsupported nonzero options fail explicitly."""
+
+    _fields = {
+        "integration_order": "IntegrationOrder", "fringemodel": "FringeModel",
+        "edge_order": "EdgeOrder", "edge_flip": "EdgeFlip", "yaw": "Yaw",
+        "optimize_fse": "OptimizeFSE", "optimize_dx": "OptimizeDX",
+        "compensate_kn": "CompensateKN", "reference_correction": "ReferenceCorrection",
+        "fse": "FSE", "fse_dipole": "FSEDipole", "fse_quadrupole": "FSEQuadrupole",
+        "fint": "FringeInt1", "fint1": "FringeInt1", "fint2": "FringeInt2",
+        "isr1part": "QuantumSingleParticle",
+    }
+
+    def to_at(self, l, angle, k1=0.0, k2=0.0, k3=0.0, k4=0.0,
+              k5=0.0, k6=0.0, k7=0.0, k8=0.0, n_slices=4,
+              tilt=0.0, hgap=0.0, synch_rad=0, isr=0, **params):
+        if isr and not synch_rad:
+            raise ValueError("CCBEND ISR without radiation loss is outside the three AT pass modes")
+        attrs = {"FullGap": 2*hgap, "NumIntSteps": n_slices}
+        attrs["PassMethod"] = "CCBendQuantPass" if isr else ("CCBendRadPass" if synch_rad else "CCBendPass")
+        ints = [[0.0]*8, [0.0]*8]
+        for key, value in params.items():
+            if key in self._fields:
+                attrs[self._fields[key]] = value
+            elif key.startswith(("fringe1", "fringe2")) and key[7:] in (
+                    "k0", "k2", "k4", "k5", "k6", "k7", "i0", "i1"):
+                index = ("k0", "k2", "k4", "k5", "k6", "k7", "i0", "i1").index(key[7:])
+                ints[int(key[6])-1][index] = value
+            elif key in ("group", "verbose"):
+                continue
+            elif value:
+                raise ValueError(f"CCBEND {self.name}: unsupported option {key}={value}")
+        attrs["fringeInt1"], attrs["fringeInt2"] = ints
+        attrs.setdefault("FringeInt2", attrs.get("FringeInt1", 0.0))
+        poly = [0.0] + [v/factorial(i) for i, v in enumerate(
+            (k1, k2, k3, k4, k5, k6, k7, k8), start=1)]
+        bend = elt.CCBend(self.name, l, angle, k1, PolynomB=poly, **attrs)
+        if tilt:
+            tilt_elem(bend, tilt)
+        bend.origin = self.origin
+        return [bend]
+
+    @classmethod
+    def from_at(cls, kwargs):
+        if kwargs.get("FSEOffset", 0) or kwargs.get("DXOffset", 0):
+            raise ValueError("CCBEND manual internal offsets cannot be exported to elegant input parameters")
+        if np.any(kwargs.get("PolynomA", 0)):
+            raise ValueError("Export of skew CCBEND polynomials requires elegant error multipole files")
+        if any(key in kwargs for key in ("R1", "R2", "T1", "T2")):
+            raise ValueError("CCBEND alignment export must be expressed explicitly in elegant")
+        params = {"l": kwargs.pop("Length"), "angle": kwargs.pop("BendingAngle")}
+        method = kwargs.pop("PassMethod", "CCBendPass")
+        params["synch_rad"] = int(method != "CCBendPass")
+        params["isr"] = int(method == "CCBendQuantPass")
+        poly = kwargs.pop("PolynomB")
+        if poly[0]:
+            raise ValueError("CCBEND PolynomB[0] export is unsupported; use FSEDipole")
+        params.update({f"k{i}": v*factorial(i) for i, v in enumerate(poly) if i})
+        for name, atname in cls._fields.items():
+            if name == "fint":
+                continue
+            if atname in kwargs:
+                params[name] = kwargs.pop(atname)
+        params["hgap"] = kwargs.pop("FullGap", 0.0)/2
+        params["n_slices"] = kwargs.pop("NumIntSteps", 4)
+        for end in (1, 2):
+            integrals = kwargs.pop(f"fringeInt{end}", np.zeros(8))
+            params.update({f"fringe{end}{name}": v for name, v in zip(
+                ("k0", "k2", "k4", "k5", "k6", "k7", "i0", "i1"), integrals)})
+        return cls(name=kwargs.pop("FamName", "?"), **params)
+
+
 class RBEN(CSBEND):
     @elegant_element
     def to_at(self, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
@@ -403,6 +477,7 @@ _elegant_env = {
     "MULT": MULT,
     "MULTIPOLE": MULT,
     "CSBEND": CSBEND,
+    "CCBEND": CCBEND,
     "SBEND": CSBEND,
     "SBEN": CSBEND,
     "CSBEN": CSBEND,
@@ -614,6 +689,7 @@ _AT2EL = {
     elt.RFCavity: RFCA.from_at,
     elt.Drift: DRIF.from_at,
     elt.Bend: CSBEND.from_at,
+    elt.CCBend: CCBEND.from_at,
     elt.Marker: MARK.from_at,
     elt.Monitor: MONI.from_at,
     elt.Corrector: KICKER.from_at,

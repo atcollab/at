@@ -172,3 +172,10 @@ Length, BendingAngle, EntranceAngle, ExitAngle
 Harwood Academic Publishers.
 
 [^F2]: É. Forest, S.C. Leemann, F Schmidt, _Fringe Effects in MAD - Part I_.
+
+(CCBendPass)=
+## `CCBendPass`, `CCBendRadPass`, `CCBendQuantPass`
+
+Straight-axis Cartesian bend using elegant's CCBEND end maps, including Lindberg
+fringe integrals. See [CCBEND in AT](ccbend.md) for parameters, examples, validation
+and the supported radiation modes.

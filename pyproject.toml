@@ -61,6 +61,7 @@ namespaces = false
 
 [tool.setuptools.package-data]
 machine_data = ["*.m", "*.mat"]
+"at.integrators" = ["elegant.LICENSE"]
 
 [tool.cibuildwheel]
 build = ["*"]
