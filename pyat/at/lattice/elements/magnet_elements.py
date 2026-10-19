@@ -53,7 +53,7 @@ import numpy as np
 from .abstract_elements import Radiative, _Radiative
 from .basic_elements import LongElement
 from .conversions import _float, _array
-from .element_object import Element, _no_encoder
+from .element_object import Element
 from ..exceptions import AtError, AtWarning
 
 # AtWarning from this module should always be issued (not only on the first occurrence)

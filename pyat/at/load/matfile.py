@@ -532,10 +532,6 @@ def _element_to_m(elem: Element) -> str:
         else:
             return repr(arg)
 
-    def m_name(elclass):
-        classname = elclass.__name__
-        return _mat_constructor.get(classname, f"at{classname.lower()}")
-
     elem_clsname, elem_args, elem_kwargs = elem.definition
     argstrs = [convert(arg) for arg in elem_args]
     if "PassMethod" in elem_kwargs:

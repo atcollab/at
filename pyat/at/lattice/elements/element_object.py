@@ -34,11 +34,6 @@ def _nop(value):
     return value
 
 
-def _no_encoder(v):
-    """type encoding for .mat files."""
-    return v
-
-
 class Element:
     """Base class for AT elements."""
 

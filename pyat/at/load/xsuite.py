@@ -489,16 +489,16 @@ class Multipole(XsElement):
     def _set_xs_transforms(self, atparams: dict) -> None:
         """Generate Xsuite element displacements."""
         tr = {
-            "shift_x": atparams.pop("dx", 0.0),
-            "shift_y": atparams.pop("dy", 0.0),
-            "shift_s": atparams.pop("dz", 0.0),
-            "rot_s_rad_no_frame": atparams.pop("tilt", 0.0),
-            "rot_x_rad": -atparams.pop("pitch", 0.0),
-            "rot_y_rad": atparams.pop("yaw", 0.0),
+            "shift_x": atparams.pop("_dx", 0.0),
+            "shift_y": atparams.pop("_dy", 0.0),
+            "shift_s": atparams.pop("_dz", 0.0),
+            "rot_s_rad_no_frame": atparams.pop("_tilt", 0.0),
+            "rot_x_rad": -atparams.pop("_pitch", 0.0),
+            "rot_y_rad": atparams.pop("_yaw", 0.0),
         }
         misalign = {k: v for k, v in tr.items() if v != 0.0}
-        refpoint = atparams.pop("reference", ReferencePoint.CENTRE)
-        rots_frame = atparams.pop("tilt_frame", 0.0)
+        refpoint = atparams.pop("_reference", ReferencePoint.CENTRE)
+        rots_frame = atparams.pop("_tilt_frame", 0.0)
         ismisaligned = len(misalign) > 0
 
         if rots_frame != 0.0:
