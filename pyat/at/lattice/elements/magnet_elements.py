@@ -596,6 +596,17 @@ class Dipole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
+    def to_dict(self) -> dict:
+        # Add a K field used by Matlab
+        elem_dict = super().to_dict()
+        elem_dict["K"] = self.K
+        return elem_dict
+
+    @classmethod
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
+
     def divide(self, frac) -> list[Element]:
         if self.PassMethod == "ExactRectangularBendPass":
             # Cannot split a rectangular bend
@@ -683,6 +694,17 @@ class Quadrupole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
+    def to_dict(self) -> dict:
+        # Add a K field used by Matlab
+        elem_dict = super().to_dict()
+        elem_dict["K"] = self.K
+        return elem_dict
+
+    @classmethod
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
+
 
 class Sextupole(Multipole):
     """Sextupole element."""
@@ -711,6 +733,11 @@ class Sextupole(Multipole):
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
+
+    @classmethod
+    def new_from_dict(cls, H=0.0, **elem_dict) -> Element:
+        # Remove the H attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
 
 
 class Octupole(Multipole):
