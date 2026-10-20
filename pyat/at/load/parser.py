@@ -3,9 +3,7 @@ from __future__ import annotations
 __all__ = ["StrParameter", "StrParser"]
 
 import abc
-from collections.abc import Callable
 from typing import Any
-from ..lattice import ParamDef
 
 
 class StrParser(abc.ABC):
@@ -28,7 +26,7 @@ class StrParser(abc.ABC):
         ...
 
 
-class StrParameter(ParamDef):
+class StrParameter:
     """String expression parameter.
 
     A StrParameter represents an expression which can be evaluated in the context
@@ -36,25 +34,23 @@ class StrParameter(ParamDef):
     expressions can reference other parameters.
     """
 
-    def __init__(
-        self,
-        parser: StrParser,
-        expr: str,
-        conversion: Callable[[Any], Any] | None = None,
-    ):
+    def __init__(self, parser: StrParser, expr: str):
         """Initialise a string parameter.
 
         Args:
             parser: StrParser instance defining the context for evaluation
             expr: Expression to be evaluated
-            conversion: Function to convert the evaluated result to the appropriate type
 
         The expression may contain parameter names, arithmetic operators and
         mathematical functions, depending on the capabilities of the parser.
         """
         self.expr = expr
         self.parser = parser
-        super().__init__(conversion=conversion)
+
+    @property
+    def value(self) -> Any:
+        """Current value of the parameter."""
+        return self.parser.evaluate(self.expr)
 
     def __str__(self):
         return self.expr
@@ -69,59 +65,43 @@ class StrParameter(ParamDef):
         return int(self.value)
 
     def __add__(self, other):
-        if str(other) == "0.0":
-            return self
-        if self.expr == "0.0":
-            return other
-        return self.__class__(self.parser, f"({self.expr})+({other})")
+        return self.value + other
 
-    __radd__ = __add__
-
-    def __sub__(self, other):
-        if str(other) == "0.0":
-            return self
-        if self.expr == "0.0":
-            return -other
-        return self.__class__(self.parser, f"({self.expr})-({other})")
-
-    def __rsub__(self, other):
-        if str(other) == "0.0":
-            return self.__class__(self.parser, f"-({self.expr})")
-        if self.expr == "0.0":
-            return other
-        return self.__class__(self.parser, f"({other})-({self.expr})")
+    def __radd__(self, other):
+        return other + self.value
 
     def __mul__(self, other):
-        if str(other) == "0.0":
-            return 0.0
-        if self.expr == "1.0":
-            return other
-        if str(other) == "1.0":
-            return self
-        return self.__class__(self.parser, f"({self.expr})*({other})")
+        return self.value * other
 
-    __rmul__ = __mul__
+    def __rmul__(self, other):
+        return other * self.value
+
+    def __sub__(self, other):
+        return self.value - other
+
+    def __rsub__(self, other):
+        return other - self.value
 
     def __truediv__(self, other):
-        return self.__class__(self.parser, f"({self.expr})/({other})")
+        return self.value / other
 
     def __rtruediv__(self, other):
-        return self.__class__(self.parser, f"({other})/({self.expr})")
+        return other / self.value
 
     def __pow__(self, other):
-        return self.__class__(self.parser, f"({self.expr})**({other})")
+        return pow(self.value, other)
 
     def __rpow__(self, other):
-        return self.__class__(self.parser, f"({other})**({self.expr})")
+        return pow(other, self.value)
 
     def __neg__(self):
-        return self.__class__(self.parser, f"-({self.expr})")
+        return -self.value
 
     def __pos__(self):
-        return self.__class__(self.parser, f"({self.expr})")
+        return +self.value
 
     def __abs__(self):
-        return self.__class__(self.parser, f"abs({self.expr})")
+        return abs(self.value)
 
     def __gt__(self, other):
         return self.value > other
@@ -134,6 +114,3 @@ class StrParameter(ParamDef):
 
     def __le__(self, other):
         return self.value <= other
-
-    def fast_value(self) -> Any:
-        return self._conversion(self.parser.evaluate(self.expr))
