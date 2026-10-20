@@ -7,7 +7,7 @@ from __future__ import annotations
 __all__ = ["load_m", "load_mat", "load_var", "save_m", "save_mat"]
 
 import sys
-from collections.abc import Generator, Sequence, Mapping, Iterator, Iterable
+from collections.abc import Generator, Iterable, Iterator, Mapping, Sequence
 from math import isfinite
 from pathlib import Path
 from typing import Any
@@ -19,8 +19,8 @@ import scipy.io
 
 # imports necessary in 'globals()' for 'eval'
 from numpy import array  # noqa: F401
-from numpy import nan as NaN  # noqa: F401
 from numpy import uint8  # noqa: F401
+from numpy import nan as NaN  # noqa: F401
 
 from ..lattice import (
     AtError,
@@ -37,10 +37,9 @@ from .utils import (
     _CLASS_MAP,
     RingParam,
     _drop_attrs,
+    element_from_dict,
     keep_elements,
     split_ignoring_parentheses,
-    element_from_dict,
-    element_to_dict,
 )
 
 # Translation of RingParam attributes
@@ -139,7 +138,7 @@ def _matfile_generator(
         return params, key
 
     # noinspection PyUnresolvedReferences
-    check = params.pop("check", True)  # noqa: F841 # kept for compatibility
+    check = params.pop("check", True)
     quiet = params.pop("quiet", False)
     params.setdefault("in_file", str(mat_file))
     matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)
@@ -150,7 +149,7 @@ def _matfile_generator(
         for index, mat_elem in enumerate(cell_array):
             elem = mat_elem[0, 0]
             kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
-            yield element_from_dict(kwargs, index=index, quiet=quiet)
+            yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
     else:
         mat_input = h5py.File(mat_file)
         params, key = define_default_key(params, mat_input, ignore_chars="#")
@@ -158,7 +157,7 @@ def _matfile_generator(
         for index, ref_elem in enumerate(cell_array):
             elem = mat_input[ref_elem]
             kwargs = {f: mcleanhdf5(elem[f]) for f in elem}
-            yield element_from_dict(kwargs, index=index, quiet=quiet)
+            yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
 
 
 def ringparam_filter(
@@ -231,6 +230,8 @@ def load_mat(filename: str | Path, **kwargs) -> Lattice:
           the lattice. Default: it there is a single variable, use it, otherwise
           select 'RING'
         mat_key (str):      deprecated alias for *use*
+        check (bool):       Run the coherence tests. Default:
+          :py:obj:`True`
         quiet (bool):       Suppress the warning for non-standard
           classes. Default: :py:obj:`False`
         keep_all (bool):    Keep RingParam elements as Markers.
@@ -312,36 +313,28 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
         elif value == "true":
             result = True
         else:
-            try:
-                result = eval(value)
-            except (NameError, SyntaxError):
-                msg = (
-                    f"In element {index}:\n"
-                    f"Cannot convert '{value}' to a Python object, replacing by None"
-                )
-                warn(AtWarning(msg), stacklevel=4)
-                result = None
+            result = eval(value)
         return result
 
     left = line.index("(")
     right = line.rindex(")")
     matcls = line[:left].strip()[2:]
-    cls = _CLASS_MAP[matcls]
-    build_attrs = cls._BUILD_ATTRIBUTES
+    build_attrs = _CLASS_MAP[matcls]._BUILD_ATTRIBUTES
     arguments = argsplit(line[left + 1 : right])
     ll = len(build_attrs)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
-    elem_args = [convert(v) for v in arguments[:ll]]
-    elem_kwargs = dict(zip(build_attrs, elem_args, strict=True))
-    elem_kwargs.update(makedir(arguments[ll:]))
+    args = [convert(v) for v in arguments[:ll]]
+    kwargs = dict(zip(build_attrs, args, strict=True))
+    kwargs.update(makedir(arguments[ll:]))
+    kwargs["Class"] = matcls
     if matcls == "rbend":
         # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
         # necessary for using the python sector bend
-        halfangle = 0.5 * elem_args[2]
-        elem_kwargs.setdefault("EntranceAngle", halfangle)
-        elem_kwargs.setdefault("ExitAngle", halfangle)
-    return cls.init_from_dict(**elem_kwargs)
+        halfangle = 0.5 * args[2]
+        kwargs.setdefault("EntranceAngle", halfangle)
+        kwargs.setdefault("ExitAngle", halfangle)
+    return element_from_dict(kwargs, index=index)
 
 
 def load_m(filename: str | Path, **kwargs) -> Lattice:
@@ -379,20 +372,17 @@ def load_m(filename: str | Path, **kwargs) -> Lattice:
                 if line.startswith("};"):
                     break
                 try:
-                    elem = _element_from_m(line, index=lineno - offset)
+                    elem = _element_from_m(line, index=lineno)
                 except ValueError:
-                    msg = f"Invalid line {lineno} skipped:\n{line!r}"
-                    warn(AtWarning(msg), stacklevel=2)
+                    warn(AtWarning(f"Invalid line {lineno} skipped."), stacklevel=2)
                     continue
                 except KeyError:
-                    msg = f"Line {lineno}: Unknown class:\n{line!r}"
-                    warn(AtWarning(msg), stacklevel=2)
+                    warn(AtWarning(f"Line {lineno}: Unknown class."), stacklevel=2)
                     continue
                 else:
                     yield elem
 
     filepath = Path(filename)
-    offset = 1 - int(kwargs.get("keep_all", False))
     return Lattice(
         ringparam_filter,
         mfile_generator,
@@ -426,9 +416,8 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
-        quiet = params.pop("quiet", False)
         for index, elem in enumerate(latt):
-            yield element_from_dict(elem, index=index, quiet=quiet)
+            yield element_from_dict(elem, index=index)
 
     return Lattice(
         ringparam_filter, var_generator, matlat, iterator=params_filter, **kwargs
@@ -473,12 +462,11 @@ def save_mat(ring: Lattice, filename: str | Path, **kwargs) -> None:
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
+    # Ensure the lattice is a Matlab column vector: list(list)
     use = kwargs.pop("mat_key", "RING")  # For backward compatibility
     use = kwargs.pop("use", use)
-    lring = [element_to_dict(el, _mat_encoder) for el in matlab_ring(ring)]
-    # Ensure that the lattice is a column cell array
-    aring = np.array(lring).reshape((-1, 1))
-    scipy.io.savemat(filename, {use: aring}, long_field_names=True)
+    lring = [el.to_file(encoder=_mat_encoder) for el in matlab_ring(ring)]
+    scipy.io.savemat(filename, {use: lring}, long_field_names=True)
 
 
 def _element_to_m(elem: Element) -> str:
@@ -534,17 +522,20 @@ def _element_to_m(elem: Element) -> str:
         else:
             return repr(arg)
 
-    elem_clsname, elem_args, elem_kwargs = elem.definition
-    argstrs = [convert(arg) for arg in elem_args]
-    if "PassMethod" in elem_kwargs:
-        argstrs.append(convert(elem_kwargs.pop("PassMethod")))
+    def m_name(elclass):
+        classname = elclass.__name__
+        return _mat_constructor.get(classname, "".join(("at", classname.lower())))
+
+    _, args, kwds = elem.definition
+    argstrs = [convert(arg) for arg in args]
+    if "PassMethod" in kwds:
+        argstrs.append(convert(kwds.pop("PassMethod")))
     argstrs.extend(
         ", ".join((repr(elem._convert_attr.get(k, k)), convert(v)))
-        for k, v in elem_kwargs.items()
+        for k, v in kwds.items()
         if k not in elem._drop_attr
     )
-    clsname = _mat_constructor.get(elem_clsname, f"at{elem_clsname.lower()}")
-    return f"{clsname:>15}({', '.join(argstrs)});..."
+    return "{:>15}({});...".format(m_name(elem.__class__), ", ".join(argstrs))
 
 
 def save_m(ring: Lattice, filename: str | Path | None = None) -> None:
@@ -593,7 +584,7 @@ def _mat_file(ring):
             raise AttributeError(msg)
     else:
         msg = "'Lattice' object has no attribute 'mat_file'"
-        raise AttributeError(msg)  # noqa: TRY004
+        raise AttributeError(msg)
     return in_file
 
 
@@ -607,7 +598,7 @@ def _mat_key(ring):
     return mat_key
 
 
-# noinspection unused-parameter
+# noinspection PyUnusedLocal
 def _ignore(ring, value):
     pass
 

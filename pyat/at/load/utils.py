@@ -7,29 +7,34 @@ from __future__ import annotations
 __all__ = [
     "RingParam",
     "element_from_dict",
-    "element_to_dict",
     "find_class",
     "keep_attributes",
     "keep_elements",
     "protect",
     "restore",
-    "show_under",
     "split_ignoring_parentheses",
 ]
 
 import collections
 import re
-from typing import ClassVar, Any
+import sysconfig
+import warnings
+from typing import ClassVar
+from pathlib import Path
 from warnings import warn, filterwarnings
-from collections.abc import Generator, Callable
+from collections.abc import Generator
 
 import numpy as np
 
-from at.lattice import AtWarning
+from at import integrators
+from at.lattice import AtWarning, AtError
 from at.lattice import elements as elt
-from at.lattice import Lattice, Particle, Element, Drift, Marker
+from at.lattice import Lattice, Particle, Element, Marker
+from at.lattice import variable_elements
 
+_ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _plh = "placeholder"
+_integrator_path = Path(integrators.__path__[0])
 
 filterwarnings("always", category=AtWarning, module=__name__)
 
@@ -45,11 +50,11 @@ def _particle(value) -> Particle:
         return Particle(value)
 
 
-def _warn(idx: int | None, message: str, elem: dict, stacklevel: int = 2) -> None:
-    name = elem.get("FamName", "")
-    location = f'"{name}"' if idx is None else f'{idx} ("{name}")'
-    warning = f"\nIn element {location}: {message}\n{elem}\n"
-    warn(AtWarning(warning), stacklevel=stacklevel)
+def _warn(index: int, message: str, elem_dict: dict) -> None:
+    name = elem_dict.get("FamName", "")
+    location = f'"{name}":\n' if index is None else f'{index} ("{name}"):\n'
+    warning = "".join(("In element ", location, message, f"\n{elem_dict}\n"))
+    warn(AtWarning(warning), stacklevel=2)
 
 
 class RingParam(elt.Element):
@@ -86,7 +91,7 @@ class RingParam(elt.Element):
         super().__init__(FamName, Periodicity=Periodicity, **kwargs)
 
 
-_alias_map: dict[str, type[Element]] = {
+_alias_map = {
     "bend": elt.Dipole,
     "rbend": elt.Dipole,
     "sbend": elt.Dipole,
@@ -102,28 +107,26 @@ _alias_map: dict[str, type[Element]] = {
 }
 
 # Map class names to Element classes
-_CLASS_MAP: dict[str, type[Element]] = {
-    cls.__name__.lower(): cls for cls in Element.subclasses()
-}
+_CLASS_MAP = {cls.__name__.lower(): cls for cls in Element.subclasses()}
 _CLASS_MAP.update(_alias_map)
 
-# Maps passmethods to Element classe names
-_PASS_MAP: dict[str, str] = {
-    "BendLinearPass": "Dipole",
-    "BndMPoleSymplectic4RadPass": "Dipole",
-    "BndMPoleSymplectic4Pass": "Dipole",
-    "QuadLinearPass": "Quadrupole",
-    "StrMPoleSymplectic4Pass": "Multipole",
-    "StrMPoleSymplectic4RadPass": "Multipole",
-    "CorrectorPass": "Corrector",
-    "CavityPass": "RFCavity",
-    "RFCavityPass": "RFCavity",
-    "ThinMPolePass": "ThinMultipole",
-    "Matrix66Pass": "M66",
-    "AperturePass": "Aperture",
-    "IdTablePass": "InsertionDeviceKickMap",
-    "GWigSymplecticPass": "Wiggler",
-    "VariableThinMPolePass": "VariableThinMultipole",
+# Maps passmethods to Element classes
+_PASS_MAP = {
+    "BendLinearPass": elt.Dipole,
+    "BndMPoleSymplectic4RadPass": elt.Dipole,
+    "BndMPoleSymplectic4Pass": elt.Dipole,
+    "QuadLinearPass": elt.Quadrupole,
+    "StrMPoleSymplectic4Pass": elt.Multipole,
+    "StrMPoleSymplectic4RadPass": elt.Multipole,
+    "CorrectorPass": elt.Corrector,
+    "CavityPass": elt.RFCavity,
+    "RFCavityPass": elt.RFCavity,
+    "ThinMPolePass": elt.ThinMultipole,
+    "Matrix66Pass": elt.M66,
+    "AperturePass": elt.Aperture,
+    "IdTablePass": elt.InsertionDeviceKickMap,
+    "GWigSymplecticPass": elt.Wiggler,
+    "VariableThinMPolePass": variable_elements.VariableThinMultipole,
 }
 
 # Lattice attributes which must be dropped when writing a file
@@ -135,20 +138,6 @@ _drop_attrs: dict[str, str | None] = {
     "m_file": None,
     "repr_file": None,
 }
-
-
-def hide_under(key: str) -> str:
-    """Hide leading underscores in attribute names.
-
-    Leading underscores are not allowed in Matlab field names, so they are prepended
-    with an x when saving to file.
-    """
-    return f"x{key}" if key.startswith("_") else key
-
-
-def show_under(key: str) -> str:
-    """Restore leading underscores in attribute names."""
-    return key[1:] if key.startswith("x_") else key
 
 
 def _hasattrs(kwargs: dict, *attributes) -> bool:
@@ -180,20 +169,8 @@ def keep_elements(ring: Lattice) -> Generator[Element, None, None]:
             yield elem
 
 
-def find_class(elem: dict, *, index: int | None = None, quiet: bool = False) -> str:
-    """Deduce the class of an element from its attributes.
-
-    `find_class` tries to deduce the class from "FamName", from "PassMethod",
-    and finally form the element contents.
-
-    Args:
-        elem:           Dictionary of element attributes.
-        quiet:          Suppress the warning for non-standard classes
-        index:          Element index in the lattice
-
-    Returns:
-        element_class:  The guessed Class name
-    """
+def _from_contents(elem: dict) -> type[Element]:
+    """Deduce the element class from its contents."""
 
     def low_order(key):
         polynom = np.array(elem[key], dtype=np.float64).reshape(-1)
@@ -203,103 +180,173 @@ def find_class(elem: dict, *, index: int | None = None, quiet: bool = False) -> 
             low = -1
         return low
 
-    elname = elem.get("FamName", "")
     length = float(elem.get("Length", 0.0))
     pass_method = elem.get("PassMethod", "")
-
-    if not quiet:  # try from element name
-        _warn(index, "No class found, looking at the element name.", elem)
-    cls = _CLASS_MAP.get(elname.lower())
-    if cls is not None:
-        return cls.__name__
-
-    if not quiet:  # try from passmethod
-        _warn(index, "No class found, looking at the element passmethod.", elem)
-    classname = _PASS_MAP.get(pass_method)
-    if classname is not None:
-        return classname
-
-    if not quiet:  # try from element contents
-        _warn(index, "No class found, looking at the element contents.", elem)
-    if _hasattrs(elem, "BendingAngle", "EntranceAngle", "ExitAngle"):
-        return "Dipole"
-    elif _hasattrs(elem, "Voltage", "Frequency", "HarmNumber"):
-        return "RFCavity"
+    if _hasattrs(
+        elem, "FullGap", "FringeInt1", "FringeInt2", "gK", "EntranceAngle", "ExitAngle"
+    ):
+        return elt.Dipole
+    elif _hasattrs(elem, "Voltage", "Frequency", "HarmNumber", "PhaseLag", "TimeLag"):
+        return elt.RFCavity
     elif _hasattrs(elem, "Periodicity"):
-        return "RingParam"
+        # noinspection PyProtectedMember
+        return RingParam
     elif _hasattrs(elem, "Limits"):
-        return "Aperture"
+        return elt.Aperture
     elif _hasattrs(elem, "M66"):
-        return "M66"
+        return elt.M66
     elif _hasattrs(elem, "K"):
-        return "Quadrupole"
+        return elt.Quadrupole
     elif _hasattrs(elem, "PolynomB", "PolynomA"):
         loworder = low_order("PolynomB")
         if loworder == 1:
-            return "Quadrupole"
+            return elt.Quadrupole
         elif loworder == 2:
-            return "Sextupole"
+            return elt.Sextupole
         elif loworder == 3:
-            return "Octupole"
+            return elt.Octupole
         elif pass_method.startswith("StrMPoleSymplectic4") or (length > 0):
-            return "Multipole"
+            return elt.Multipole
         else:
-            return "ThinMultipole"
+            return elt.ThinMultipole
     elif _hasattrs(elem, "KickAngle"):
-        return "Corrector"
+        return elt.Corrector
     elif length > 0.0:
-        return "Drift"
+        return elt.Drift
     elif _hasattrs(elem, "GCR"):
-        return "Monitor"
+        return elt.Monitor
+    elif pass_method == "IdentityPass":
+        return elt.Marker
     else:
-        if not quiet:
-            _warn(index, "No class found, using 'Marker'.", elem)
-        return "Marker"
+        return elt.Element
+
+
+def find_class(
+    elem_dict: dict, quiet: bool = False, index: int | None = None
+) -> type[Element]:
+    """Deduce the class of an element from its attributes.
+
+    `find_class` looks first at the "Class" field, if existing. It then tries to deduce
+    the class from "FamName", from "PassMethod", and finally form the element contents.
+
+    Args:
+        elem_dict:      The dictionary of keyword arguments passed to the
+                        Element constructor.
+        quiet:          Suppress the warning for non-standard classes
+        index:          Element index in the lattice
+
+    Returns:
+        element_class:  The guessed Class name
+    """
+
+    def check_class(clname):
+        if clname:
+            _warn(index, f"Class '{clname}' does not exist.", elem_dict)
+
+    def check_pass(passm):
+        if not passm:
+            _warn(index, "No PassMethod provided.", elem_dict)
+        elif not passm.endswith("Pass"):
+            message = (
+                f"Invalid PassMethod '{passm}': "
+                "provided pass methods should end in 'Pass'."
+            )
+            _warn(index, message, elem_dict)
+
+    class_name = elem_dict.pop("Class", "")  # try from class name
+    cls = _CLASS_MAP.get(class_name.lower(), None)
+    if cls is not None:
+        return cls
+    elif not quiet:
+        check_class(class_name)
+
+    elname = elem_dict.get("FamName", "")  # try from element name
+    cls = _CLASS_MAP.get(elname.lower(), None)
+    if cls is not None:
+        return cls
+
+    pass_method = elem_dict.get("PassMethod", "")  # try from passmethod
+    cls = _PASS_MAP.get(pass_method)
+    if cls is not None:
+        return cls
+    elif not quiet:
+        check_pass(pass_method)
+
+    return _from_contents(elem_dict)  # look for contents
 
 
 def element_from_dict(
     elem_dict: dict,
     index: int | None = None,
+    check: bool = True,
     quiet: bool = False,
 ) -> Element:
     """Builds an :py:class:`.Element` from a dictionary of attributes.
 
     Parameters:
         elem_dict:      Dictionary of element attributes
-        index:          Element index in the lattice
-        quiet:          Suppress the warning for undefined classes
+        index:          Element index
+        check:          Check the compatibility of class and PassMethod
+        quiet:          Suppress the warning for non-standard classes
 
     Returns:
         elem (Element): new :py:class:`.Element`
     """
-    # Translate Matlab field names back to python
-    dct = {show_under(k): v for k, v in elem_dict.items()}
-    # Extract the class name, or try to deduce it from the element contents
-    try:
-        classname = dct.pop("Class")
-    except KeyError:
-        classname = find_class(elem_dict, index=index, quiet=quiet)
-    # Get the class from the class name, or use Drift/Marker if not found
-    try:
-        cls = _CLASS_MAP[classname.lower()]
-    except KeyError:
-        if elem_dict.get("Length", 0.0) > 0:
-            cls = Drift
-            elem_dict["PassMethod"] = "DriftPass"
-        else:
-            cls = Marker
-            elem_dict["PassMethod"] = "IdentityPass"
-        msg = f"Class '{classname}' does not exist, using `{cls.__name__}` instead."
-        _warn(index, msg, elem_dict, stacklevel=3)
-    return cls.new_from_dict(**dct)
 
+    # noinspection PyShadowingNames
+    def sanitise_class(index, cls, elem_dict):
+        """Checks that the Class and PassMethod of the element are a valid
+            combination. Some Classes and PassMethods are incompatible and
+            would raise errors during calculation, so we send a
+            warning here.
 
-def element_to_dict(
-    el: Element, encoder: Callable[[Any], Any] = lambda v: v
-) -> dict[str, Any]:
-    dct = {hide_under(k): encoder(v) for k, v in el.items()}
-    dct["Class"] = getattr(el, "_file_classname", el.__class__.__name__)
-    return dct
+        Args:
+            index:          element index
+            cls:            Proposed class
+            elem_dict:      The dictionary of keyword arguments passed to the
+                            Element constructor.
+
+        Raises:
+            AttributeError: if the PassMethod and Class are incompatible.
+        """
+        class_name = cls.__name__
+        pass_method = elem_dict.get("PassMethod")
+        if pass_method is not None:
+            pass_to_class = _PASS_MAP.get(pass_method)
+            length = float(elem_dict.get("Length", 0.0))
+            file_path = (_integrator_path / pass_method).with_suffix(_ext_suffix)
+            if not file_path.exists():
+                message = f"PassMethod {pass_method} is missing {file_path}."
+                _warn(index, message, elem_dict)
+            elif (pass_method == "IdentityPass") and (length != 0.0):
+                message = (
+                    f"PassMethod {pass_method} is not compatible with length {length}."
+                )
+                _warn(index, message, elem_dict)
+            elif pass_to_class is not None:
+                if not issubclass(cls, pass_to_class):
+                    message = (
+                        f"PassMethod {pass_method} is not compatible "
+                        f"with Class {class_name}."
+                    )
+                    _warn(index, message, elem_dict)
+
+    cls = find_class(elem_dict, quiet=quiet, index=index)
+    if check:
+        sanitise_class(index, cls, elem_dict)
+    try:
+        elem = cls.from_file(elem_dict.copy())
+    except AtError as err:
+        if cls.__name__ == "Dipole":
+            elem_dict.pop('K', None)
+        if cls.__name__ == "Quadrupole":
+            elem_dict.pop('K', None)       
+        if cls.__name__ == "Sextupole":
+            elem_dict.pop('H', None)
+        msg = f"{err}, positional argument ignored"
+        warnings.warn(AtWarning(msg))
+        elem = cls.from_file(elem_dict)
+    return elem
 
 
 def split_ignoring_parentheses(
