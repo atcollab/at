@@ -443,6 +443,12 @@ class RFCavity(LongtMotion, LongElement):
             )
         return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
 
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> Element:
+        # Ensure that the optional TimeLag is set
+        elem_dict.setdefault("TimeLag", 0.0)
+        return super().new_from_dict(**elem_dict)
+
 
 class M66(Radiative, Element):
     """Linear (6, 6) transfer matrix."""

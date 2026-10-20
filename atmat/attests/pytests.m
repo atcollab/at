@@ -36,7 +36,7 @@ classdef pytests < matlab.unittest.TestCase
 
             function [ring4,ring6]=mload(fpath)
                 mr=atradoff(atloadlattice(fullfile(atroot,'..',fpath)));
-                pr=atwritepy(mr,'keep_all',true);
+                pr=atwritepy(mr,'keep_all',true,'quiet',true);
                 ring4.m=mr;
                 ring4.p=pr;
                 ring6.m=atenable_6d(mr);
