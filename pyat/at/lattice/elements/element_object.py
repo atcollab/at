@@ -52,7 +52,7 @@ def _no_encoder(v):
 def _passmethod(v):
     """Check for existing PassMethod"""
     pm = str(v)
-    file_path = (_integrator_path / pm)
+    file_path = _integrator_path / pm
     if not (
         file_path.with_suffix(_ext_suffix).exists()
         or file_path.with_suffix(".py").exists()
