@@ -149,7 +149,6 @@ from .file_input import BaseParser, LowerCaseParser, UnorderedParser
 from .file_output import Exporter
 from .parser import StrParameter
 from ..lattice import Lattice, elements as elt, Particle, AtWarning
-from ..lattice import ParamDef, Param
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -948,15 +947,6 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         else:
             return super()._argparser(argcount, argstr, **kwargs)
 
-    def _assign(self, label: str | None, key: str, val: str):
-        """Variable assignment."""
-        try:  # if val is a constant
-            constval: int | float = eval(val)
-        except NameError:
-            return key, self.evaluate(val)
-        else:
-            return key, Param(constval, name=key)
-
     def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
         # Special treatment of SEQUENCE definitions
         res = None
@@ -1070,16 +1060,9 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         # noinspection PyUnboundLocalVariable
         if radiate:
             lat.enable_6d(copy=False)
-        if not parameterised:
-            lat.unparameterise()
+        # if not parameterised:
+        #     lat.unparameterise()
         return lat
-
-    def parameterise(self, key: str):
-        val = self[key]
-        if isinstance(val, ParamDef):
-            return val
-        else:
-            return Param(val, name=key)
 
 
 class MadxParser(_MadParser):

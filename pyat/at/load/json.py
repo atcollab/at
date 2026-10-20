@@ -7,45 +7,34 @@ from __future__ import annotations
 __all__ = ["load_json", "save_json"]
 
 from pathlib import Path
-from collections.abc import Mapping, Generator
 import json
 from typing import Any
 
 import numpy as np
 
 from .allfiles import register_format
-from .utils import keep_elements, keep_attributes, element_from_dict, element_to_dict
+from .utils import keep_elements, keep_attributes, element_from_dict
 from ..lattice import Element, Lattice, Particle
-from .xsuite_line import XsLine
+from .xsuite import XsLine
 from .._version import __version_tuple__
 
 
 class _AtEncoder(json.JSONEncoder):
     """JSON encoder for specific AT types."""
 
-    def default(self, o: Any):
-        if isinstance(o, Element):
-            return element_to_dict(o)
-        elif isinstance(o, np.ndarray):
-            return o.tolist()
-        elif isinstance(o, Particle):
-            return o.to_dict()
-        elif isinstance(o, np.integer):
-            return int(o)
-        elif isinstance(o, np.floating):
-            return float(o)
+    def default(self, obj):
+        if isinstance(obj, Element):
+            return obj.to_file()
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, Particle):
+            return obj.to_dict()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
         else:
-            return super().default(o)
-
-
-def json_decoder(elem_dict: Mapping) -> Generator[tuple[str, Any], None, None]:
-    for k, v in elem_dict.items():
-        if isinstance(v, (str, int, float, bool)):
-            yield k, v
-        elif isinstance(v, Mapping):
-            yield k, dict(json_decoder(v))
-        else:
-            yield k, np.array(v)
+            return super().default(obj)
 
 
 def save_json(
@@ -62,7 +51,6 @@ def save_json(
 
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
-
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     indent = None if compact else 2
@@ -116,7 +104,7 @@ def _load_at(root: dict[str, Any], **kwargs) -> Lattice:
         for k, v in properties.items():
             params.setdefault(k, v)
         for idx, elem_dict in enumerate(elements):
-            yield element_from_dict(json_decoder(elem_dict), index=idx)
+            yield element_from_dict(elem_dict, index=idx, check=False)
 
     return Lattice(root, iterator=json_generator, **kwargs)
 
@@ -128,15 +116,15 @@ def load_json(
     from_xsuite: bool = False,
     **kwargs,
 ) -> Lattice:
-    """Create a :py:class:`.Lattice`  from an AT or Xsuite JSON file.
+    """Create a :py:class:`.Lattice`  from a AT or Xsuite JSON file.
 
     The kind of file is derived from its contents. In case of ambiguity, the file
     kind can be explicitly selected with the *from_at* or *from_xsuite* keywords.
 
     Parameters:
         filename:           Name of a JSON file
-        from_at:            Force the selection of AT JSON file
-        from_xsuite:        Force the selection of Xsuite JSON file
+        from_at:            Force the selection of AT json file
+        from_xsuite:        Force the selection of Xsuite json file
         use:                Line name, for Xsuite files containing several lines.
           Default: ``ring``
 
