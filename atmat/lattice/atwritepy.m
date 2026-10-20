@@ -10,22 +10,20 @@ function pyring=atwritepy(ring,varargin)
 %
 %   >>> with open(<filename>,'rb') as fid:
 %   ...  ring=pickle.load(fid)
+%
+%PYRING=ATWRITEPY(...,quiet=true)
+%   Do not emit warnings for undefined elements (when Class is not specified
+%
+%PYRING=ATWRITEPY(...,name='name')
+%PYRING=ATWRITEPY(...,energy=ENERGY)
+%PYRING=ATWRITEPY(...,energy=PERIODICITY)
+%   Set the corresponding attribute on the python lattice. Useful when the
+%   lattice has no RingParam element
 
 [filename,varargs]=getoption(varargin,'file','');
 if ~isempty(filename)
     fid=py.open(filename,'wb');
 end
-
-% [keep_all,varargs]=getoption(varargs,'keep_all',false);
-% [name,energy,periods,ring_h,particle]=atGetRingProperties(ring,'FamName',...
-%     'Energy','Periodicity','HarmNumber','Particle');
-% if ~keep_all
-%     rp=atgetcells(ring,'Class','RingParam');
-%     ring=ring(~rp);
-% end
-% mlist=cellfun(@(elem) at2py(elem), ring, 'UniformOutput', false);
-% pyring=py.at.Lattice(reshape(mlist,1,[]),pyargs('name',name,'energy',energy,...
-%     'periodicity',int32(periods),'harmonic_number',ring_h,'particle',particle.name));
 
 pyring=py.at.load_var(ring',pyargs(varargs{:}));
 
