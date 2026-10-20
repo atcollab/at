@@ -5,14 +5,24 @@ from __future__ import annotations
 __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
-from collections.abc import Generator
+import sysconfig
+from collections.abc import Callable, Generator
 from enum import Enum
+from warnings import warn, filterwarnings
+from pathlib import Path
 from copy import copy, deepcopy
 from typing import Any, ClassVar
 
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
+from ..exceptions import AtWarning
+from ... import integrators
+
+_ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+_integrator_path = Path(integrators.__path__[0])
+
+filterwarnings("always", category=AtWarning, module=__name__)
 
 
 class ReferencePoint(Enum):
@@ -34,13 +44,31 @@ def _nop(value):
     return value
 
 
+def _no_encoder(v):
+    """type encoding for .mat files."""
+    return v
+
+
+def _passmethod(v):
+    """Check for existing PassMethod"""
+    pm = str(v)
+    file_path = (_integrator_path / pm)
+    if not (
+        file_path.with_suffix(_ext_suffix).exists()
+        or file_path.with_suffix(".py").exists()
+    ):
+        msg = f"PassMethod {pm} is missing."
+        warn(AtWarning(msg), stacklevel=4)
+    return pm
+
+
 class Element:
     """Base class for AT elements."""
 
     _BUILD_ATTRIBUTES: ClassVar[list[str]] = ["FamName"]
     _conversions: ClassVar[dict] = {
         "FamName": str,
-        "PassMethod": str,
+        "PassMethod": _passmethod,
         "Length": _float,
         "R1": _array66,
         "R2": _array66,
@@ -64,6 +92,7 @@ class Element:
     # _drop_attr = ["T1", "T2", "R1", "R2"]
     _drop_attr: ClassVar[list[str]] = [
         "_enable_passmethod",
+        "_disable_passmethod",
     ]
     _convert_attr: ClassVar[dict] = {
         "_dx": "dx",
@@ -87,6 +116,11 @@ class Element:
         self.FamName = family_name
         self.Length = kwargs.pop("Length", 0.0)
         self.PassMethod = kwargs.pop("PassMethod", "IdentityPass")
+        self._enable_passmethod = self.PassMethod
+        if self.Length==0.0:
+            self._disable_passmethod = "IdentityPass"
+        else:
+            self._disable_passmethod = "DriftPass"
         self.update(kwargs)
 
     def __setattr__(self, attrname: str, value: Any) -> None:
@@ -140,21 +174,20 @@ class Element:
     def enable(self):
         """Function to enable an element in the lattice.
 
-        Restore the element PassMethod.
+        Convert DriftPass / IdentityPass to the standard
+        or user defined element pass method
         """
-        if hasattr(self, "_enable_passmethod"):
-            self.PassMethod = self._enable_passmethod
-            del self._enable_passmethod
+        self.PassMethod = self._enable_passmethod
 
     def disable(self):
         """Function to disable an element in the lattice.
 
-        Set the element PassMethod to DriftPass or IdentityPass depending on its length.
+        Convert the element passmethod to either a DrifPass
+        is the length is not zero or IdentityPass otherwise
         """
-        if not hasattr(self, "_enable_passmethod"):
-            # noinspection attribute-outside-init
+        if self.PassMethod != self._disable_passmethod:
             self._enable_passmethod = self.PassMethod
-            self.PassMethod = "IdentityPass" if self.Length == 0.0 else "DriftPass"
+            self.PassMethod = self._disable_passmethod   
 
     def to_dict(self):
         return vars(self).copy()
@@ -275,56 +308,39 @@ class Element:
     def _get_collective(self):
         return False
 
-    @classmethod
-    def new_from_dict(
-        cls,
-        FamName: str = "-",
-        Length: float = 0.0,
-        PassMethod: str = "DriftPass",
-        **elem_dict,
-    ) -> Element:
-        """Generate an Element from a dictionary of attributes.
+    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
+        """Convert a :py:class:`.Element` to a :py:class:`dict`.
 
-        This creates an instance of the class without calling the constructor,
-        sets the attributes from the provided dictionary, and applies any specified
-        transformations.
+        Parameters:
+            encoder:        data converter
+
+        Returns:
+            dct (dict):     Dictionary of :py:class:`.Element` attributes
+        """
+        dct = {
+            self._convert_attr.get(k, k): encoder(v)
+            for k, v in self.items()
+            if k not in self._drop_attr
+        }
+        dct["Class"] = getattr(self, "_file_classname", self.__class__.__name__)
+        return dct
+
+    @classmethod
+    def from_file(cls, elem_dict: dict[str, Any]) -> Element:
+        """Generate an Element from a dictionary of attributes.
 
         Parameters:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
-            FamName:    Name of the element
-            Length:     Length of the element
-            PassMethod: Pass method for the element
-
-        Returns:
-            elem(Element):       :py:class:`.Element`
-        """
-        # Create the element
-        element = cls.__new__(cls)
-        # Set the attributes, skipping element-specific controls
-        Element.__setattr__(element, "FamName", FamName)
-        Element.__setattr__(element, "Length", Length)
-        Element.__setattr__(element, "PassMethod", PassMethod)
-        for key, value in elem_dict.items():
-            Element.__setattr__(element, key, value)
-        return element
-
-    @classmethod
-    def init_from_dict(cls, **elem_dict) -> Element:
-        """Generate an Element from a dictionary of attributes.
 
         Returns:
             elem(Element):       :py:class:`.Element`
         """
         # Separate the positional arguments
-        elem_args = [
-            arg
-            for attr in cls._BUILD_ATTRIBUTES
-            if (arg := elem_dict.pop(attr, None)) is not None
-        ]
+        elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
         # Remove the transformation attributes
         trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
         # Create the element
-        element = cls(*elem_args, **elem_dict)
+        element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
         # Transform the element if necessary
         if not all(v is None for v in trs.values()):
             refval = trs.pop("reference", transform_options.referencepoint.value)
