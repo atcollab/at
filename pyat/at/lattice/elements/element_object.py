@@ -6,7 +6,7 @@ __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
 import sysconfig
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from enum import Enum
 from warnings import warn, filterwarnings
 from pathlib import Path
