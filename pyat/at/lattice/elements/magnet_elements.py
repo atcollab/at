@@ -52,7 +52,7 @@ import numpy as np
 
 from .abstract_elements import Radiative, _Radiative
 from .basic_elements import LongElement
-from .conversions import _float, _array
+from .conversions import _int, _float, _array
 from .element_object import Element
 from ..exceptions import AtError, AtWarning
 
@@ -421,7 +421,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     PolynomA: np.ndarray  #: Skew strengths
     PolynomB: np.ndarray  #: Normal strengths
     MaxOrder: int  #: Highest multipole order
-    NumIntSteps: int  #: Number of integration slices
+    NumIntSteps: int = 10  #: Number of integration slices
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -503,10 +503,10 @@ class Dipole(Radiative, Multipole):
         ExitAngle=float,
         FringeInt1=float,
         FringeInt2=float,
-        FringeQuadEntrance=int,
-        FringeQuadExit=int,
-        FringeBendEntrance=int,
-        FringeBendExit=int,
+        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
+        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
+        FringeBendEntrance=lambda v: _int(v, vmin=0, vmax=4),
+        FringeBendExit=lambda v: _int(v, vmin=0, vmax=4),
     )
     _file_classname = "Bend"
     _stacklevel = 7  # Stacklevel for warnings
@@ -596,6 +596,13 @@ class Dipole(Radiative, Multipole):
         yield from super().items()
         yield "K", self.K
 
+    def divide(self, frac) -> list[Element]:
+        if self.PassMethod == "ExactRectangularBendPass":
+            # Cannot split a rectangular bend
+            return [self]
+        else:
+            return super().divide(frac)
+
     def _part(self, fr, sumfr):
         pp = super()._part(fr, sumfr)
         pp.BendingAngle = fr / sumfr * self.BendingAngle
@@ -629,7 +636,9 @@ class Quadrupole(Radiative, Multipole):
 
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "K"]
     _conversions = dict(
-        Multipole._conversions, FringeQuadEntrance=int, FringeQuadExit=int
+        Multipole._conversions,
+        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
+        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
     )
     _stacklevel = 7  # Stacklevel for warnings
 
