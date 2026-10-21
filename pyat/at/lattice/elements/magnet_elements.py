@@ -44,7 +44,7 @@ __all__ = [
 
 import contextlib
 import warnings
-from collections.abc import Generator, Callable
+from collections.abc import Callable
 from math import tan, atan
 from typing import Any
 
