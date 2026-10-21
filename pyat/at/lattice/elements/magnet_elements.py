@@ -44,7 +44,7 @@ __all__ = [
 
 import contextlib
 import warnings
-from collections.abc import Generator, Callable
+from collections.abc import Callable
 from math import tan, atan
 from typing import Any
 
@@ -592,10 +592,6 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "K", self.K
-
     def to_dict(self) -> dict:
         # Add a K field used by Matlab
         elem_dict = super().to_dict()
@@ -689,10 +685,6 @@ class Quadrupole(Radiative, Multipole):
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
-
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "K", self.K
 
     def to_dict(self) -> dict:
         # Add a K field used by Matlab

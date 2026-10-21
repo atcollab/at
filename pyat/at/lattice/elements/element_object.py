@@ -50,7 +50,7 @@ def _no_encoder(v):
 
 
 def _passmethod(v):
-    """Check for existing PassMethod"""
+    """Check for existing PassMethod."""
     pm = str(v)
     file_path = _integrator_path / pm
     if not (
@@ -263,7 +263,7 @@ class Element:
     @property
     def definition(self) -> tuple[str, tuple, dict]:
         """tuple (class_name, args, kwargs) defining the element."""
-        attrs = dict(self.items())
+        attrs = self.to_dict()
         arguments = tuple(
             attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
         )
