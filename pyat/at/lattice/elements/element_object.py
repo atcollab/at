@@ -363,14 +363,14 @@ class Element:
     @property
     def definition(self) -> tuple[str, tuple, dict]:
         """tuple (class_name, args, kwargs) defining the element."""
-        attrs = dict(self.items())
+        attrs = self.to_dict()
         arguments = tuple(
             attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
         )
         defelem = self.__class__(*arguments)
         keywords = {
             k: v
-            for k, v in attrs.items()
+            for k, v in sorted(attrs.items())
             if not np.array_equal(v, getattr(defelem, k, None))
             and k not in self._drop_attr
         }
