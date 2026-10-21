@@ -62,16 +62,13 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 def _warn(doc: str) -> str:
     """Add a notice on AT / PALS field expansion."""
-    return "\n".join(
-        (
-            doc,
-            "",
-            "The AT field expansion differs from the MAD expansion by a factor n!. "
-            "See :ref:`here <at-field-expansion>` for the definition of the AT field "
-            "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
-            "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
-            "for the MAD/PALS field expansion.",
-        )
+    return (
+        f"{doc}\n\n"
+        "The AT field expansion differs from the MAD expansion by a factor n!. "
+        "See :ref:`here <at-field-expansion>` for the definition of the AT field "
+        "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
+        "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
+        "for the MAD/PALS field expansion."
     )
 
 
@@ -246,7 +243,7 @@ class ThinMultipole(Element):
         super().__init__(
             family_name,
             Length=kwargs.pop("Length", 0),
-            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass")
+            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass"),
         )
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super().__setattr__("MaxOrder", maxorder)
@@ -257,7 +254,7 @@ class ThinMultipole(Element):
         # Set the rest of attributes
         self.update(kwargs)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, attrname: str, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB."""
 
         def maxord(poly):
@@ -269,16 +266,16 @@ class ThinMultipole(Element):
             return maxord(poly)
 
         polys = ("PolynomA", "PolynomB")
-        if key in polys:
+        if attrname in polys:
             lmin = self.MaxOrder
             lenp, ordp = maxord(np.asarray(value))
             if not lenp > lmin:
-                msg = f"Length of {key} must be larger than {lmin}"
+                msg = f"Length of {attrname} must be larger than {lmin}"
                 raise ValueError(msg)
             if ordp > lmin:
-                msg = f"Some values of {key} are truncated by MaxOrder={lmin}"
+                msg = f"Some values of {attrname} are truncated by MaxOrder={lmin}"
                 warnings.warn(AtWarning(msg), stacklevel=2)
-        elif key == "MaxOrder":
+        elif attrname == "MaxOrder":
             intval = int(value)
             lens, ords = zip(*(ck(k) for k in polys), strict=True)
             if intval >= (lmin := min(lens)):
@@ -287,7 +284,7 @@ class ThinMultipole(Element):
             if intval < max(ords):
                 msg = f"Some values are truncated by MaxOrder={intval}"
                 warnings.warn(AtWarning(msg), stacklevel=2)
-        super().__setattr__(key, value)
+        super().__setattr__(attrname, value)
 
     # noinspection PyPep8Naming
     @property
@@ -397,6 +394,7 @@ class ThinMultipole(Element):
     @VKick.setter
     def VKick(self, value: float) -> None:
         self.Ks0L = value
+
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element."""
@@ -581,9 +579,16 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items(freeze=freeze)
-        yield "K", self.K
+    def to_dict(self, freeze: bool = True) -> dict:
+        # Add a K field used by Matlab
+        elem_dict = super().to_dict(freeze=freeze)
+        elem_dict["K"] = self.K
+        return elem_dict
+
+    @classmethod
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
 
     def _part(self, fr, sumfr):
         pp = super()._part(fr, sumfr)
@@ -659,9 +664,16 @@ class Quadrupole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items(freeze=freeze)
-        yield "K", self.K
+    def to_dict(self, freeze: bool = True) -> dict:
+        # Add a K field used by Matlab
+        elem_dict = super().to_dict(freeze=freeze)
+        elem_dict["K"] = self.K
+        return elem_dict
+
+    @classmethod
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
 
 
 class Sextupole(Multipole):
