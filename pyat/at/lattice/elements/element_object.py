@@ -5,9 +5,12 @@ from __future__ import annotations
 __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
+import sysconfig
 from collections.abc import Callable, Generator
 from contextlib import suppress
 from enum import Enum
+from warnings import warn, filterwarnings
+from pathlib import Path
 from copy import copy, deepcopy
 from typing import Any, ClassVar
 
@@ -16,6 +19,13 @@ import numpy as np
 from .conversions import _array, _array66, _int, _float
 from ..parambase import ParamDef, _nop
 from ..parameters import _ACCEPTED, Param, ParamArray
+from ..exceptions import AtWarning
+from ... import integrators
+
+_ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+_integrator_path = Path(integrators.__path__[0])
+
+filterwarnings("always", category=AtWarning, module=__name__)
 
 
 class ReferencePoint(Enum):
@@ -38,13 +48,26 @@ def _no_encoder(v):
     return v
 
 
+def _passmethod(v):
+    """Check for existing PassMethod"""
+    pm = str(v)
+    file_path = _integrator_path / pm
+    if not (
+        file_path.with_suffix(_ext_suffix).exists()
+        or file_path.with_suffix(".py").exists()
+    ):
+        msg = f"PassMethod {pm} is missing."
+        warn(AtWarning(msg), stacklevel=4)
+    return pm
+
+
 class Element:
     """Base class for AT elements."""
 
     _BUILD_ATTRIBUTES: ClassVar[list[str]] = ["FamName"]
     _conversions: ClassVar[dict] = {
         "FamName": str,
-        "PassMethod": str,
+        "PassMethod": _passmethod,
         "Length": _float,
         "R1": _array66,
         "R2": _array66,
@@ -70,7 +93,6 @@ class Element:
     # _drop_attr = ["T1", "T2", "R1", "R2"]
     _drop_attr: ClassVar[list[str]] = [
         "_enable_passmethod",
-        "_disable_passmethod",
     ]
     _convert_attr: ClassVar[dict] = {
         "_dx": "dx",
@@ -80,7 +102,7 @@ class Element:
         "_yaw": "yaw",
         "_tilt": "tilt",
         "_tilt_frame": "tilt_frame",
-        "_referencepoint": "reference"
+        "_referencepoint": "reference",
     }
 
     def __new__(cls, *args, **kwargs):
@@ -100,11 +122,6 @@ class Element:
         self.FamName = family_name
         self.Length = kwargs.pop("Length", 0.0)
         self.PassMethod = kwargs.pop("PassMethod", "IdentityPass")
-        self._enable_passmethod = self.PassMethod
-        if self.Length==0.0:
-            self._disable_passmethod = "IdentityPass"
-        else:
-            self._disable_passmethod = "DriftPass"
         self.update(kwargs)
 
     def __setattr__(self, attrname: str, value: Any) -> None:
@@ -172,8 +189,7 @@ class Element:
     def __str__(self):
         return "\n".join(
             [self.__class__.__name__ + ":"]
-            + [f"{k:>14}: {v!s}" for k, v in self.items()
-               if k not in self._drop_attr]
+            + [f"{k:>14}: {v!s}" for k, v in self.items() if k not in self._drop_attr]
         )
 
     def __repr__(self):
@@ -209,20 +225,21 @@ class Element:
     def enable(self):
         """Function to enable an element in the lattice.
 
-        Convert DriftPass / IdentityPass to the standard
-        or user defined element pass method
+        Restore the element PassMethod.
         """
-        self.PassMethod = self._enable_passmethod
+        if hasattr(self, "_enable_passmethod"):
+            self.PassMethod = self._enable_passmethod
+            del self._enable_passmethod
 
     def disable(self):
         """Function to disable an element in the lattice.
 
-        Convert the element passmethod to either a DrifPass
-        is the length is not zero or IdentityPass otherwise
+        Set the element PassMethod to DriftPass or IdentityPass depending on its length.
         """
-        if self.PassMethod != self._disable_passmethod:
+        if not hasattr(self, "_enable_passmethod"):
+            # noinspection attribute-outside-init
             self._enable_passmethod = self.PassMethod
-            self.PassMethod = self._disable_passmethod
+            self.PassMethod = "IdentityPass" if self.Length == 0.0 else "DriftPass"
 
     def keys(self):
         """Return a set of all attribute names."""
@@ -233,11 +250,11 @@ class Element:
     def to_dict(self, freeze: bool = True):
         """Return a copy of the element parameters."""
         if freeze:
-            return {k: getattr(self, k) for k in self.keys()}
+            v = {k: v.value for k, v in self._parameters.items()}
         else:
-            v = vars(self).copy()
-            v.update(self._parameters)
-            return v
+            v = self._parameters.copy()
+        v.update(vars(self))
+        return v
 
     def get_parameter(self, attrname: str, index: int | None = None) -> Any:
         """Extract a parameter of an element.
