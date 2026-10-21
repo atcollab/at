@@ -43,11 +43,6 @@ transform_options = _TransFormOptions()
 transform_attr = ["dx", "dy", "dz", "pitch", "yaw", "tilt", "reference"]
 
 
-def _no_encoder(v):
-    """type encoding for .mat files."""
-    return v
-
-
 def _passmethod(v):
     """Check for existing PassMethod"""
     pm = str(v)
@@ -454,45 +449,6 @@ class Element:
         trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
         # Create the element
         element = cls(*elem_args, **elem_dict)
-        # Transform the element if necessary
-        if not all(v is None for v in trs.values()):
-            refval = trs.pop("reference", transform_options.referencepoint.value)
-            element.transform(reference=ReferencePoint(refval), **trs)
-        return element
-
-    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
-        """Convert a :py:class:`.Element` to a :py:class:`dict`.
-
-        Parameters:
-            encoder:        data converter
-
-        Returns:
-            dct (dict):     Dictionary of :py:class:`.Element` attributes
-        """
-        dct = {
-            self._convert_attr.get(k, k): encoder(v)
-            for k, v in self.items()
-            if k not in self._drop_attr
-        }
-        dct["Class"] = getattr(self, "_file_classname", self.__class__.__name__)
-        return dct
-
-    @classmethod
-    def from_file(cls, elem_dict: dict[str, Any]) -> Element:
-        """Generate an Element from a dictionary of attributes.
-
-        Parameters:
-            elem_dict:  Dictionary of :py:class:`.Element` attributes
-
-        Returns:
-            elem(Element):       :py:class:`.Element`
-        """
-        # Separate the positional arguments
-        elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
-        # Remove the transformation attributes
-        trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
-        # Create the element
-        element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
         # Transform the element if necessary
         if not all(v is None for v in trs.values()):
             refval = trs.pop("reference", transform_options.referencepoint.value)
