@@ -270,7 +270,7 @@ class Element:
         defelem = self.__class__(*arguments)
         keywords = {
             k: v
-            for k, v in attrs.items()
+            for k, v in sorted(attrs.items())
             if not np.array_equal(v, getattr(defelem, k, None))
             and k not in self._drop_attr
         }
