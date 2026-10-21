@@ -421,7 +421,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     PolynomA: np.ndarray  #: Skew strengths
     PolynomB: np.ndarray  #: Normal strengths
     MaxOrder: int  #: Highest multipole order
-    NumIntSteps: int = 10  #: Number of integration slices
+    NumIntSteps: int  #: Number of integration slices
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -441,6 +441,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        kwargs.setdefault("NumIntSteps", 10)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
