@@ -6,7 +6,7 @@ __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
 import sysconfig
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from contextlib import suppress
 from enum import Enum
 from warnings import warn, filterwarnings
@@ -44,7 +44,7 @@ transform_attr = ["dx", "dy", "dz", "pitch", "yaw", "tilt", "reference"]
 
 
 def _passmethod(v):
-    """Check for existing PassMethod"""
+    """Check for existing PassMethod."""
     pm = str(v)
     file_path = _integrator_path / pm
     if not (

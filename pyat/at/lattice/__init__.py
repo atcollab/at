@@ -9,7 +9,6 @@ from .exceptions import *
 from .axisdef import *
 from .options import *
 from .particle_object import Particle
-# from .variables import *
 from .parambase import *
 from .variables import *
 from .parameters import *
