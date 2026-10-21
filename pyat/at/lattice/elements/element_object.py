@@ -404,6 +404,62 @@ class Element:
     def _get_collective(self):
         return False
 
+    @classmethod
+    def new_from_dict(
+        cls,
+        FamName: str = "-",
+        Length: float = 0.0,
+        PassMethod: str = "DriftPass",
+        **elem_dict,
+    ) -> Element:
+        """Generate an Element from a dictionary of attributes.
+
+        This creates an instance of the class without calling the constructor,
+        sets the attributes from the provided dictionary, and applies any specified
+        transformations.
+
+        Parameters:
+            elem_dict:  Dictionary of :py:class:`.Element` attributes
+            FamName:    Name of the element
+            Length:     Length of the element
+            PassMethod: Pass method for the element
+
+        Returns:
+            elem(Element):       :py:class:`.Element`
+        """
+        # Create the element
+        element = cls.__new__(cls)
+        # Set the attributes, skipping element-specific controls
+        Element.__setattr__(element, "FamName", FamName)
+        Element.__setattr__(element, "Length", Length)
+        Element.__setattr__(element, "PassMethod", PassMethod)
+        for key, value in elem_dict.items():
+            Element.__setattr__(element, key, value)
+        return element
+
+    @classmethod
+    def init_from_dict(cls, **elem_dict) -> Element:
+        """Generate an Element from a dictionary of attributes.
+
+        Returns:
+            elem(Element):       :py:class:`.Element`
+        """
+        # Separate the positional arguments
+        elem_args = [
+            arg
+            for attr in cls._BUILD_ATTRIBUTES
+            if (arg := elem_dict.pop(attr, None)) is not None
+        ]
+        # Remove the transformation attributes
+        trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
+        # Create the element
+        element = cls(*elem_args, **elem_dict)
+        # Transform the element if necessary
+        if not all(v is None for v in trs.values()):
+            refval = trs.pop("reference", transform_options.referencepoint.value)
+            element.transform(reference=ReferencePoint(refval), **trs)
+        return element
+
     def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
         """Convert a :py:class:`.Element` to a :py:class:`dict`.
 
