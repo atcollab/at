@@ -312,6 +312,7 @@
 %   settags                             - Sets the 'Tag' field in AT lattice elements
 %   settilt                             - Sets the entrance and exit misalignment matrixes
 %   splitdrift                          - Inserts an element into a drift space
+%   swapKickmapData                     - Activate a stored insertion-device kick map
 %   symplectify                         - Makes a matrix more symplectic
 %   
 %   ATMAT/LATTICE/CONVERTERS
