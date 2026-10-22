@@ -34,10 +34,12 @@ function elem = attransformelem(elem,varargin)
 %   its entrance or its centre (the middle of the chord joining the entry and
 %   exit points of the element).
 %
-%   The transformation is stored in the fields dx, dy, dz, tilt, pitch, yaw,
-%   tilt_frame and reference (0 for centre, 1 for entrance), with the same
-%   names and meaning as in pyAT. R1, T1, R2 and T2 are recomputed from these
-%   fields, any previous value is discarded.
+%   The transformation is stored in the fields x_dx, x_dy, x_dz, x_tilt,
+%   x_pitch, x_yaw, x_tilt_frame and x_referencepoint (0 for centre, 1 for
+%   entrance). They are the pyAT attributes _dx, _dy..., with the leading
+%   underscore replaced by x_ as in .mat files, so the transformation is kept
+%   when the lattice is converted to pyAT. R1, T1, R2 and T2 are recomputed
+%   from these fields, any previous value is discarded.
 %
 %   The transverse momenta are canonical, so the angular kicks of pitch and
 %   yaw scale with (1 + delta). This introduces spurious dispersion.
@@ -48,6 +50,7 @@ function elem = attransformelem(elem,varargin)
 %See also atsettransform, atshiftelem, attiltelem
 
 names={'dx','dy','dz','pitch','yaw','tilt','tilt_frame'};
+fields=strcat('x_',names);
 [relative,args]=getflag(varargin,'relative');
 [reference,args]=getoption(args,'reference',[]);
 newvals=cell(size(names));
@@ -58,8 +61,8 @@ if ~isempty(args)
     error('AT:WrongArgument','Unexpected argument "%s"',num2str(args{1}))
 end
 
-if isfield(elem,'reference')
-    reference0=elem.reference;
+if isfield(elem,'x_referencepoint')
+    reference0=elem.x_referencepoint;
 else
     reference0=[];
 end
@@ -79,8 +82,8 @@ end
 
 vals=zeros(size(names));
 for i=1:length(names)
-    if isfield(elem,names{i})
-        vals(i)=elem.(names{i});
+    if isfield(elem,fields{i})
+        vals(i)=elem.(fields{i});
     end
     if ~isempty(newvals{i})
         if relative
@@ -89,9 +92,9 @@ for i=1:length(names)
             vals(i)=newvals{i};
         end
     end
-    elem.(names{i})=vals(i);
+    elem.(fields{i})=vals(i);
 end
-elem.reference=reference;
+elem.x_referencepoint=reference;
 offsets=vals(1:3)';
 rotations=vals(4:6);
 tilt_frame=vals(7);
