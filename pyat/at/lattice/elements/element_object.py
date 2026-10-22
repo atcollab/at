@@ -306,9 +306,6 @@ class Element:
     @classmethod
     def new_from_dict(
         cls,
-        FamName: str = "-",
-        Length: float = 0.0,
-        PassMethod: str = "DriftPass",
         **elem_dict,
     ) -> Element:
         """Generate an Element from a dictionary of attributes.
@@ -319,22 +316,18 @@ class Element:
 
         Parameters:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
-            FamName:    Name of the element
-            Length:     Length of the element
-            PassMethod: Pass method for the element
 
         Returns:
             elem(Element):       :py:class:`.Element`
         """
         # Create the element
-        element = cls.__new__(cls)
-        # Set the attributes, skipping element-specific controls
-        Element.__setattr__(element, "FamName", FamName)
-        Element.__setattr__(element, "Length", Length)
-        Element.__setattr__(element, "PassMethod", PassMethod)
-        for key, value in elem_dict.items():
-            Element.__setattr__(element, key, value)
-        return element
+        elem = cls.__new__(cls)
+        # Set the element attributes
+        for k, vdef in (("FamName", ""), ("Length", 0.0), ("PassMethod", "DriftPass")):
+            elem.__dict__[k] = elem._conversions.get(k, _nop)(elem_dict.pop(k, vdef))
+        for k, v in elem_dict.items():
+            elem.__dict__[k] = elem._conversions.get(k, _nop)(v)
+        return elem
 
     @classmethod
     def init_from_dict(cls, **elem_dict) -> Element:
