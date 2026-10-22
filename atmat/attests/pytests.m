@@ -314,14 +314,17 @@ classdef pytests < matlab.unittest.TestCase
             mring=atsettransform(lattice.m,1:n,'dx',v(1,:),'dy',v(2,:),'dz',v(3,:),...
                 'tilt',v(4,:),'pitch',v(5,:),'yaw',v(6,:),'reference',reference);
             mout=linepass(mring,rin,1:n+1);
-            % Matlab lattice converted to python, which recomputes R1, T1, R2, T2
-            % from the stored transformation
-            fout=double(py.at.lattice_pass(atwritepy(mring,'keep_all',true),...
-                pin.copy(),pyargs('refpts',py.at.All)));
-            % check: R1, T1, R2, T2 are built separately in Matlab and pyAT;
-            % differences up to 2e-15 were seen on Linux
+            % check 1: Matlab and pyAT build the same R1, T1, R2, T2 from the
+            % same transformation; differences up to 2e-15 were seen on Linux
             testCase.verifyEqual(mout,reshape(pout,6,[]),AbsTol=1.E-12);
-            testCase.verifyEqual(mout,reshape(fout,6,[]),AbsTol=1.E-12);
+            % check 2: pyAT reads the transformation stored by Matlab, once
+            % the lattice is converted
+            fring=cell(py.list(atwritepy(mring,'keep_all',true,'quiet',true)));
+            ftrans=cellfun(@(e) [e.dx;e.dy;e.dz;e.tilt;e.pitch;e.yaw],fring,...
+                'UniformOutput',false);
+            fref=cellfun(@(e) double(py.getattr(e.ReferencePoint,'value')),fring);
+            testCase.verifyEqual([ftrans{:}],v);
+            testCase.verifyEqual(fref,repmat(double(strcmp(reference,'entrance')),1,n));
         end
 
     end
