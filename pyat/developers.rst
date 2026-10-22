@@ -116,12 +116,6 @@ numbers: ``MAJOR.MINOR.PATCH``. Increment the:
 Release procedure
 -----------------
 
-To upload a release to PyPI, you will need to be a 'maintainer' of
-`Accelerator Toolbox on PyPI <https://pypi.org/project/accelerator-toolbox/>`_.
-
-For testing any version that you have installed, the simple snippet in
-``README.rst`` is sufficient.
-
 Decide the Python versions that should be supported in the release
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -136,27 +130,22 @@ Determine the minimum ``numpy`` and ``scipy`` versions:
 * The version required to **build** PyAT is set in the ``requires`` item of the
   ``[build-system]`` section of ``pyproject.toml``. It depends on the python version
   and must be higher or equal to the "run" version.
-* To avoid ABI compatibility issues, the pre-compiled binaries are built with the
-  earliest possible version of numpy for the given Python version. This ensures that
-  the user's libraries are more recent than the one AT has been compiled with. For
-  that, a copy of ``pyproject.toml`` named ``githubproject.toml`` is used for
-  compilation. In this copy, the numpy version specifications are set using ``~=``
-  instead of minimum (``>=``). Apart from these lines, the 2 files
-  should be strictly identical.
 
 Prepare the "Release notes"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A draft can be obtained by creating a new tag on GitHub. Click "Draft a new release"
 in the releases page, choose a new tag in the form ``pyat-x.y.z`` with the correct
 incremented version number. The ``pyat-`` prefix is necessary to identify python releases.
+The specified tag will not be created until the release is published.
 Select the master branch as target. In the description area, choose the current
-release in the "previous tag" pull-down, and press "Generate release notes".
+release in the "previous tag" pull-down, and press "Generate release notes". This will
+list all the pull requests merged since the previous release, with their titles.
 
 The generated notes can now be copied and edited. You can then either cancel or
 save the release as a draft while editing the release notes.
 
-The ``## What's changed`` section should be split into ``## Bug fixes`` and
-``## New features``. It must be filtered to keep only the python changes, ignoring
+The ``## What's changed`` section should be split into ``## New features`` and
+``## Bug fixes``. It must be filtered to keep only the python changes, ignoring
 the Matlab ones. The tags on each pull request are there to help in this filtering.
 
 The release notes should start with a ``## Main modifications`` section summarising
@@ -174,19 +163,34 @@ modifications are worth being included and to review the release notes.
 There should be no code modifications except updates of version informations in the
 documentation. Once the pull request is approved and merged, the release may be built.
 
+Test the build and upload process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Build the release
-~~~~~~~~~~~~~~~~~
+This checks that the github actions workflow ``Build and upload wheels and sdist``
+is likely to work correctly. A test action is called ``Test build and publish`` and can
+be triggered from the `Github Actions page <https://github.com/atcollab/at/actions>`_.
+Select ``Test build and publish`` on the left sidebar and press ``Run workflow``.
+This builds the wheels and sdist for the current selected branch, and uploads them to a
+test PyPI repository.
+
+Build and publish the release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now either go back to the draft release saved above, or start again the procedure,
 but now finalising with the ``Publish`` button.
 
-If all goes well, there will be a build of "Build and upload wheels and sdist"
-associated with the tag ``pyat-x.y.z``: on the `Github Actions page <https://github.com/atcollab/at/actions/workflows/build-python-wheels.yml>`_. This build will have
-'tar.gz' and 'wheels' downloads available.
+This will create the tag, and trigger the Github Actions workflow
+``Build and upload wheels and sdist``.
 
-Upload the release to ``pip``
+This action can be followed on the `Github Actions page <https://github.com/atcollab/at/actions>`_.
+It will automatically upload the new release to PyPI once the wheels have been built.
+
+Manual Upload to ``pip``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is only necessary if the automatic upload fails. The wheels and tar.gz files
+can be downloaded from the
+`Github Actions page <https://github.com/atcollab/at/actions/workflows/build-python-wheels.yml>`_.
 
 * Download the tar.gz and wheels files and unzip them into a directory ``<dir>``
 * Manually install at least one wheel to make sure that it has built correctly
