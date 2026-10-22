@@ -1,7 +1,7 @@
 function elem=atoctupole(fname,varargin)
 %ATSEXTUPOLE Creates an octupole element with class 'Octupole'
 %
-%  ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD)
+%  ATSEXTUPOLE(FAMNAME,LENGTH,K3N,PASSMETHOD)
 %	
 %  INPUTS
 %	 1. FNAME        	family name 
