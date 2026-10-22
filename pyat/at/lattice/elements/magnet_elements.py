@@ -160,7 +160,7 @@ class ThinMultipole(Element):
         """
 
         def make_same_length(arr1, arr2):
-            lmax = max(len(arr1), len(arr2))
+            lmax = max(len(arr1), len(arr2), order + 1)
             arr1 = np.pad(arr1, (0, lmax - len(arr1)), "constant")
             arr2 = np.pad(arr2, (0, lmax - len(arr2)), "constant")
             return arr1, arr2
@@ -168,7 +168,7 @@ class ThinMultipole(Element):
         def seterr(name, kname, kval, aname, aval):
             mess = (
                 f"Element {name}: Conflicting element data, {kname!r} ({kval}) "
-                f"in kwargs does not match positional argument {aname!r} ({aval})."
+                f"does not match positional argument {aname!r} ({aval})."
             )
             return AtError(mess)
 
@@ -185,27 +185,16 @@ class ThinMultipole(Element):
             if keyname in kwargs:
                 kvalue = self._conversions[keyname](kwargs.pop(keyname))
                 kvalue, argvalue = make_same_length(kvalue, argvalue)
+                chk = argvalue[order]
                 if isinstance(self, (Dipole, Quadrupole)):
-                    if (
-                        keyname == "PolynomB"
-                        and argvalue[1] != 0.0
-                        and (kvalue.size < 2 or argvalue[1] != kvalue[1])
-                    ):
-                        raise seterr(family_name, "PolynomB", kvalue, "k", argvalue[1])
+                    if keyname == "PolynomB" and chk != 0.0 and chk != kvalue[order]:
+                        raise seterr(family_name, "PolynomB", kvalue, "K", chk)
                 elif isinstance(self, Sextupole):
-                    if (
-                        keyname == "PolynomB"
-                        and argvalue[2] != 0.0
-                        and (kvalue.size < 3 or argvalue[2] != kvalue[2])
-                    ):
-                        raise seterr(family_name, "PolynomB", kvalue, "h", argvalue[2])
+                    if keyname == "PolynomB" and chk != 0.0 and chk != kvalue[order]:
+                        raise seterr(family_name, "PolynomB", kvalue, "H", chk)
                 elif isinstance(self, Octupole):
-                    if (
-                            keyname == "PolynomB"
-                            and argvalue[3] != 0.0
-                            and (kvalue.size < 4 or argvalue[3] != kvalue[3])
-                    ):
-                        raise seterr(family_name, "PolynomB", kvalue, "k3n", argvalue[3])
+                    if keyname == "PolynomB" and chk != 0.0 and chk != kvalue[order]:
+                        raise seterr(family_name, "PolynomB", kvalue, "Kn3", chk)
                 elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
                     raise seterr(family_name, keyname, kvalue, argname, argvalue)
                 else:
@@ -236,6 +225,7 @@ class ThinMultipole(Element):
         #   error, otherwise we give a warning.
 
         # Check kwargs and poly_a & poly_b for compatibility and convert to ParamArray
+        order = getattr(self, "DefaultOrder", 0)
         prmpola = check_polynom("PolynomA", poly_a)
         prmpolb = check_polynom("PolynomB", poly_b)
         check_strength("K", 1)
@@ -764,6 +754,7 @@ class Octupole(Multipole):
                 msg = "Octupole strength should be a float."
                 raise ValueError(msg)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
+
 
 class Corrector(LongElement):
     """Corrector element."""

@@ -136,6 +136,25 @@ def test_octupole():
     o = elements.Octupole("octupole", 1.0, [], [0.0, 0.0, 0.0, 0.0])
     assert o.MaxOrder == 3
     assert len(o.PolynomA) == 4
+    o = elements.Octupole("octupole", 1.0)
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == 0.0
+    o = elements.Octupole("octupole", 1.0, -0.5)
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == -0.5
+    o = elements.Octupole("octupole", 1.0, PolynomB=[0.0, 0.0, 0.0, 0.005])
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == 0.005
+    with pytest.warns(AtWarning):
+        o = elements.Octupole(
+            "octupole", 1.0, PolynomB=[0.0, 0.5, 0.005, 0.001], MaxOrder=2
+        )
+    assert o.MaxOrder == 2
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == 0.0
 
 
 def test_thinmultipole():
@@ -160,7 +179,6 @@ def test_multipole():
     [
         (elements.Multipole, ["Multi", 1.0]),
         (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
     ],
 )
 def test_PolynomA_strength_prioritisation(element_type, args):
@@ -191,7 +209,6 @@ def test_PolynomA_strength_prioritisation(element_type, args):
     [
         (elements.Multipole, ["Multi", 1.0]),
         (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
     ],
 )
 def test_PolynomB_strength_prioritisation(element_type, args):
