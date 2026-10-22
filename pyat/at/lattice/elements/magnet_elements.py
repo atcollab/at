@@ -286,6 +286,12 @@ class ThinMultipole(Element):
                 warnings.warn(AtWarning(msg), stacklevel=2)
         super().__setattr__(key, value)
 
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> Element:
+        # Remove the KickAngle attribute possibly present in old files
+        elem_dict.pop("KickAngle", None)
+        return super().new_from_dict(**elem_dict)
+
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
@@ -605,7 +611,12 @@ class Dipole(Radiative, Multipole):
         return super().new_from_dict(**elem_dict)
 
     def divide(self, frac) -> list[Element]:
-        if self.PassMethod == "ExactRectangularBendPass":
+        if self.PassMethod in {
+            "ExactRectangularBendPass",
+            "ExactRectangularBendRadPass",
+            "ExactRectBendPass",
+            "ExactRectBendRadPass",
+        }:
             # Cannot split a rectangular bend
             return [self]
         else:

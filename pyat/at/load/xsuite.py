@@ -370,8 +370,8 @@ class XsElement(dict, _XsFactory):
         Args:
             atelem:         AT :py:class:`.Element`
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
-              matching at best the AT PassMethod. If :py:obj:`True`, the Xsuite default
-              model and integrator will be used.
+              matching at best the AT PassMethod. If :py:obj:`False`, the Xsuite default
+              model and integrator are be used.
 
         Returns:
             xselement:  new :py:class:`XsElement` object

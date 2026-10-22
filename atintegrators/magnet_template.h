@@ -208,33 +208,35 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double *bdiff = NULL;
     #endif
     #endif
-    magnet(r_in, Elem->Length, Elem->BendingAngle,
-            Elem->PolynomA, Elem->PolynomB,
-            Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
-            Elem->FringeBendEntrance,Elem->FringeBendExit,
-            Elem->gK_entrance, Elem->gK_exit,
-            Elem->FringeQuadEntrance, Elem->FringeQuadExit,
-            Elem->fringeIntM0, Elem->fringeIntP0,
-            Elem->T1, Elem->T2, Elem->R1, Elem->R2,
-            Elem->RApertures, Elem->EApertures,
-            Elem->Scaling,
-    #if defined(STRAIGHT_DIPOLE)
-            Elem->X0ref,
-            Elem->RefDZ,
-    #endif
-    #if defined(E2_DIPOLE)
-            Elem->H1,
-            Elem->H2,
-    #endif
-    #if defined(RADIATION)
-            gamma0,
-            bdiff,
-    #endif
-    #if defined(QUANTUM)
-            gamma0,
-            Param->thread_rng,
-    #endif
-            num_particles);
+    if ((num_particles > 0) && (r_in) && (Elem->Length != 0.0)) {
+        magnet(r_in, Elem->Length, Elem->BendingAngle,
+                Elem->PolynomA, Elem->PolynomB,
+                Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
+                Elem->FringeBendEntrance,Elem->FringeBendExit,
+                Elem->gK_entrance, Elem->gK_exit,
+                Elem->FringeQuadEntrance, Elem->FringeQuadExit,
+                Elem->fringeIntM0, Elem->fringeIntP0,
+                Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+                Elem->RApertures, Elem->EApertures,
+                Elem->Scaling,
+#if defined(STRAIGHT_DIPOLE)
+                Elem->X0ref,
+                Elem->RefDZ,
+#endif /* STRAIGHT_DIPOLE */
+#if defined(E2_DIPOLE)
+                Elem->H1,
+                Elem->H2,
+#endif /* E2_DIPOLE */
+#if defined(RADIATION)
+                gamma0,
+                bdiff,
+#endif /* RADIATION */
+#if defined(QUANTUM)
+                gamma0,
+                Param->thread_rng,
+#endif /* QUANTUM */
+                num_particles);
+    }
     return Elem;
 }
 
@@ -324,7 +326,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             plhs[1] = mxCreateCellMatrix(12+N_OPTIONAL, 1);
             for (int i=0; i<N_OPTIONAL; i++)
                 mxSetCell(plhs[1], i1++, mxCreateString(optional[i]));
-            mxSetCell(plhs[0], i1++, mxCreateString("NumIntSteps"));
+            mxSetCell(plhs[1], i1++, mxCreateString("NumIntSteps"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
             mxSetCell(plhs[1], i1++, mxCreateString("fringeIntM0"));
