@@ -926,7 +926,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         def _try_constant(expr):
             try:
                 return eval(expr, self.env)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return StrParameter(self, expr)
 
         if value[0] == "(" and value[-1] == ")":
