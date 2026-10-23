@@ -7,7 +7,7 @@ from warnings import warn
 from collections.abc import Sequence
 
 import numpy as np
-from scipy.optimize import brentq
+from scipy.optimize import brentq, minimize_scalar
 
 from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
@@ -159,9 +159,30 @@ def _synchronous_points(
     imain = np.argmin(freq)
     period = clight / freq[imain]
     ct0 = tl0[imain] - 0.5 * period
-    ctg = ct0 + np.linspace(0.0, period, npoints)
+    nsteps = int(np.ceil(npoints * np.amax(freq) / freq[imain]))
+    ctg = ct0 + np.linspace(0.0, period, nsteps)
     gg = g(ctg)
+
+    def extremum(j):
+        sign = np.sign(dg[j - 1])
+        res = minimize_scalar(
+            lambda x: -sign * g(x),
+            bounds=(ctg[j - 1], ctg[j + 1]),
+            method="bounded",
+            options={"xatol": ts_tol * period},
+        )
+        return res.x
+
+    dg = np.diff(gg)
+    iext = np.flatnonzero(dg[:-1] * dg[1:] < 0.0) + 1
+    ctext = np.array([extremum(j) for j in iext])
+    if len(ctext) > 0:
+        ctg = np.sort(np.concatenate((ctg, ctext)))
+        gg = g(ctg)
     dE_max = np.amax(gg) + u0
+    nonzero = gg != 0.0
+    ctg = ctg[nonzero]
+    gg = gg[nonzero]
 
     positive = gg > 0.0
     idx = np.flatnonzero(positive[:-1] != positive[1:])
@@ -198,7 +219,7 @@ def get_timelag_fromU0(
     With several frequencies, all the synchronous points over one period of
     the lowest frequency are computed (see :py:func:`_synchronous_points`).
     Among the stable ones, the deepest potential well is selected. A warning
-    lists all of them when there are several.
+    is issued when there are several.
 
     Parameters:
         ring:               Lattice description
@@ -206,7 +227,8 @@ def get_timelag_fromU0(
           See :py:class:`ELossMethod`.
         cavpts:             Cavity location. If None, use all cavities.
           This allows to ignore harmonic cavities.
-        ts_tol: relative tolerance for ts calculation, default is 1.0e-9.
+        ts_tol: tolerance on the synchronous position, as a fraction of the
+          period of the lowest frequency, default is 1.0e-9.
           The default can be changed by setting `at.DConstant.TStol`
     Returns:
         timelag (float):    (ncav,) array of *Timelag* values
@@ -226,6 +248,9 @@ def get_timelag_fromU0(
         ts_tol = DConstant.TStol
     u0 = get_energy_loss(ring, method=method) / ring.periodicity
     freq = np.array([cav.Frequency for cav in ring.select(cavpts)])
+    if np.any(freq <= 0.0):
+        err_string = "All cavities must have a positive frequency"
+        raise AtError(err_string)
     Vc = np.array([cav.Voltage for cav in ring.select(cavpts)])
     tl0 = np.array([cav.TimeLag for cav in ring.select(cavpts)])
     try:
@@ -241,6 +266,9 @@ def get_timelag_fromU0(
             raise AtError(err_string) from None
         ct = ct[kind == 1]
         depth = depth[kind == 1]
+        if len(ct) == 0:
+            err_string = "No stable solution found for Phis: check RF settings"
+            raise AtError(err_string)
         best = np.argmax(depth)
         if len(ct) > 1:
             msg = "More than one stable solution found for Phis: check RF settings"
