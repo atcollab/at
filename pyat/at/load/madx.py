@@ -336,9 +336,8 @@ class sextupole(_MadElement):
 class octupole(_MadElement):
     @mad_element
     def to_at(self, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
-        poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
-        poly_a = [0.0, 0.0, 0.0, k3s / 6.0]
-        return [elt.Octupole(self.name, l, poly_a, poly_b, **self.meval(params))]
+        atparams = {"PolynomA": [0.0, 0.0, 0.0, k3s / 6.0]}
+        return [elt.Octupole(self.name, l, k3 / 6.0, **atparams, **self.meval(params))]
 
     @classmethod
     def from_at(cls, kwargs):
@@ -927,7 +926,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         def _try_constant(expr):
             try:
                 return eval(expr, self.env)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return StrParameter(self, expr)
 
         if value[0] == "(" and value[-1] == ")":
