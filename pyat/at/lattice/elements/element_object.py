@@ -6,7 +6,7 @@ __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
 import sysconfig
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import suppress
 from enum import Enum
 from warnings import warn, filterwarnings
@@ -60,7 +60,7 @@ class Element:
     """Base class for AT elements."""
 
     _BUILD_ATTRIBUTES: ClassVar[list[str]] = ["FamName"]
-    _conversions: ClassVar[dict] = {
+    _conversions: ClassVar[dict[str, Callable[[Any], Any]]] = {
         "FamName": str,
         "PassMethod": _passmethod,
         "Length": _float,
@@ -70,13 +70,13 @@ class Element:
         "T2": lambda v: _array(v, (6,)),
         "RApertures": lambda v: _array(v, (4,)),
         "EApertures": lambda v: _array(v, (2,)),
-        "KickAngle": lambda v: _array(v, (2,)),
         "PolynomB": _array,
         "PolynomA": _array,
         "BendingAngle": _float,
         "MaxOrder": _int,
         "NumIntSteps": lambda v: _int(v, vmin=0),
         "Energy": _float,
+        "_referencepoint": _int,
     }
     _file_classname: ClassVar[str]
 
@@ -406,9 +406,6 @@ class Element:
     @classmethod
     def new_from_dict(
         cls,
-        FamName: str = "-",
-        Length: float = 0.0,
-        PassMethod: str = "DriftPass",
         **elem_dict,
     ) -> Element:
         """Generate an Element from a dictionary of attributes.
@@ -419,22 +416,18 @@ class Element:
 
         Parameters:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
-            FamName:    Name of the element
-            Length:     Length of the element
-            PassMethod: Pass method for the element
 
         Returns:
-            elem(Element):       :py:class:`.Element`
+            element(Element):       :py:class:`.Element`
         """
-        # Create the element
-        element = cls.__new__(cls)
-        # Set the attributes, skipping element-specific controls
-        Element.__setattr__(element, "FamName", FamName)
-        Element.__setattr__(element, "Length", Length)
-        Element.__setattr__(element, "PassMethod", PassMethod)
-        for key, value in elem_dict.items():
-            Element.__setattr__(element, key, value)
-        return element
+        # Create the elem
+        elem = cls.__new__(cls)
+        # Set the elem attributes
+        for k, vdef in (("FamName", ""), ("Length", 0.0), ("PassMethod", "DriftPass")):
+            elem.__dict__[k] = elem._conversions.get(k, _nop)(elem_dict.pop(k, vdef))
+        for k, v in elem_dict.items():
+            elem.__dict__[k] = elem._conversions.get(k, _nop)(v)
+        return elem
 
     @classmethod
     def init_from_dict(cls, **elem_dict) -> Element:
