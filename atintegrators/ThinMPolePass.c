@@ -60,7 +60,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double Scaling;
         int MaxOrder;
         double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
-        int nl, nc;
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
