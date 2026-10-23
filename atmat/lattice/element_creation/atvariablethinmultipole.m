@@ -55,7 +55,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    the ith component of the Polynom(A/B) seen by a particle with 6th coordinate ct
 %    is calculated as,
 %          amp(A/B)[i] * func(1,k) + (ct-delay) * func(2,k) + ...
-%                                      + (ct-delay)**(m-1) * func(m,k)
+%                                      + (ct-delay)**{m-1} * func(m,k)
 %
 %  EXAMPLES
 %
