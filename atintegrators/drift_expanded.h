@@ -38,9 +38,10 @@ static void drift(double *r6, double L, double *bdiff)
   double py = r6[3];
   double NormL = L * p_norm;
 
-  if (bdiff) {
-    drift_propagateB(NormL, px * p_norm, py * p_norm, bdiff);
-  }
+  #ifdef DIFFUSION
+  if (bdiff) drift_propagateB(NormL, px * p_norm, py * p_norm, bdiff);
+  #endif /*DIFFUSION*/
+
   r6[0] += NormL * px;
   r6[2] += NormL * py;
   r6[5] += NormL * p_norm * (px*px + py*py) / 2.0;
