@@ -7,6 +7,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
+#include "drift_expanded.h"
 
 struct elem {
     double Length;
@@ -31,8 +32,8 @@ void quad6 (double *r, double L, double K)
     double x, xpr, y ,ypr, g, t ,lt;
     double M12,M21,M34,M43,MVD,MHD;  /* non-0 elements of transfer matrix */
     
-    if(K==0) /* Track as a drift */
-    {	ATdrift6(r,L);
+    if (K==0) { /* Track as a drift */
+        DRIFT(r, L, 0.0, NULL);
         return;
     }
     
@@ -81,11 +82,10 @@ void quad6 (double *r, double L, double K)
 }
 
 void QuadLinearPass(double *r, double le, double kv, double *T1, double *T2, double *R1, double *R2, int num_particles)
-{	int c;
-    double *r6;
-
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6)
-    for (c = 0;c<num_particles;c++) {	r6 = r+c*6;
+{
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles)
+    for (int c = 0;c<num_particles;c++) {
+        double *r6 = r+c*6;
         if (!atIsNaN(r6[0]) && atIsFinite(r6[4])) {
             /*
 		       function quad6 internally calculates the square root
