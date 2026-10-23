@@ -6,7 +6,7 @@ __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
 import sysconfig
-from collections.abc import Generator
+from collections.abc import Generator, Callable
 from enum import Enum
 from warnings import warn, filterwarnings
 from pathlib import Path
@@ -66,7 +66,7 @@ class Element:
     """Base class for AT elements."""
 
     _BUILD_ATTRIBUTES: ClassVar[list[str]] = ["FamName"]
-    _conversions: ClassVar[dict] = {
+    _conversions: ClassVar[dict[str, Callable[[Any], Any]]] = {
         "FamName": str,
         "PassMethod": _passmethod,
         "Length": _float,
@@ -82,6 +82,7 @@ class Element:
         "MaxOrder": _int,
         "NumIntSteps": lambda v: _int(v, vmin=0),
         "Energy": _float,
+        "_referencepoint": _int,
     }
     _file_classname: ClassVar[str]
 
