@@ -297,7 +297,7 @@ def element_from_dict(
 def element_to_dict(
     el: Element, encoder: Callable[[Any], Any] = lambda v: v
 ) -> dict[str, Any]:
-    dct = {hide_under(k): encoder(v) for k, v in el.to_dict().items()}
+    dct = {hide_under(k): encoder(v) for k, v in el.items()}
     dct["Class"] = getattr(el, "_file_classname", el.__class__.__name__)
     return dct
 
