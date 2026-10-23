@@ -5,14 +5,24 @@ from __future__ import annotations
 __all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
+import sysconfig
 from collections.abc import Generator
 from enum import Enum
+from warnings import warn, filterwarnings
+from pathlib import Path
 from copy import copy, deepcopy
 from typing import Any, ClassVar
 
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
+from ..exceptions import AtWarning
+from ... import integrators
+
+_ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+_integrator_path = Path(integrators.__path__[0])
+
+filterwarnings("always", category=AtWarning, module=__name__)
 
 
 class ReferencePoint(Enum):
@@ -34,13 +44,31 @@ def _nop(value):
     return value
 
 
+def _no_encoder(v):
+    """type encoding for .mat files."""
+    return v
+
+
+def _passmethod(v):
+    """Check for existing PassMethod."""
+    pm = str(v)
+    file_path = _integrator_path / pm
+    if not (
+        file_path.with_suffix(_ext_suffix).exists()
+        or file_path.with_suffix(".py").exists()
+    ):
+        msg = f"PassMethod {pm} is missing."
+        warn(AtWarning(msg), stacklevel=4)
+    return pm
+
+
 class Element:
     """Base class for AT elements."""
 
     _BUILD_ATTRIBUTES: ClassVar[list[str]] = ["FamName"]
     _conversions: ClassVar[dict] = {
         "FamName": str,
-        "PassMethod": str,
+        "PassMethod": _passmethod,
         "Length": _float,
         "R1": _array66,
         "R2": _array66,
@@ -48,7 +76,6 @@ class Element:
         "T2": lambda v: _array(v, (6,)),
         "RApertures": lambda v: _array(v, (4,)),
         "EApertures": lambda v: _array(v, (2,)),
-        "KickAngle": lambda v: _array(v, (2,)),
         "PolynomB": _array,
         "PolynomA": _array,
         "BendingAngle": _float,
@@ -236,14 +263,14 @@ class Element:
     @property
     def definition(self) -> tuple[str, tuple, dict]:
         """tuple (class_name, args, kwargs) defining the element."""
-        attrs = dict(self.items())
+        attrs = self.to_dict()
         arguments = tuple(
             attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
         )
         defelem = self.__class__(*arguments)
         keywords = {
             k: v
-            for k, v in attrs.items()
+            for k, v in sorted(attrs.items())
             if not np.array_equal(v, getattr(defelem, k, None))
             and k not in self._drop_attr
         }
@@ -279,9 +306,6 @@ class Element:
     @classmethod
     def new_from_dict(
         cls,
-        FamName: str = "-",
-        Length: float = 0.0,
-        PassMethod: str = "DriftPass",
         **elem_dict,
     ) -> Element:
         """Generate an Element from a dictionary of attributes.
@@ -292,22 +316,18 @@ class Element:
 
         Parameters:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
-            FamName:    Name of the element
-            Length:     Length of the element
-            PassMethod: Pass method for the element
 
         Returns:
-            elem(Element):       :py:class:`.Element`
+            element(Element):       :py:class:`.Element`
         """
-        # Create the element
-        element = cls.__new__(cls)
-        # Set the attributes, skipping element-specific controls
-        Element.__setattr__(element, "FamName", FamName)
-        Element.__setattr__(element, "Length", Length)
-        Element.__setattr__(element, "PassMethod", PassMethod)
-        for key, value in elem_dict.items():
-            Element.__setattr__(element, key, value)
-        return element
+        # Create the elem
+        elem = cls.__new__(cls)
+        # Set the elem attributes
+        for k, vdef in (("FamName", ""), ("Length", 0.0), ("PassMethod", "DriftPass")):
+            elem.__dict__[k] = elem._conversions.get(k, _nop)(elem_dict.pop(k, vdef))
+        for k, v in elem_dict.items():
+            elem.__dict__[k] = elem._conversions.get(k, _nop)(v)
+        return elem
 
     @classmethod
     def init_from_dict(cls, **elem_dict) -> Element:

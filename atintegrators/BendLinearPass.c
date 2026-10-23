@@ -7,7 +7,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
-#include "atphyslib.c"
+#include "bendfringe.h"
 
 
 #define SQR(X) ((X)*(X))
@@ -77,7 +77,7 @@ void bend6(double* r, double L, double b_angle, double grd, double ByError)
         {
             sqrtG2 = sqrt(G2);
             arg2 = L*sqrtG2;
-            MVD = cos(arg2);;
+            MVD = cos(arg2);
             M34 = sin(arg2)/sqrtG2;
             M43 = -sin(arg2)*sqrtG2;
         }
@@ -141,13 +141,11 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
          * Set fint OR gap are 0 to ignore fringe effects
          * Set bye to 0 to ignore ByError*/
 {
-    double *r6;
     double irho = ba/le;
-    int c;
-    
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6)
-    for (c = 0;c<num_particles;c++) {
-        r6 = r+c*6;
+
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles)
+    for (int c = 0;c<num_particles;c++) {
+        double *r6 = r+c*6;
         if(!atIsNaN(r6[0]) && atIsFinite(r6[4]))
         /*
          * function bend6 internally calculates the square root
@@ -160,10 +158,10 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
             /* edge focus */
-            edge_fringe_entrance(r6, irho, entrance_angle, fint1, gap, 1);
+            bend_linear_fringe(r6, irho, entrance_angle, gap*fint1, 1, 1.0, NULL);
             bend6(r6, le, ba, grd, bye);
             /* edge focus */
-            edge_fringe_exit(r6, irho, exit_angle, fint2, gap, 1);
+            bend_linear_fringe(r6, irho, exit_angle, gap*fint2, 1, -1.0, NULL);
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);

@@ -1,7 +1,7 @@
 import numpy
 import pytest
 
-from at import elements, uint32_refpts
+from at import elements, uint32_refpts, AtWarning
 from at.tracking.atpass import atpass  # Direct access to the C function
 
 
@@ -71,7 +71,8 @@ def test_missing_pass_method_raises_attribute_error(rin):
 
 
 def test_missing_integrator_raises_runtime_error(rin):
-    lat = [elements.Drift("drift", 1.0, PassMethod="UnknownPass")]
+    with pytest.warns(AtWarning):
+        lat = [elements.Drift("drift", 1.0, PassMethod="UnknownPass")]
     with pytest.raises(RuntimeError):
         atpass(lat, rin, 1)
 
