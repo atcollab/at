@@ -345,7 +345,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             plhs[1] = mxCreateCellMatrix(12+N_OPTIONAL, 1);
             for (int i=0; i<N_OPTIONAL; i++)
                 mxSetCell(plhs[1], i1++, mxCreateString(optional[i]));
-            mxSetCell(plhs[0], i1++, mxCreateString("NumIntSteps"));
+            mxSetCell(plhs[1], i1++, mxCreateString("NumIntSteps"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
             mxSetCell(plhs[1], i1++, mxCreateString("fringeIntM0"));
