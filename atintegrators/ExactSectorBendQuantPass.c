@@ -1,5 +1,5 @@
 #define MAGNET_PASS ExactSectorBendQuantPass
-#define INTEGRATOR_4
+#define INTEGRATOR_6
 #define QUANTUM
 #define NO_OMP  /* because of problems with random generator and OpenMP */
 
