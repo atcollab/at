@@ -144,7 +144,7 @@ def _matfile_generator(
     params.setdefault("in_file", str(mat_file))
     matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)
     if matlabfile_ver < (2, 0):
-        mat_input = scipy.io.loadmat(mat_file)
+        mat_input = scipy.io.loadmat(mat_file, mat_dtype=True)
         params, key = define_default_key(params, mat_input, ignore_chars="__")
         cell_array = mat_input[key].flat
         for index, mat_elem in enumerate(cell_array):
