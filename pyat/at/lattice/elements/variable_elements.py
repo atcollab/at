@@ -42,7 +42,8 @@ class VariableThinMultipole(Element):
         FuncA=_anyarray,
         FuncB=_anyarray,
         FuncDelay=float,
-        DOrder=int,
+        DOrderA=int,
+        DOrderB=int,
         FinterpolateA=_array,
         FinterpolateB=_array,
         TinterpolateA=_array,
@@ -65,6 +66,7 @@ class VariableThinMultipole(Element):
               * :py:attr:`at.ACMode.WHITENOISE`: gaussian white noise
               * :py:attr:`at.ACMode.ARBITRARY`: user defined turn-by-turn kick list
               * :py:attr:`at.ACMode.INTERPOLATION_TABLE`: linear interpolation from user curve
+              * :py:attr:`at.ACMode.DERIVATIVE_TABLE`: polynomial function per turn
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
@@ -81,6 +83,7 @@ class VariableThinMultipole(Element):
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
             FuncA(list|array): User defined tbt kick list for PolynomA
             FuncB(list|array): User defined tbt kick list for PolynomB
+            FuncDelay(float): Value to substract from the particles 6th coordinate
             Periodic(bool): If True (default) the user defined kick is repeated
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
                          of the excitation
@@ -131,7 +134,7 @@ class VariableThinMultipole(Element):
               with 6th coordinate ct is calculated as,
                 .. math:: \begin{equation}
                           Amp_i(A/B)[f(0,k) + (ct-delay) f(1,k) + ...
-                                            + (ct-delay)^(m-1) f(m-1,k) ]
+                                            + (ct-delay)^{m-1} f(m-1,k) ]
                           \end{equation}
         """
 
@@ -270,4 +273,4 @@ class VariableThinMultipole(Element):
             dorder = rows - 1
         setattr(self, "NSamples" + ab, nsamp)
         setattr(self, "DOrder" + ab, dorder)
-        self.FuncDelay = kwargs.setdefault("FuncDelay", 0)
+        self.FuncDelay = kwargs.get("FuncDelay", 0)
