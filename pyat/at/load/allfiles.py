@@ -10,6 +10,7 @@ from pathlib import Path
 from collections.abc import Callable
 import pickle
 
+from at import lattice
 from at.lattice import Lattice
 
 _load_extension: dict[str, Callable[..., Lattice]] = {}
@@ -88,6 +89,7 @@ def save_pkl(ring: Lattice, filename: str | Path, **kwargs) -> None:
 
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
+
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     p = Path(filename)
@@ -109,11 +111,15 @@ def load_pkl(filename: str | Path, **kwargs) -> Lattice:
 
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
+
         :py:meth:`.Lattice.load` for a generic lattice-loading method.
     """
     p = Path(filename)
     with p.open("rb") as fp:
         lattice = pickle.load(fp, **kwargs)
+    if not isinstance(lattice, Lattice):
+        msg = f"File load failed: unexpected type {type(lattice)} instead of Lattice."
+        raise TypeError(msg)
     kwargs.pop("use", None)
     lattice.in_file = str(filename)
     lattice.update(in_file=str(filename), **kwargs)
