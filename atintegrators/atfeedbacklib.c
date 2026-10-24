@@ -304,8 +304,8 @@ void track_PIL(double *vc_previous_real, double *vc_previous_imag,
     
     for(index=samplestart[0];index<ring_harmn;index+=every){
 
-        diff_real = diff_record_real[record_size-1] - FFconst[0];
-        diff_imag = diff_record_imag[record_size-1] - FFconst[1];
+        diff_real = diff_record_real[record_size-1];
+        diff_imag = diff_record_imag[record_size-1];
 
         I_record[0] += diff_real * T1;
         I_record[1] += diff_imag * T1;
