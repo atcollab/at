@@ -4,7 +4,7 @@ determined by the file extension.
 
 from __future__ import annotations
 
-__all__ = ["load_lattice", "register_format", "save_lattice"]
+__all__ = ["load_lattice", "load_pkl", "register_format", "save_lattice", "save_pkl"]
 
 from pathlib import Path
 from collections.abc import Callable
@@ -99,7 +99,7 @@ def load_pkl(filename: str | Path, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a pickle file.
 
     Parameters:
-        filename:           Name of a JSON file
+        filename:           Name of a pickle file
 
     Keyword Args:
         *:                  All keywords update the lattice properties
@@ -108,6 +108,7 @@ def load_pkl(filename: str | Path, **kwargs) -> Lattice:
         lattice (Lattice):          New :py:class:`.Lattice` object
 
     See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
         :py:meth:`.Lattice.load` for a generic lattice-loading method.
     """
     p = Path(filename)
