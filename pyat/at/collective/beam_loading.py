@@ -292,7 +292,6 @@ class BeamLoadingElement(RFCavity, Collective):
             raise AtError(error_string)
         harmonic_number = int(harmonic_number)
         
-        self.ring_harmonic_number = ring.harmonic_number #ring harmonic number (nbuckets)        
         self._nbunch = ring.nbunch
         self._beta = ring.beta #particle velocity (NOT cavity beta)
         self._cavitymode = int(cavitymode)        
@@ -353,7 +352,6 @@ class BeamLoadingElement(RFCavity, Collective):
             warnings.warn(AtWarning(warning_string), stacklevel=2)   
             self.samplenum = ring.harmonic_number
                      
-        self.samplelist_length = int(np.ceil(ring.harmonic_number/self.every))
         self.recordsize = int(np.ceil(self.delay / self.every))
 
         self.cutoff = kwargs.pop("IIRCutoff", 0.0)
@@ -462,21 +460,13 @@ class BeamLoadingElement(RFCavity, Collective):
         self.clear_history(ring=ring)
 
         # these big chaps are all for the memory assignment in C
-        self._Ig2Vg_vec = np.zeros(ring.harmonic_number*2)
-        self._Ig2Vg_tmp = np.zeros(ring.harmonic_number*2)
-        self._ig_phasor = np.zeros(ring.harmonic_number*2)
-        self._ig_phasor_record = np.zeros(ring.harmonic_number*2)
-        self._dot_output = np.zeros(ring.harmonic_number*2)
-        self._generator_phasor_record = np.zeros(ring.harmonic_number*2)
-        self._beam_phasor_record = np.zeros(ring.harmonic_number*2)                
-        self._cavity_phasor_record = np.zeros(ring.harmonic_number*2)        
-        
-        self._Ig2Vg_mat = np.zeros(ring.harmonic_number**2 * 2)
-        self._vc_previous = np.zeros(self.samplenum*2)
-        self._diff_record = np.zeros(self.recordsize*2)
-        self._samplelist = np.zeros(self.samplelist_length, dtype=np.int64)
+        self._ig_phasor = np.zeros((ring.harmonic_number, 2), order="F")
+        self._generator_phasor_record = np.zeros((ring.harmonic_number, 2), order="F")
+        self._cavity_phasor_record = np.zeros((ring.harmonic_number, 2), order="F")
 
-        self._vc_list = np.zeros((ring.harmonic_number + self.samplenum)*2)        
+        self._vc_previous = np.zeros((self.samplenum, 2), order="F")
+        self._diff_record = np.zeros((self.recordsize, 2), order="F")
+        self._samplestart = np.zeros(1, dtype=np.int64)
 
         
     def is_compatible(self, other):

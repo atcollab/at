@@ -41,14 +41,11 @@ struct elem
   double *vgen_buffer; double *vbeam_buffer; double *vbunch_buffer;
   int samplenum; int every; int recordsize;
   int ff; double cutoff;
-  double *Ig2Vg_vec; double *Ig2Vg_tmp;
-  double *ig_phasor; double *ig_phasor_record;
-  double *dot_output;
-  double *generator_phasor_record; double *beam_phasor_record; double *cavity_phasor_record;
-  double *Ig2Vg_mat;
-  double *vc_previous; double *vc_list;
+  double *ig_phasor;
+  double *generator_phasor_record; double *cavity_phasor_record;
+  double *vc_previous;
   double *diff_record;
-  long *samplelist;
+  long *samplestart;
   double *I_record; double *FFconst; double *IIRout; double *IIRcoef;
   double *pil_init;
   }; 
@@ -133,7 +130,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     int every = Elem->every;  // ...in steps of every 
     int FF = Elem->ff; //Use the feedforward constant? 
     int record_size = Elem->recordsize; // overlap coming from delay and every sampling
-    int samplelist_length = (ring_harmn + every - 1)/every; // the length of the samplelist array
     int open = Elem->openloop; // do you want to apply the correction?
     
     double *I_record = Elem->I_record; // real and imaginary of the integral part of the loop            
@@ -145,44 +141,24 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     /* Here we have to declare pointers for the PI Loop
     They have to be defined outside of an if statement*/
     
-    double *Ig2Vg_vec_real = Elem->Ig2Vg_vec;
-    double *Ig2Vg_vec_imag = Elem->Ig2Vg_vec + ring_harmn;
-    double *Ig2Vg_tmp_real = Elem->Ig2Vg_tmp;
-    double *Ig2Vg_tmp_imag = Elem->Ig2Vg_tmp + ring_harmn;
     double *ig_phasor_real = Elem->ig_phasor;
     double *ig_phasor_imag = Elem->ig_phasor + ring_harmn;
-    double *ig_phasor_record_real = Elem->ig_phasor_record;
-    double *ig_phasor_record_imag = Elem->ig_phasor_record + ring_harmn;
-    double *dot_output_real = Elem->dot_output;
-    double *dot_output_imag = Elem->dot_output + ring_harmn;
                       
     double *generator_phasor_record_real = Elem->generator_phasor_record;
     double *generator_phasor_record_imag = Elem->generator_phasor_record + ring_harmn;
-    double *beam_phasor_record_real = Elem->beam_phasor_record;
-    double *beam_phasor_record_imag = Elem->beam_phasor_record + ring_harmn;
     double *cavity_phasor_record_real = Elem->cavity_phasor_record;
     double *cavity_phasor_record_imag = Elem->cavity_phasor_record + ring_harmn;
-
-    double *Ig2Vg_mat_real = Elem->Ig2Vg_mat;
-    double *Ig2Vg_mat_imag = Elem->Ig2Vg_mat + ring_harmn*ring_harmn;
-
     double *vc_previous_real = Elem->vc_previous; 
     double *vc_previous_imag = Elem->vc_previous + samplenum;
     double *diff_record_real = Elem->diff_record; 
     double *diff_record_imag = Elem->diff_record + record_size;
-    long *samplelist = Elem->samplelist;
-    double *vc_list_real = Elem->vc_list; 
-    double *vc_list_imag = Elem->vc_list + ring_harmn + samplenum;
-    
-    //double *Ig_modulation_signal_real; double *Ig_modulation_signal_imag; 
-
+    long *samplestart = Elem->samplestart;
 
     // End of loading element attributes.
 
             
     double vbeam_set[] = {vbeam[0], vbeam[1]}; 
     double vcav_meas[] = {0.0, 0.0, 0.0};
-    double vcav_phasor[] = {0.0, 0.0}; 
 
     double tot_current = 0.0;
 
@@ -268,69 +244,32 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             if(fbmode==2){
                 // If FBMode=PROP_INTEGRAL
                 if(pil_init[0]==0){
-                    init_sample_list(samplelist, ring_harmn, every, samplelist_length); 
-                             
-                    init_phasor_arrays(vgen, gen_phase,
-                                       ig_phasor_real, ig_phasor_imag,
-                                       ig_phasor_record_real, ig_phasor_record_imag,
-                                       ring_harmn, rshunt, psi,
-                                       generator_phasor_record_real, generator_phasor_record_imag);
-
-                    init_IIR(cutoff, IIRcoef, IIRout, T1, every, vcav_set[0]);
-                    
-                    init_FFconst(FF,
-                                 ig_phasor_real, ig_phasor_imag,
-                                 ring_harmn, FFconst);
-                                 
-                    init_Ig2Vg_matrix(ring_harmn,
-                                      Ig2Vg_vec_real, Ig2Vg_vec_imag,
-                                      Ig2Vg_tmp_real, Ig2Vg_tmp_imag,
-                                      filling_time, psi, T1, 
-                                      Ig2Vg_mat_real, Ig2Vg_mat_imag);
-
-                    I_record[0] = 0.0; I_record[1] = 0.0;
-
-
-                    set_cavity_phasor(vgen, gen_phase, vbeam_set, vcav_phasor);
-
-                    init_vc_previous(vc_previous_real, vc_previous_imag, samplenum, vcav_phasor);    
-
+                    init_PIL(vgen, gen_phase, psi, rshunt, vbeam_set,
+                             vcav_set[0], FF, cutoff, T1, every,
+                             ring_harmn, samplenum, record_size,
+                             ig_phasor_real, ig_phasor_imag,
+                             generator_phasor_record_real, generator_phasor_record_imag,
+                             vc_previous_real, vc_previous_imag,
+                             diff_record_real, diff_record_imag,
+                             I_record, FFconst, IIRcoef, IIRout, samplestart);
                     pil_init[0] = 1.0;
-
-                };
+                }
 
                 set_cavity_record_phasor_array(vbunch,
-                                               beam_phasor_record_real, beam_phasor_record_imag,
                                                cavity_phasor_record_real, cavity_phasor_record_imag,
                                                generator_phasor_record_real, generator_phasor_record_imag,
                                                ring_harmn); 
 
-                if(TunerGain>0 && TunerParams[0]==0){
-                    // It is inited above, but if the psi changes
-                    // then you need to redo it.
-                    init_Ig2Vg_matrix(ring_harmn,
-                                      Ig2Vg_vec_real, Ig2Vg_vec_imag,
-                                      Ig2Vg_tmp_real, Ig2Vg_tmp_imag,
-                                      filling_time, psi, T1,
-                                      Ig2Vg_mat_real, Ig2Vg_mat_imag);
-                }
-
                 track_PIL(vc_previous_real, vc_previous_imag,
                           cavity_phasor_record_real, cavity_phasor_record_imag,
                           ig_phasor_real, ig_phasor_imag,
-                          samplelist, samplenum, record_size, samplelist_length,
+                          samplestart, samplenum, record_size,
                           diff_record_real, diff_record_imag,
                           FFconst, gain, I_record,
-                          rffreq,
                           vcav_set[0], vcav_set[1],
                           generator_phasor_record_real, generator_phasor_record_imag,
-                          Ig2Vg_vec_real, Ig2Vg_vec_imag,
-                          Ig2Vg_mat_real, Ig2Vg_mat_imag,
-                          ig_phasor_record_real, ig_phasor_record_imag,
-                          dot_output_real, dot_output_imag,
-                          kloss, T1, ring_harmn, vgen_arr,
+                          filling_time, kloss, T1, ring_harmn, vgen_arr,
                           IIRout, IIRcoef,
-                          vc_list_real, vc_list_imag,
                           every,
                           psi, rshunt,
                           open
@@ -390,19 +329,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *vgen;
         double *vcav;
 
-        double *Ig2Vg_vec;
-        double *Ig2Vg_tmp;
         double *ig_phasor;
-        double *ig_phasor_record;
-        double *dot_output;
         double *generator_phasor_record;
-        double *beam_phasor_record;
         double *cavity_phasor_record;
-        double *Ig2Vg_mat;
         double *vc_previous;
         double *diff_record;
-        long *samplelist;
-        double *vc_list;
+        long *samplestart;
         double *I_record;
         double *FFconst;
         double *IIRcoef;
@@ -453,20 +385,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         ff=atGetOptionalLong(ElemData,"FF",1); check_error();
         recordsize=atGetOptionalLong(ElemData,"recordsize",1); check_error();
 
-        Ig2Vg_vec=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_vec"); check_error();
-        Ig2Vg_tmp=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_tmp"); check_error();
         ig_phasor=atGetOptionalDoubleArray(ElemData,"_ig_phasor"); check_error();
-        ig_phasor_record=atGetOptionalDoubleArray(ElemData,"_ig_phasor_record"); check_error();
-        dot_output=atGetOptionalDoubleArray(ElemData,"_dot_output"); check_error();
         generator_phasor_record=atGetOptionalDoubleArray(ElemData,"_generator_phasor_record"); check_error();
-        beam_phasor_record=atGetOptionalDoubleArray(ElemData,"_beam_phasor_record"); check_error();
         cavity_phasor_record=atGetOptionalDoubleArray(ElemData,"_cavity_phasor_record"); check_error();
 
-        Ig2Vg_mat=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_mat"); check_error();
         vc_previous=atGetOptionalDoubleArray(ElemData,"_vc_previous"); check_error();
         diff_record=atGetOptionalDoubleArray(ElemData,"_diff_record"); check_error();        
-        samplelist=atGetOptionalLongArray(ElemData,"_samplelist"); check_error();        
-        vc_list=atGetOptionalDoubleArray(ElemData,"_vc_list"); check_error();        
+        samplestart=atGetOptionalLongArray(ElemData,"_samplestart"); check_error();        
         I_record=atGetOptionalDoubleArray(ElemData,"_I_record"); check_error();
         FFconst=atGetOptionalDoubleArray(ElemData,"_FFconst"); check_error();
         IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error();
@@ -530,27 +455,17 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->ts = ts;
 
         Elem->every=every;
-        Elem->delay=delay;
-        Elem->VoltDelay=VoltDelay;
-        Elem->PhaseDelay=PhaseDelay;        
         Elem->samplenum=samplenum;
         Elem->cutoff=cutoff;
         Elem->ff=ff;
         Elem->recordsize=recordsize;
         Elem->I_record=I_record;
-        Elem->Ig2Vg_vec=Ig2Vg_vec;
-        Elem->Ig2Vg_tmp=Ig2Vg_tmp;
         Elem->ig_phasor=ig_phasor;
-        Elem->ig_phasor_record=ig_phasor_record;
-        Elem->dot_output=dot_output;
         Elem->generator_phasor_record=generator_phasor_record;
-        Elem->beam_phasor_record=beam_phasor_record;
         Elem->cavity_phasor_record=cavity_phasor_record;
-        Elem->Ig2Vg_mat=Ig2Vg_mat;
         Elem->vc_previous=vc_previous;
         Elem->diff_record=diff_record;
-        Elem->samplelist=samplelist;
-        Elem->vc_list=vc_list;
+        Elem->samplestart=samplestart;
         Elem->FFconst=FFconst;
         Elem->IIRcoef=IIRcoef;
         Elem->IIRout=IIRout;
@@ -619,19 +534,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *IIRout;
       
       
-      double *Ig2Vg_vec;
-      double *Ig2Vg_tmp;
       double *ig_phasor;
-      double *ig_phasor_record;
-      double *dot_output;
       double *generator_phasor_record;
-      double *beam_phasor_record;
       double *cavity_phasor_record;
-      double *Ig2Vg_mat;
       double *vc_previous;
       double *diff_record;
-      long *samplelist;
-      double *vc_list;
+      long *samplestart;
 
 
       
@@ -674,13 +582,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       TunerOffset=atGetOptionalDouble(ElemData,"TunerOffset",0.0); check_error();
       TunerParams=atGetOptionalDoubleArray(ElemData,"_TunerParams"); check_error();
       
-      Ig2Vg_vec=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_vec"); check_error();
-      Ig2Vg_tmp=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_tmp"); check_error();
       ig_phasor=atGetOptionalDoubleArray(ElemData,"_ig_phasor"); check_error();
-      ig_phasor_record=atGetOptionalDoubleArray(ElemData,"_ig_phasor_record"); check_error();
-      dot_output=atGetOptionalDoubleArray(ElemData,"_dot_output"); check_error();
       generator_phasor_record=atGetOptionalDoubleArray(ElemData,"_generator_phasor_record"); check_error();
-      beam_phasor_record=atGetOptionalDoubleArray(ElemData,"_beam_phasor_record"); check_error();
       cavity_phasor_record=atGetOptionalDoubleArray(ElemData,"_cavity_phasor_record"); check_error();
 
 
@@ -694,11 +597,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       ff=atGetOptionalLong(ElemData,"FF",1); check_error();
       recordsize=atGetOptionalLong(ElemData,"recordsize",1); check_error();  
         
-      Ig2Vg_mat=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_mat"); check_error();
       vc_previous=atGetOptionalDoubleArray(ElemData,"_vc_previous"); check_error();
       diff_record=atGetOptionalDoubleArray(ElemData,"_diff_record"); check_error();        
-      samplelist=atGetOptionalLongArray(ElemData,"_samplelist"); check_error();        
-      vc_list=atGetOptionalDoubleArray(ElemData,"_vc_list"); check_error();        
+      samplestart=atGetOptionalLongArray(ElemData,"_samplestart"); check_error();        
       I_record=atGetOptionalDoubleArray(ElemData,"_I_record"); check_error();
       FFconst=atGetOptionalDoubleArray(ElemData,"_FFconst"); check_error();
       IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error();
@@ -747,28 +648,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->ts = ts;
 
       Elem->every=every;
-      
-      Elem->VoltDelay=VoltDelay;
-      Elem->PhaseDelay=PhaseDelay;
-      Elem->delay=delay;
       Elem->samplenum=samplenum;
       Elem->cutoff=cutoff;
       Elem->ff=ff;
       Elem->recordsize=recordsize;
       
-      Elem->Ig2Vg_vec=Ig2Vg_vec;
-      Elem->Ig2Vg_tmp=Ig2Vg_tmp;
       Elem->ig_phasor=ig_phasor;
-      Elem->ig_phasor_record=ig_phasor_record;
-      Elem->dot_output=dot_output;
       Elem->generator_phasor_record=generator_phasor_record;
-      Elem->beam_phasor_record=beam_phasor_record;
       Elem->cavity_phasor_record=cavity_phasor_record;
-      Elem->Ig2Vg_mat=Ig2Vg_mat;
       Elem->vc_previous=vc_previous;
       Elem->diff_record=diff_record;
-      Elem->samplelist=samplelist;
-      Elem->vc_list=vc_list;
+      Elem->samplestart=samplestart;
       Elem->I_record=I_record;
       Elem->FFconst=FFconst;
       Elem->pil_init=pil_init;
@@ -822,7 +712,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                                 
       if(nlhs>1) /* optional fields */
       {
-          plhs[1] = mxCreateCellMatrix(31,1);
+          plhs[1] = mxCreateCellMatrix(24,1);
           mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
           mxSetCell(plhs[1],1,mxCreateString("ZCuts"));
           mxSetCell(plhs[1],2,mxCreateString("TunerOffset"));
@@ -831,29 +721,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           mxSetCell(plhs[1],5,mxCreateString("every"));
           mxSetCell(plhs[1],6,mxCreateString("samplenum"));
           mxSetCell(plhs[1],7,mxCreateString("cutoff"));
-          mxSetCell(plhs[1],8,mxCreateString("FF"));   
-          mxSetCell(plhs[1],9,mxCreateString("_Ig2Vg_vec"));
-          mxSetCell(plhs[1],10,mxCreateString("_Ig2Vg_tmp"));
-          mxSetCell(plhs[1],11,mxCreateString("_ig_phasor"));
-          mxSetCell(plhs[1],12,mxCreateString("_ig_phasor_record"));
-          mxSetCell(plhs[1],13,mxCreateString("_dot_output"));
-          mxSetCell(plhs[1],14,mxCreateString("_generator_phasor_record"));
-          mxSetCell(plhs[1],15,mxCreateString("_beam_phasor_record"));
-          mxSetCell(plhs[1],16,mxCreateString("_cavity_phasor_record"));
-          mxSetCell(plhs[1],17,mxCreateString("_Ig2Vg_mat"));
-          mxSetCell(plhs[1],18,mxCreateString("_vc_previous"));
-          mxSetCell(plhs[1],19,mxCreateString("_diff_record"));
-          mxSetCell(plhs[1],20,mxCreateString("_samplelist"));
-          mxSetCell(plhs[1],21,mxCreateString("_vc_list"));
-          mxSetCell(plhs[1],22,mxCreateString("_I_record"));
-          mxSetCell(plhs[1],23,mxCreateString("_FFconst"));
-          mxSetCell(plhs[1],24,mxCreateString("_IIRcoef"));
-          mxSetCell(plhs[1],25,mxCreateString("_IIRout"));
-          mxSetCell(plhs[1],26,mxCreateString("recordsize"));
-          mxSetCell(plhs[1],27,mxCreateString("_TunerParams"));
-          mxSetCell(plhs[1],28,mxCreateString("VoltDelay"));
-          mxSetCell(plhs[1],29,mxCreateString("PhaseDelay"));
-          mxSetCell(plhs[1],30,mxCreateString("_pil_init"));
+          mxSetCell(plhs[1],8,mxCreateString("FF"));
+          mxSetCell(plhs[1],9,mxCreateString("_ig_phasor"));
+          mxSetCell(plhs[1],10,mxCreateString("_generator_phasor_record"));
+          mxSetCell(plhs[1],11,mxCreateString("_cavity_phasor_record"));
+          mxSetCell(plhs[1],12,mxCreateString("_vc_previous"));
+          mxSetCell(plhs[1],13,mxCreateString("_diff_record"));
+          mxSetCell(plhs[1],14,mxCreateString("_samplestart"));
+          mxSetCell(plhs[1],15,mxCreateString("_I_record"));
+          mxSetCell(plhs[1],16,mxCreateString("_FFconst"));
+          mxSetCell(plhs[1],17,mxCreateString("_IIRcoef"));
+          mxSetCell(plhs[1],18,mxCreateString("_IIRout"));
+          mxSetCell(plhs[1],19,mxCreateString("recordsize"));
+          mxSetCell(plhs[1],20,mxCreateString("_TunerParams"));
+          mxSetCell(plhs[1],21,mxCreateString("VoltDelay"));
+          mxSetCell(plhs[1],22,mxCreateString("PhaseDelay"));
+          mxSetCell(plhs[1],23,mxCreateString("_pil_init"));
       }
   }
   else
