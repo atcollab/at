@@ -630,6 +630,7 @@ void track_PIL(double *vc_previous_real, double *vc_previous_imag,
     int index=0;
     int index2=0;
     int sample=0;
+    int nsamples = (ring_harmn - sample_list[0] + every - 1)/every;
     
     double diff_real, diff_imag, fb_value_real, fb_value_imag;
     double fb_amp, fb_phase, fb_real, fbr, fbi;
@@ -641,7 +642,7 @@ void track_PIL(double *vc_previous_real, double *vc_previous_imag,
 
     fill_ig_phasor(ig_phasor_real, ig_phasor_imag, ring_harmn);
     
-    for(idx=0;idx<samplelist_length;idx++){
+    for(idx=0;idx<nsamples;idx++){
         index = sample_list[idx];
 
         diff_real = diff_record_real[record_size-1] - FFconst[0];

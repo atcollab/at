@@ -121,7 +121,7 @@ at.add_beamloading(
     Nslice=Nslice,
     cavitymode=at.CavityMode.PASSIVE_SETVOLTAGE,
     PhaseGain=0.00,
-    passive_voltage=volt_set,
+    PassiveVoltage=volt_set,
     buffersize=1000,
     windowlength=1000,
     fbmode=at.FeedbackMode.WINDOW,

@@ -163,7 +163,7 @@ class BeamLoadingElement(RFCavity, Collective):
         NormFact=float,
         TunerGain=float,
         Gain=lambda v: _array(v, shape=(2,)),
-        IIR_cutoff=float,
+        cutoff=float,
         _beta=float,
         _wakefact=float,
         _nslice=int,
@@ -194,7 +194,6 @@ class BeamLoadingElement(RFCavity, Collective):
         detune: float | None = 0.0,
         cavitymode: CavityMode | None = CavityMode.ACTIVE,
         fbmode: FeedbackMode | None = FeedbackMode.PROP,
-        IIR_cutoff: float = 0.0,
         **kwargs,
     ):
         r"""
@@ -342,6 +341,8 @@ class BeamLoadingElement(RFCavity, Collective):
 
         # Initialise FBMode=PROP_INTEGRAL buffers                  
         self.every = kwargs.pop("Every", 1)
+        if not 1 <= self.every <= ring.harmonic_number:
+            raise AtError('Attribute every must be between 1 and ring.harmonic_number')
         self.samplenum = kwargs.pop("SampleNum", 1)
         if self.samplenum > ring.harmonic_number:
             warning_string = (
@@ -355,7 +356,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self.samplelist_length = int(np.ceil(ring.harmonic_number/self.every))
         self.recordsize = int(np.ceil(self.delay / self.every))
 
-        self.Cutoff = kwargs.pop("IIRCutoff",0.0)
+        self.cutoff = kwargs.pop("IIRCutoff", 0.0)
         self.FF = kwargs.pop("FF", 1) #bool
         self._IIRcoef = np.zeros(1)
         self._IIRout = np.zeros(2)
@@ -473,7 +474,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._Ig2Vg_mat = np.zeros(ring.harmonic_number**2 * 2)
         self._vc_previous = np.zeros(self.samplenum*2)
         self._diff_record = np.zeros(self.recordsize*2)
-        self._samplelist = np.zeros(self.samplelist_length, dtype=np.long)
+        self._samplelist = np.zeros(self.samplelist_length, dtype=np.int64)
 
         self._vc_list = np.zeros((ring.harmonic_number + self.samplenum)*2)        
 
@@ -483,9 +484,9 @@ class BeamLoadingElement(RFCavity, Collective):
 
     def clear_history(self, ring=None):
         if ring is not None:
-            current = ring.beam_current
             self._vbunch = np.zeros((self.ring_harmonic_number, 2), order="F")
-            self._init_bl_params(current)
+            self._init_bl_params(ring)
+            self._pil_init = np.zeros(1)
 
         tl = self._nturns * self._nslice * self._nbunch
         self._turnhistory = np.zeros((tl, 4), order="F")
@@ -498,11 +499,6 @@ class BeamLoadingElement(RFCavity, Collective):
                 (self.ring_harmonic_number, 2, self._buffersize), order="F"
             )
             
-    def _set_optimum_detuning(self, current):
-        psi = np.arctan(- 2 * current * self.Rshunt / self.Voltage * np.cos(self._phis))
-        return psi
-       
-
     def _set_optimum_detuning(self, current):
         psi = np.arctan(- 2 * current * self.Rshunt / self.Voltage * np.cos(self._phis))
         return psi
@@ -556,7 +552,8 @@ class BeamLoadingElement(RFCavity, Collective):
         '''
         return np.array([Vg, theta_g, Pg])
 
-    def _init_bl_params(self, current):
+    def _init_bl_params(self, ring):
+        current = ring.beam_current
         if (self._cavitymode == 1) and (current > 0.0):
             psi = self._set_optimum_detuning(current)
             if np.isnan(psi):
@@ -584,9 +581,13 @@ class BeamLoadingElement(RFCavity, Collective):
 
         self._vgen = np.array([vgen, theta_g, psi])
 
-        vbp_amp = 2 * current * self.Rshunt * np.cos(psi)
-        vbp_phase = np.pi + psi
-        vbp_complex = vbp_amp * np.cos(vbp_phase) + 1j * vbp_amp * np.sin(vbp_phase)
+        omr = 2 * np.pi * self.ResFrequency
+        alpha = 1j * omr - omr / (2 * self.Qfactor)
+        kloss = self.Rshunt * omr / (2 * self.Qfactor)
+        t0 = ring.circumference / (ring.beta * clight)
+        tb = ring.bunch_spos / (ring.beta * clight)
+        jumps = -2 * kloss * ring.bunch_currents * t0
+        vbp_complex = np.sum(jumps * np.exp(alpha * (t0 - tb))) / (1 - np.exp(alpha * t0))
 
         self._vbeam_phasor = np.array([np.abs(vbp_complex), np.angle(vbp_complex)])
 

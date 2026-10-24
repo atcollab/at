@@ -50,6 +50,7 @@ struct elem
   double *diff_record;
   long *samplelist;
   double *I_record; double *FFconst; double *IIRout; double *IIRcoef;
+  double *pil_init;
   }; 
 
 
@@ -132,13 +133,14 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     int every = Elem->every;  // ...in steps of every 
     int FF = Elem->ff; //Use the feedforward constant? 
     int record_size = Elem->recordsize; // overlap coming from delay and every sampling
-    int samplelist_length = ceil(ring_harmn/every); // the length of the samplelist array
+    int samplelist_length = (ring_harmn + every - 1)/every; // the length of the samplelist array
     int open = Elem->openloop; // do you want to apply the correction?
     
     double *I_record = Elem->I_record; // real and imaginary of the integral part of the loop            
     double *FFconst = Elem->FFconst; // the feedfoward constant to use
     double *IIRout = Elem->IIRout;
     double *IIRcoef = Elem->IIRcoef;
+    double *pil_init = Elem->pil_init;
     
     /* Here we have to declare pointers for the PI Loop
     They have to be defined outside of an if statement*/
@@ -265,7 +267,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             }
             if(fbmode==2){
                 // If FBMode=PROP_INTEGRAL
-                if(iturn==0){
+                if(pil_init[0]==0){
                     init_sample_list(samplelist, ring_harmn, every, samplelist_length); 
                              
                     init_phasor_arrays(vgen, gen_phase,
@@ -293,6 +295,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
                     init_vc_previous(vc_previous_real, vc_previous_imag, samplenum, vcav_phasor);    
 
+                    pil_init[0] = 1.0;
+
                 };
 
                 set_cavity_record_phasor_array(vbunch,
@@ -301,10 +305,9 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                                                generator_phasor_record_real, generator_phasor_record_imag,
                                                ring_harmn); 
 
-                if(iturn>=1 && TunerGain>0 && iturn%TunerAveragingPeriod==1){
+                if(TunerGain>0 && TunerParams[0]==0){
                     // It is inited above, but if the psi changes
-                    // then you need to redo it. The ==1 is smart because
-                    // it means the psi was changed on the turn before!
+                    // then you need to redo it.
                     init_Ig2Vg_matrix(ring_harmn,
                                       Ig2Vg_vec_real, Ig2Vg_vec_imag,
                                       Ig2Vg_tmp_real, Ig2Vg_tmp_imag,
@@ -370,7 +373,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         long nslice, nturns, cavitymode, fbmode, buffersize;
         long delay, every, samplenum, ff, recordsize, openloop;
         double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
-        double *VoltDelay, *PhaseDelay;
+        double *VoltDelay, *PhaseDelay, *pil_init;
         
         double wakefact, Energy, Frequency, TimeLag, Length;
         double normfact, qfactor, rshunt, beta, phis, ts, cutoff;
@@ -468,6 +471,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         FFconst=atGetOptionalDoubleArray(ElemData,"_FFconst"); check_error();
         IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error();
         IIRout=atGetOptionalDoubleArray(ElemData,"_IIRout"); check_error();
+        pil_init=atGetOptionalDoubleArray(ElemData,"_pil_init"); check_error();
         
                 
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
@@ -550,6 +554,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->FFconst=FFconst;
         Elem->IIRcoef=IIRcoef;
         Elem->IIRout=IIRout;
+        Elem->pil_init=pil_init;
 
     }
     energy = atEnergy(Param->energy, Elem->Energy); check_error();
@@ -566,10 +571,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         atError("Unknown fbmode provided."); check_error();
     } 
 
-    if(Elem->fbmode>=3){
-        atError("Unknown fbmode provided."); check_error();
-    } 
-    
     #ifdef _MSC_VER
     atError("Beam loading module not implemented in Windows."); check_error();
     #endif
@@ -598,7 +599,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       long delay, every, samplenum, ff, recordsize, openloop;
 
       double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
-      double *VoltDelay, *PhaseDelay;
+      double *VoltDelay, *PhaseDelay, *pil_init;
       double wakefact, Energy, Frequency, TimeLag, Length;
       double normfact, qfactor, rshunt, beta, phis, ts, cutoff;
       double *gain;
@@ -668,6 +669,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
 
+      TunerGain=atGetDouble(ElemData,"TunerGain"); check_error();
       TunerAveragingPeriod=atGetOptionalLong(ElemData,"TunerAveragingPeriod",1); check_error();
       TunerOffset=atGetOptionalDouble(ElemData,"TunerOffset",0.0); check_error();
       TunerParams=atGetOptionalDoubleArray(ElemData,"_TunerParams"); check_error();
@@ -698,9 +700,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       samplelist=atGetOptionalLongArray(ElemData,"_samplelist"); check_error();        
       vc_list=atGetOptionalDoubleArray(ElemData,"_vc_list"); check_error();        
       I_record=atGetOptionalDoubleArray(ElemData,"_I_record"); check_error();
-      FFconst=atGetOptionalDoubleArray(ElemData,"_FFcont"); check_error();
-      IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error()
+      FFconst=atGetOptionalDoubleArray(ElemData,"_FFconst"); check_error();
+      IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error();
       IIRout=atGetOptionalDoubleArray(ElemData,"_IIRout"); check_error();
+      pil_init=atGetOptionalDoubleArray(ElemData,"_pil_init"); check_error();
 
       
       Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -768,6 +771,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->vc_list=vc_list;
       Elem->I_record=I_record;
       Elem->FFconst=FFconst;
+      Elem->pil_init=pil_init;
       Elem->IIRcoef=IIRcoef;
       Elem->IIRout=IIRout;
       
@@ -811,12 +815,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],20,mxCreateString("_vbeam_buffer"));
       mxSetCell(plhs[0],21,mxCreateString("_vbunch_buffer"));
       mxSetCell(plhs[0],22,mxCreateString("_buffersize"));
-
-      mxSetCell(plhs[0],24,mxCreateString("_phis"));
-      mxSetCell(plhs[0],25,mxCreateString("_ts"));     
-      mxSetCell(plhs[0],26,mxCreateString("OpenLoop"));     
-    
-      
+      mxSetCell(plhs[0],23,mxCreateString("_phis"));
+      mxSetCell(plhs[0],24,mxCreateString("_ts"));
+      mxSetCell(plhs[0],25,mxCreateString("OpenLoop"));
+      mxSetCell(plhs[0],26,mxCreateString("TunerGain"));
                                 
       if(nlhs>1) /* optional fields */
       {
@@ -825,33 +827,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           mxSetCell(plhs[1],1,mxCreateString("ZCuts"));
           mxSetCell(plhs[1],2,mxCreateString("TunerOffset"));
           mxSetCell(plhs[1],3,mxCreateString("TunerAveragingPeriod"));
-          mxSetCell(plhs[1],4,mxCreateString("Delay"));           
-          mxSetCell(plhs[1],5,mxCreateString("Every"));           
-          mxSetCell(plhs[1],6,mxCreateString("SampleNum"));            
-          mxSetCell(plhs[1],7,mxCreateString("Delay"));  
+          mxSetCell(plhs[1],4,mxCreateString("delay"));
+          mxSetCell(plhs[1],5,mxCreateString("every"));
+          mxSetCell(plhs[1],6,mxCreateString("samplenum"));
+          mxSetCell(plhs[1],7,mxCreateString("cutoff"));
           mxSetCell(plhs[1],8,mxCreateString("FF"));   
-          
-          mxSetCell(plhs[1],9,mxCreateString("Ig2Vg_vec"));   
-          mxSetCell(plhs[1],10,mxCreateString("Ig2Vg_tmp"));   
-          mxSetCell(plhs[1],11,mxCreateString("ig_phasor"));   
-          mxSetCell(plhs[1],12,mxCreateString("ig_phasor_record"));   
-          mxSetCell(plhs[1],13,mxCreateString("dot_output"));   
-          mxSetCell(plhs[1],14,mxCreateString("generator_phasor_record"));   
-          mxSetCell(plhs[1],15,mxCreateString("beam_phasor_record"));   
-          mxSetCell(plhs[1],16,mxCreateString("cavity_phasor_record"));   
-          mxSetCell(plhs[1],17,mxCreateString("Ig2Vg_mat"));   
-          mxSetCell(plhs[1],18,mxCreateString("vc_previous"));   
-          mxSetCell(plhs[1],19,mxCreateString("diff_record"));   
-          mxSetCell(plhs[1],20,mxCreateString("samplelist"));   
-          mxSetCell(plhs[1],21,mxCreateString("vc_list"));   
-          mxSetCell(plhs[1],22,mxCreateString("I_record"));   
-          mxSetCell(plhs[1],23,mxCreateString("FFconst"));   
-          mxSetCell(plhs[1],24,mxCreateString("IIRcoef"));   
-          mxSetCell(plhs[1],25,mxCreateString("IIRout"));   
-          mxSetCell(plhs[1],26,mxCreateString("RecordSize"));  
-          mxSetCell(plhs[1],28,mxCreateString("TunerParams"));   
-          mxSetCell(plhs[1],29,mxCreateString("VoltDelay"));
-          mxSetCell(plhs[1],30,mxCreateString("PhaseDelay"));          
+          mxSetCell(plhs[1],9,mxCreateString("_Ig2Vg_vec"));
+          mxSetCell(plhs[1],10,mxCreateString("_Ig2Vg_tmp"));
+          mxSetCell(plhs[1],11,mxCreateString("_ig_phasor"));
+          mxSetCell(plhs[1],12,mxCreateString("_ig_phasor_record"));
+          mxSetCell(plhs[1],13,mxCreateString("_dot_output"));
+          mxSetCell(plhs[1],14,mxCreateString("_generator_phasor_record"));
+          mxSetCell(plhs[1],15,mxCreateString("_beam_phasor_record"));
+          mxSetCell(plhs[1],16,mxCreateString("_cavity_phasor_record"));
+          mxSetCell(plhs[1],17,mxCreateString("_Ig2Vg_mat"));
+          mxSetCell(plhs[1],18,mxCreateString("_vc_previous"));
+          mxSetCell(plhs[1],19,mxCreateString("_diff_record"));
+          mxSetCell(plhs[1],20,mxCreateString("_samplelist"));
+          mxSetCell(plhs[1],21,mxCreateString("_vc_list"));
+          mxSetCell(plhs[1],22,mxCreateString("_I_record"));
+          mxSetCell(plhs[1],23,mxCreateString("_FFconst"));
+          mxSetCell(plhs[1],24,mxCreateString("_IIRcoef"));
+          mxSetCell(plhs[1],25,mxCreateString("_IIRout"));
+          mxSetCell(plhs[1],26,mxCreateString("recordsize"));
+          mxSetCell(plhs[1],27,mxCreateString("_TunerParams"));
+          mxSetCell(plhs[1],28,mxCreateString("VoltDelay"));
+          mxSetCell(plhs[1],29,mxCreateString("PhaseDelay"));
+          mxSetCell(plhs[1],30,mxCreateString("_pil_init"));
       }
   }
   else
