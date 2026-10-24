@@ -684,7 +684,7 @@ class BaseParser(DictNoDot, StrParser):
     def _command_str(label: str | None, cmdname: str, *argnames: str):
         string = ", ".join((cmdname, *argnames))
         if label is not None:
-            string = " : ".join((label, string))
+            string = f"{label} : {string}"
         return string
 
     def _lookup(self, item: str):
@@ -845,7 +845,7 @@ class BaseParser(DictNoDot, StrParser):
         self,
         *filenames: str | Path,
         final: bool = True,
-        prolog: None | int | Callable[..., None] = None,
+        prolog: int | Callable[..., None] | None = None,
         epilog: Callable[..., None] | None = None,
         **kwargs,
     ) -> None:

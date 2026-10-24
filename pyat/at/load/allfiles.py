@@ -8,6 +8,7 @@ __all__ = ["load_lattice", "register_format", "save_lattice"]
 
 from pathlib import Path
 from collections.abc import Callable
+import pickle
 
 from at.lattice import Lattice
 
@@ -78,6 +79,46 @@ def save_lattice(ring: Lattice, filepath: str | Path, **kwargs) -> None:
         return save_func(ring, filepath, **kwargs)
 
 
+def save_pkl(ring: Lattice, filename: str | Path, **kwargs) -> None:
+    """Save a :py:class:`.Lattice` as a :py:mod:`pickle` file.
+
+    Parameters:
+        ring:           Lattice description
+        filename:       Name of the pickle file
+
+    See Also:
+        :py:func:`.save_lattice` for a generic lattice-saving function.
+        :py:meth:`.Lattice.save` for a generic lattice-saving method.
+    """
+    p = Path(filename)
+    with p.open("wb") as fp:
+        pickle.dump(ring, fp, **kwargs)
+
+
+def load_pkl(filename: str | Path, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a pickle file.
+
+    Parameters:
+        filename:           Name of a JSON file
+
+    Keyword Args:
+        *:                  All keywords update the lattice properties
+
+    Returns:
+        lattice (Lattice):          New :py:class:`.Lattice` object
+
+    See Also:
+        :py:meth:`.Lattice.load` for a generic lattice-loading method.
+    """
+    p = Path(filename)
+    with p.open("rb") as fp:
+        lattice = pickle.load(fp, **kwargs)
+    kwargs.pop("use", None)
+    lattice.in_file = str(filename)
+    lattice.update(in_file=str(filename), **kwargs)
+    return lattice
+
+
 def register_format(
     extension: str,
     load_func: Callable[..., Lattice] | None = None,
@@ -98,6 +139,17 @@ def register_format(
     if save_func is not None:
         _save_extension[extension] = save_func
         save_lattice.__doc__ += f"\n        {extension:<10}\n            {descr}\n"
+
+
+register_format(
+    ".pkl",
+    load_pkl,
+    save_pkl,
+    descr=(
+        ":py:mod:`pickle` representation of a python AT Lattice."
+        " See :py:func:`.load_pkl`."
+    ),
+)
 
 
 Lattice.load = staticmethod(load_lattice)
