@@ -239,7 +239,8 @@ class Lattice(list):
         frequency: float = kwargs.pop("_frequency", 0.0)
         cell_length: float = kwargs.pop("_length", 0.0)
         cell_h = kwargs.pop("cell_harmnumber", kwargs.pop("_cell_harmnumber", 0.0))
-        ring_h = round(kwargs.pop("harmonic_number", cell_h * periodicity))
+        ring_h = kwargs.pop("harmonic_number", cell_h * periodicity)
+        ring_h = round(ring_h) if ring_h else 0.0
 
         energy = kwargs.setdefault("energy", kwargs.pop("_energy", None))
         if energy is None:
@@ -640,7 +641,7 @@ class Lattice(list):
         return elem_filter(params, *args)
 
     @property
-    def s_range(self) -> None | tuple[float, float]:
+    def s_range(self) -> tuple[float, float] | None:
         """Range of interest: (s_min, s_max). :py:obj:`None` means the full cell."""
         try:
             return self._s_range

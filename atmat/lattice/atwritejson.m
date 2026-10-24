@@ -46,18 +46,16 @@ end
 
     function prms=get_params(ring)
         % Get "standard" properties
-        [name, energy, part, periodicity, harmonic_number]=...
-            atGetRingProperties(ring,'FamName', 'Energy', 'Particle',...
-            'Periodicity', 'HarmNumber');
+        flist = {'FamName', 'Energy', 'Particle', 'Periodicity'};
+        [name, energy, part, periodicity]=atGetRingProperties(ring,flist{:});
         prms=struct('name', name, 'energy', energy, 'periodicity', periodicity,...
-            'particle', saveobj(part), 'harmonic_number', harmonic_number);
+            'particle', saveobj(part));
         % Add user-defined properties
         idx=atlocateparam(ring);
         if ~isempty(idx)
-            flist={'FamName','PassMethod','Length','Class',...
-                'Energy', 'Particle','Periodicity','cell_harmnumber'};
-            present=isfield(ring{idx}, flist);
-            p2=rmfield(ring{idx},flist(present));
+            glist = [flist {'Length', 'PassMethod', 'Class'}];
+            present=isfield(ring{idx}, glist);
+            p2=rmfield(ring{idx},glist(present));
             for nm=fieldnames(p2)'
                 na=nm{1};
                 prms.(na)=p2.(na);

@@ -164,7 +164,7 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
                 E0s = atgetfieldvalues(ring,'Energy');
                 E0s = E0s(isfinite(E0s));   % Discard undefined values
                 E0s = unique(E0s);
-                if length(E0s) == 1
+                if isscalar(E0s)
                     energy = E0s;
                 elseif length(E0s) > 1
                     error('AT:NoEnergy','Energy field not equal for all elements')
@@ -192,15 +192,16 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
             if ~isempty(maincav)
                 if maincav{1}.Frequency ~= 0
                     cell_h = round(maincav{1}.Frequency/get_cell_frev(ring));
+                    parmelem.cell_harmnumber=cell_h;
                 elseif isfield(maincav{1},'HarmNumber')
                     cell_h = maincav{1}.HarmNumber/getnp(ring);
+                    parmelem.cell_harmnumber=cell_h;
                 else
                     cell_h=NaN;
                 end
             else
                 cell_h = NaN;
             end
-            parmelem.cell_harmnumber=cell_h;
         end
     end
 

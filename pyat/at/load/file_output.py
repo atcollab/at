@@ -74,7 +74,7 @@ class Exporter:
                         yield name, loc
 
         use_line = kwargs.pop("use_line", self.use_line)
-        self.seqname = kwargs.pop("use", ring.name if ring.name else "RING")
+        self.seqname = kwargs.pop("use", ring.name or "RING")
         self.anystore = {}
         self.store = {
             elt.Drift: {} if use_line else None,
