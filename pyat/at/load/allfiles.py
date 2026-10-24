@@ -10,7 +10,6 @@ from pathlib import Path
 from collections.abc import Callable
 import pickle
 
-from at import lattice
 from at.lattice import Lattice
 
 _load_extension: dict[str, Callable[..., Lattice]] = {}
@@ -121,7 +120,6 @@ def load_pkl(filename: str | Path, **kwargs) -> Lattice:
         msg = f"File load failed: unexpected type {type(lattice)} instead of Lattice."
         raise TypeError(msg)
     kwargs.pop("use", None)
-    lattice.in_file = str(filename)
     lattice.update(in_file=str(filename), **kwargs)
     return lattice
 
