@@ -62,6 +62,7 @@ def save_json(
 
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
+
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     indent = None if compact else 2
