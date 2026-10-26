@@ -1,5 +1,4 @@
 #include "atelem.c"
-#include "atlalib.c"
 #include "atimplib.c"
 #include <math.h>
 #include <float.h>
