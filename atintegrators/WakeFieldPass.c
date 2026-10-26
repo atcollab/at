@@ -289,7 +289,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(12,1); /* No optional fields */
+            plhs[1] = mxCreateCellMatrix(10,1); /* No optional fields */
             mxSetCell(plhs[0],0,mxCreateString("_wakeDX"));
             mxSetCell(plhs[0],1,mxCreateString("_wakeDY"));
             mxSetCell(plhs[0],2,mxCreateString("_wakeQX"));
