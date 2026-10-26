@@ -27,13 +27,6 @@ struct elem
   double *T2;
 };
 
-void apply_all_Tarr(double *r_in, int num_particles, double *T_arr){
-    int c=0;
-    for(c=0; c<num_particles; c++){
-       double *r6 = r_in+c*6;
-       ATaddvv(r6, T_arr);
-    }
-}
 
 void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunch,
                    double *bunch_spos,double *bunch_currents,struct elem *Elem) {
