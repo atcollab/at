@@ -9,6 +9,13 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
+void apply_all_Tarr(double *r_in, int num_particles, double *T_arr){
+    int c=0;
+    for(c=0; c<num_particles; c++){
+       double *r6 = r_in+c*6;
+       ATaddvv(r6, T_arr);
+    }
+}
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
 
