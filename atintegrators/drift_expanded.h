@@ -31,7 +31,7 @@ static void drift_propagateB(double NormL, double xpr, double ypr, double *bdiff
   ATsandwichmmt(M66, bdiff);
 }
 
-static void drift(double *r6, double L, double *bdiff)
+static ForceInline void drift(double *r6, double L, double *bdiff)
 {
   double p_norm = 1.0 / (1.0+r6[4]);
   double px = r6[1];
