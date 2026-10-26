@@ -181,7 +181,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     // parameters needed to computed cavity response
     double filling_time = 2*qfactor / (TWOPI * freqres);
-    double T1 = 1/rffreq;
+    double T1 = circumference / (ring_harmn * beta * C0);
     double kloss = rshunt * TWOPI * freqres / (2 * qfactor);
 
 
@@ -227,7 +227,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                
         // First write the values to the buffer
         if(buffersize>0){
-            write_buffer(vbeam, vbeam_buffer, 2, buffersize);
+            write_buffer(vbeam_set, vbeam_buffer, 2, buffersize);
             write_buffer(vgen_arr, vgen_buffer, 3, buffersize);
             write_buffer(vbunch, vbunch_buffer, 2*ring_harmn, buffersize);
         }   
@@ -239,7 +239,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             // If CavityMode=ACTIVE
             if(fbmode==1){
                 // If FBMode=PROP
-                update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay);
+                update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay, open);
             }
             if(fbmode==2){
                 // If FBMode=PROP_INTEGRAL
@@ -288,7 +288,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         // If TunerGain is zero, it is skipped 
         // If you are in PASSIVE_VOLTAGE, then the psi 
         //  has already been updated so don't need to come here again. 
-        if(TunerGain>0 && cavitymode!=3){
+        if(TunerGain>0 && cavitymode==1){
             compute_tuner(vcav_meas, vgen_arr,
                           TunerParams, TunerGain, TunerAveragingPeriod, TunerOffset);
         }            
@@ -374,16 +374,16 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         openloop=atGetLong(ElemData,"OpenLoop"); check_error();
        
         /*optional attributes*/        
-        delay=atGetOptionalLong(ElemData,"delay",1); check_error();
+        delay=atGetOptionalLong(ElemData,"_delay",1); check_error();
         
-        VoltDelay=atGetOptionalDoubleArray(ElemData,"VoltDelay"); check_error();
-        PhaseDelay=atGetOptionalDoubleArray(ElemData,"PhaseDelay"); check_error();
+        VoltDelay=atGetOptionalDoubleArray(ElemData,"_voltdelay"); check_error();
+        PhaseDelay=atGetOptionalDoubleArray(ElemData,"_phasedelay"); check_error();
 
-        every=atGetOptionalLong(ElemData,"every",1); check_error();
-        samplenum=atGetOptionalLong(ElemData,"samplenum",1); check_error();        
+        every=atGetOptionalLong(ElemData,"_every",1); check_error();
+        samplenum=atGetOptionalLong(ElemData,"_samplenum",1); check_error();        
         cutoff=atGetOptionalDouble(ElemData,"cutoff",0); check_error();        
         ff=atGetOptionalLong(ElemData,"FF",1); check_error();
-        recordsize=atGetOptionalLong(ElemData,"recordsize",1); check_error();
+        recordsize=atGetOptionalLong(ElemData,"_recordsize",1); check_error();
 
         ig_phasor=atGetOptionalDoubleArray(ElemData,"_ig_phasor"); check_error();
         generator_phasor_record=atGetOptionalDoubleArray(ElemData,"_generator_phasor_record"); check_error();
@@ -587,15 +587,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       cavity_phasor_record=atGetOptionalDoubleArray(ElemData,"_cavity_phasor_record"); check_error();
 
 
-      delay=atGetOptionalLong(ElemData,"delay",1); check_error();
-      VoltDelay=atGetOptionalDoubleArray(ElemData,"VoltDelay"); check_error();
-      PhaseDelay=atGetOptionalDoubleArray(ElemData,"PhaseDelay"); check_error();  
+      delay=atGetOptionalLong(ElemData,"_delay",1); check_error();
+      VoltDelay=atGetOptionalDoubleArray(ElemData,"_voltdelay"); check_error();
+      PhaseDelay=atGetOptionalDoubleArray(ElemData,"_phasedelay"); check_error();  
           
-      every=atGetOptionalLong(ElemData,"every",1); check_error();
-      samplenum=atGetOptionalLong(ElemData,"samplenum",1); check_error();        
+      every=atGetOptionalLong(ElemData,"_every",1); check_error();
+      samplenum=atGetOptionalLong(ElemData,"_samplenum",1); check_error();        
       cutoff=atGetOptionalDouble(ElemData,"cutoff",0); check_error();        
       ff=atGetOptionalLong(ElemData,"FF",1); check_error();
-      recordsize=atGetOptionalLong(ElemData,"recordsize",1); check_error();  
+      recordsize=atGetOptionalLong(ElemData,"_recordsize",1); check_error();  
         
       vc_previous=atGetOptionalDoubleArray(ElemData,"_vc_previous"); check_error();
       diff_record=atGetOptionalDoubleArray(ElemData,"_diff_record"); check_error();        
@@ -717,9 +717,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           mxSetCell(plhs[1],1,mxCreateString("ZCuts"));
           mxSetCell(plhs[1],2,mxCreateString("TunerOffset"));
           mxSetCell(plhs[1],3,mxCreateString("TunerAveragingPeriod"));
-          mxSetCell(plhs[1],4,mxCreateString("delay"));
-          mxSetCell(plhs[1],5,mxCreateString("every"));
-          mxSetCell(plhs[1],6,mxCreateString("samplenum"));
+          mxSetCell(plhs[1],4,mxCreateString("_delay"));
+          mxSetCell(plhs[1],5,mxCreateString("_every"));
+          mxSetCell(plhs[1],6,mxCreateString("_samplenum"));
           mxSetCell(plhs[1],7,mxCreateString("cutoff"));
           mxSetCell(plhs[1],8,mxCreateString("FF"));
           mxSetCell(plhs[1],9,mxCreateString("_ig_phasor"));
@@ -732,10 +732,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           mxSetCell(plhs[1],16,mxCreateString("_FFconst"));
           mxSetCell(plhs[1],17,mxCreateString("_IIRcoef"));
           mxSetCell(plhs[1],18,mxCreateString("_IIRout"));
-          mxSetCell(plhs[1],19,mxCreateString("recordsize"));
+          mxSetCell(plhs[1],19,mxCreateString("_recordsize"));
           mxSetCell(plhs[1],20,mxCreateString("_TunerParams"));
-          mxSetCell(plhs[1],21,mxCreateString("VoltDelay"));
-          mxSetCell(plhs[1],22,mxCreateString("PhaseDelay"));
+          mxSetCell(plhs[1],21,mxCreateString("_voltdelay"));
+          mxSetCell(plhs[1],22,mxCreateString("_phasedelay"));
           mxSetCell(plhs[1],23,mxCreateString("_pil_init"));
       }
   }

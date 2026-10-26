@@ -183,11 +183,14 @@ void compute_set_params(double *vbeam, double *vgen, double phis, double *vcav_m
 
 }
 static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
-                        double phasegain, double *VoltDelay, double *PhaseDelay, int delay){
+                        double phasegain, double *VoltDelay, double *PhaseDelay, int delay,
+                        int open){
     double diff_Amp = VoltDelay[delay-1] - vcav[0];
     double diff_Phase = PhaseDelay[delay-1] - vcav[1];
-    vgen[0] -= voltgain * diff_Amp;
-    vgen[1] -= phasegain * diff_Phase;
+    if(open==0){
+        vgen[0] -= voltgain * diff_Amp;
+        vgen[1] -= phasegain * diff_Phase;
+    }
     
     roll_array(VoltDelay, delay, 1);
     roll_array(PhaseDelay, delay, 1);
@@ -313,7 +316,7 @@ void track_PIL(double *vc_previous_real, double *vc_previous_imag,
         fb_value = gain[0] * (diff_real + _Complex_I * diff_imag) 
                  + gain[1] * (I_record[0] + _Complex_I * I_record[1]);
         
-        ig = Vg2Ig(fb_value, psi, rshunt);
+        ig = Vg2Ig(fb_value * cexp(_Complex_I * (theta+TWOPI/4)), psi, rshunt);
 
         for(index2=index;index2<index+every && index2<ring_harmn;index2++){
             ig_phasor_real[index2] = creal(ig) + FFconst[0];
