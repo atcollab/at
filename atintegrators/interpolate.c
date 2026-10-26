@@ -14,9 +14,10 @@
 #include <math.h>
 
 
-/* binarySearch returns the index of the array where array[index] <= value.
- * If value is outside the range of the array, it returns the closest index. */
-int binarySearch(double *array,double value,int upper,int lower,int nStep){
+/* get_index_leq_value returns the index of the array where array[index] <= value.
+ * If value is outside the range of the array, it returns the closest index.
+ * The index search is implemented as a recursive bipartition. */
+int get_index_leq_value(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
     if ((upper-lower)<=1){
         return lower;
@@ -24,11 +25,11 @@ int binarySearch(double *array,double value,int upper,int lower,int nStep){
     if (value < array[pivot]){
         upper = pivot;
         nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
+        return get_index_leq_value(array,value,upper,lower,nStep);
     } else if (value > array[pivot]){
         lower = pivot;
         nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
+        return get_index_leq_value(array,value,upper,lower,nStep);
     }else{
         return pivot;
     };
