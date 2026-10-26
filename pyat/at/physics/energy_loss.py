@@ -257,6 +257,13 @@ def get_timelag_fromU0(
         frf = singlev(freq)
         tml = singlev(tl0)
     except AtError:
+        ratio = freq / np.amin(freq)
+        if not np.allclose(ratio, np.round(ratio), rtol=0.0, atol=1.0e-9):
+            msg = (
+                "Cavity frequencies are not all multiples of the lowest one: "
+                "only one period of the lowest frequency is searched for Phis"
+            )
+            warn(AtWarning(msg), stacklevel=2)
         ct, kind, depth, dE_max = _synchronous_points(freq, Vc, tl0, u0, ts_tol=ts_tol)
         if dE_max <= u0:
             err_string = (
