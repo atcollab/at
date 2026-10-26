@@ -208,7 +208,7 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                 if(wi>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
-                    index = binarySearch(waketableT,ds,nelem,0,0);          
+                    index = get_index_leq_value(waketableT,ds,nelem,0,0);
                     if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index);
                     if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index);
                     if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableQX,waketableT,ds,index);
