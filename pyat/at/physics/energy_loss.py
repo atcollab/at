@@ -7,7 +7,7 @@ from warnings import warn
 from collections.abc import Sequence
 
 import numpy as np
-from scipy.optimize import least_squares
+from scipy.optimize import brentq, minimize_scalar
 
 from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
@@ -133,13 +133,82 @@ def get_energy_loss(
         raise AtError(err_string)
 
 
+def _synchronous_points(
+    freq: np.ndarray,
+    Vc: np.ndarray,
+    tl0: np.ndarray,
+    u0: float,
+    *,
+    npoints: int = 128,
+    ts_tol: float = 1.0e-9,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    """Find all the zeros of the energy balance over one main RF period.
+    """
+    k = 2.0 * np.pi * freq / clight
+
+    def dE(ct):
+        return np.sum(-Vc * np.sin(k * np.subtract.outer(ct, tl0)), axis=-1)
+
+    def g(ct):
+        return dE(ct) - u0
+
+    def Vp(ct):
+        integ = np.sum(Vc / k * np.cos(k * np.subtract.outer(ct, tl0)), axis=-1)
+        return u0 * ct - integ
+
+    imain = np.argmin(freq)
+    period = clight / freq[imain]
+    ct0 = tl0[imain] - 0.5 * period
+    nsteps = int(np.ceil(npoints * np.amax(freq) / freq[imain]))
+    ctg = ct0 + np.linspace(0.0, period, nsteps)
+    gg = g(ctg)
+
+    def extremum(j):
+        sign = np.sign(dg[j - 1])
+        res = minimize_scalar(
+            lambda x: -sign * g(x),
+            bounds=(ctg[j - 1], ctg[j + 1]),
+            method="bounded",
+            options={"xatol": ts_tol * period},
+        )
+        return res.x
+
+    dg = np.diff(gg)
+    iext = np.flatnonzero(dg[:-1] * dg[1:] < 0.0) + 1
+    ctext = np.array([extremum(j) for j in iext])
+    if len(ctext) > 0:
+        ctg = np.sort(np.concatenate((ctg, ctext)))
+        gg = g(ctg)
+    dE_max = np.amax(gg) + u0
+    nonzero = gg != 0.0
+    ctg = ctg[nonzero]
+    gg = gg[nonzero]
+
+    positive = gg > 0.0
+    idx = np.flatnonzero(positive[:-1] != positive[1:])
+
+    ct = np.array([brentq(g, ctg[j], ctg[j + 1], xtol=ts_tol * period) for j in idx])
+    kind = np.where(positive[idx], 1, -1)
+    potential = Vp(ct)
+    depth = np.full(len(ct), np.nan)
+
+    ctu = ct[kind == -1]
+    if len(ctu) > 0:
+        ctu = np.concatenate((ctu - period, ctu, ctu + period))
+        for i in np.flatnonzero(kind == 1):
+            left = ctu[ctu < ct[i]][-1]
+            right = ctu[ctu > ct[i]][0]
+            barrier = np.amin(Vp(np.array([left, right])))
+            depth[i] = barrier - potential[i]
+    return ct, kind, depth, dE_max
+
+
 # noinspection PyPep8Naming
 def get_timelag_fromU0(
     ring: Lattice,
     *,
     method: ELossMethod | None = ELossMethod.TRACKING,
     cavpts: Refpts | None = None,
-    divider: int | None = 4,
     ts_tol: float | None = None,
 ) -> tuple[Sequence[float], float]:
     """
@@ -147,17 +216,20 @@ def get_timelag_fromU0(
     voltage and energy loss per turn, so that the synchronous phase is zero.
     Used in set_cavity_phase().
 
+    With several frequencies, all the synchronous points over one period of
+    the lowest frequency are computed (see :py:func:`_synchronous_points`).
+    Among the stable ones, the deepest potential well is selected. A warning
+    is issued when there are several.
+
     Parameters:
         ring:               Lattice description
         method:             Method for energy loss computation.
           See :py:class:`ELossMethod`.
         cavpts:             Cavity location. If None, use all cavities.
           This allows to ignore harmonic cavities.
-        divider: number of segments to search for ts
-        ts_tol: relative tolerance for ts calculation, default is 1.0-9
-          If the search fails to find the synchronous phase the tolerance
-          can be increased using the keyword argument or by setting
-          `at.DConstant.TStol`
+        ts_tol: tolerance on the synchronous position, as a fraction of the
+          period of the lowest frequency, default is 1.0e-9.
+          The default can be changed by setting `at.DConstant.TStol`
     Returns:
         timelag (float):    (ncav,) array of *Timelag* values
         ts (float):         Time difference with the present value
@@ -170,62 +242,48 @@ def get_timelag_fromU0(
             raise AtError(err_string)
         return vals[0]
 
-    def eq(x, freq, rfv, tl0, u0):
-        omf = 2 * np.pi * freq / clight
-        if u0 > 0.0:
-            eq1 = (np.sum(-rfv * np.sin(omf * (x - tl0))) - u0) / u0
-        else:
-            eq1 = np.sum(-rfv * np.sin(omf * (x - tl0)))
-        eq2 = np.sum(-omf * rfv * np.cos(omf * (x - tl0)))
-        if eq2 > 0:
-            return np.sqrt(eq1**2 + eq2**2)
-        else:
-            return abs(eq1)
-
     if cavpts is None:
         cavpts = get_bool_index(ring, RFCavity)
     if ts_tol is None:
         ts_tol = DConstant.TStol
     u0 = get_energy_loss(ring, method=method) / ring.periodicity
     freq = np.array([cav.Frequency for cav in ring.select(cavpts)])
-    rfv = np.array([cav.Voltage for cav in ring.select(cavpts)])
+    if np.any(freq <= 0.0):
+        err_string = "All cavities must have a positive frequency"
+        raise AtError(err_string)
+    Vc = np.array([cav.Voltage for cav in ring.select(cavpts)])
     tl0 = np.array([cav.TimeLag for cav in ring.select(cavpts)])
     try:
         frf = singlev(freq)
         tml = singlev(tl0)
     except AtError:
-        ctmax = clight / np.amin(freq) / 2
-        tt0 = tl0[np.argmin(freq)]
-        bounds = (-ctmax, ctmax)
-        args = (freq, rfv, tl0, u0)
-        r = []
-        for i in range(divider):
-            fact = (i + 1) / divider
-            r.append(
-                least_squares(
-                    eq, bounds[0] * fact + tt0, args=args, bounds=bounds + tt0
-                )
+        ratio = freq / np.amin(freq)
+        if not np.allclose(ratio, np.round(ratio), rtol=0.0, atol=1.0e-9):
+            msg = (
+                "Cavity frequencies are not all multiples of the lowest one: "
+                "only one period of the lowest frequency is searched for Phis"
             )
-            r.append(
-                least_squares(
-                    eq, bounds[1] * fact + tt0, args=args, bounds=bounds + tt0
-                )
+            warn(AtWarning(msg), stacklevel=2)
+        ct, kind, depth, dE_max = _synchronous_points(freq, Vc, tl0, u0, ts_tol=ts_tol)
+        if dE_max <= u0:
+            err_string = (
+                f"The Max. energy gain ({dE_max * ring.periodicity:.3e} eV) is lower "
+                f"than the radiation losses ({u0 * ring.periodicity:.3e} eV)."
             )
-        res = np.array([ri.fun[0] for ri in r])
-        ok = res < ts_tol
-        vals = np.array([abs(ri.x[0]).round(decimals=6) for ri in r])
-        if not np.any(ok):
-            err_string = "No solution found for Phis: check RF settings"
             raise AtError(err_string) from None
-        if len(np.unique(vals[ok])) > 1:
-            warn(
-                AtWarning("More than one solution found for Phis: check RF settings"),
-                stacklevel=2,
-            )
-        ts = -r[np.argmin(res)].x[0]
+        ct = ct[kind == 1]
+        depth = depth[kind == 1]
+        if len(ct) == 0:
+            err_string = "No stable solution found for Phis: check RF settings"
+            raise AtError(err_string)
+        best = np.argmax(depth)
+        if len(ct) > 1:
+            msg = "More than one stable solution found for Phis: check RF settings"
+            warn(AtWarning(msg), stacklevel=2)
+        ts = -ct[best]
         timelag = ts + tl0
     else:
-        vrf = np.sum(rfv)
+        vrf = np.sum(Vc)
         if u0 > vrf:
             v1 = ring.periodicity * vrf
             v2 = ring.periodicity * u0
