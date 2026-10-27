@@ -158,7 +158,7 @@ __all__ = [
 import json
 import warnings
 from abc import abstractmethod
-from math import sqrt
+from math import sqrt, sin, cos
 from pathlib import Path
 from collections.abc import Callable
 from typing import Any, ClassVar, Protocol
@@ -724,34 +724,44 @@ class RBend(Bend):
         atparams = super()._params_to_at(**atparams)
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
-        if (
-            straight
-            and not exact
-            and not (
-                np.all(atparams["PolynomA"] == 0.0)
-                and np.all(atparams["PolynomB"] == 0.0)
-            )
-        ):
-            msg = (
-                "Multipole are present in the rectangular bend: "
-                "PassMethod is forced to ExactRectangularBendPass"
-            )
-            warnings.warn(AtWarning(msg), stacklevel=3)
-            atparams["PassMethod"] = "ExactRectangularBendPass"
         hangle = abs(0.5 * self["angle"])
-        atparams["Length"] = self.get("length_straight", 0.0) / np.sinc(hangle / np.pi)
+        length = self.get("length_straight", 0.0) * sin(hangle) / hangle
+        if straight:
+            if not (
+                exact
+                and np.all(atparams["PolynomA"] == 0.0)
+                and np.all(atparams["PolynomB"] == 0.0)
+            ):
+                msg = (
+                    "Multipole are present in the rectangular bend: "
+                    "PassMethod is forced to ExactRectangularBendPass"
+                )
+                warnings.warn(AtWarning(msg), stacklevel=3)
+                atparams["PassMethod"] = "ExactRectangularBendPass"
+            rbs = self.get("rbend_shift", 0.0)
+            ro = length / hangle / 2.0
+            atparams["X0ref"] = -rbs - (1.0 - cos(hangle)) * ro
+        atparams["Length"] = length
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
         return atparams
 
     @classmethod
     def from_at(cls, match_model: bool = True, **atparams):
+
+        def X0ref_to_rbend_shift(hangle, length, X0ref):
+            ro = length / hangle / 2.0
+            return -X0ref - (1.0 - cos(hangle)) * ro
+
         elem = super().from_at(match_model=match_model, **atparams)
-        elem["rbend_model"] = "straight-body"
         hangle = 0.5 * elem["angle"]
+        length = elem.pop("length")
+        X0ref = atparams.get("X0ref", 0.0)
+        elem["rbend_model"] = "straight-body"
         elem["edge_entry_angle"] -= hangle
         elem["edge_exit_angle"] -= hangle
-        elem["length_straight"] = elem.pop("length") * np.sinc(hangle / np.pi)
+        elem["length_straight"] = length * sin(hangle) / hangle
+        elem["rbend_shift"] = X0ref_to_rbend_shift(hangle, length, X0ref)
         return elem
 
     @property
