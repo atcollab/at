@@ -285,9 +285,10 @@ def get_1d_acceptance(
          full parallelization.
     """
     if not use_mp:
-        if verbose:
-            print("No parallel calculation selected, force to GridMode.RECURSIVE")
-        grid_mode = GridMode.RECURSIVE
+        if grid_mode != GridMode.FLOODFILL and plane != "dp":
+            if verbose:
+                print("No parallel calculation selected, force to GridMode.RECURSIVE")
+            grid_mode = GridMode.RECURSIVE
     assert len(np.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
     assert np.isscalar(resolution), "1D acceptance: scalar args required"
     assert np.isscalar(amplitude), "1D acceptance: scalar args required"
