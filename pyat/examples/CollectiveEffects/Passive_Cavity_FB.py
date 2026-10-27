@@ -30,10 +30,10 @@ ring_dict = {
 
 # main cavity resonator parameters
 beta_main = 1.9
-QL = 3688
-Rsl = 0.32e6
-Nmain = 4
 
+Q0 = 3688*(1+beta_main)
+Rs0 = 0.32e6*(1+beta_main)
+Nmain = 4
 
 Nbunches = ring_dict["harmonic_number"]
 Nslice = 1
@@ -85,7 +85,7 @@ simple_ring.set_cavity_phase()
 ## setup parked cavity
 psi_parked = np.arctan(
     2
-    * QL
+    * Q0 / (1 + beta_main)
     * (1 - simple_ring.rf_frequency / (simple_ring.rf_frequency + parking_detune))
 )
 parked_cav = at.RFCavity(
@@ -102,30 +102,34 @@ simple_ring.insert(1, parked_cav)
 # add beamloading
 at.add_beamloading(
     simple_ring,
-    QL,
-    Nmain * Rsl,
+    Q0,
+    Nmain * Rs0,
+    beta_main,
     cavpts=[0],
     Nslice=Nslice,
-    VoltGain=1.0,
-    PhaseGain=0.001,
+    Gain=[1e-4,1e-4],
     cavitymode=at.CavityMode.ACTIVE,
-    fbmode=at.FeedbackMode.ONETURN,
+    fbmode=at.FeedbackMode.PROP,
+    TunerGain=0.01,
+    TunerAveragingPeriod=500,
+    TunerOffset=0.0
 )
 
 at.add_beamloading(
     simple_ring,
-    QL,
-    Rsl,
+    Q0,
+    Rs0,
+    beta_main,
     detune=parking_detune,
     cavpts=[1],
     Nslice=Nslice,
     cavitymode=at.CavityMode.PASSIVE_SETVOLTAGE,
-    PhaseGain=0.00,
     PassiveVoltage=volt_set,
-    buffersize=1000,
-    windowlength=1000,
-    fbmode=at.FeedbackMode.WINDOW,
+    TunerGain=0.0,
+    TunerAveragingPeriod=500,
+    TunerOffset=0.0
 )
+
 
 # at.add_beamloading(simple_ring, QL, Rsl, detune=parking_detune, cavpts=[1],
 #                   Nslice=Nslice, cavitymode=at.CavityMode.PASSIVE)
@@ -142,7 +146,7 @@ all_dp_means = np.zeros((Nbunches, Nturns))
 all_z_stds = np.zeros((Nbunches, Nturns))
 all_dp_stds = np.zeros((Nbunches, Nturns))
 
-all_Vg_main = np.zeros((4, Nturns))
+all_Vg_main = np.zeros((3, Nturns))
 all_Vb_main = np.zeros((2, Nturns))
 
 all_Vb_park = np.zeros((2, Nturns))
@@ -157,7 +161,7 @@ for iturn in np.arange(Nturns):
 
     _ = simple_ring.track(parts, in_place=True, refpts=None, nturns=1)
     if iturn == turn_passive_fb_on:
-        simple_ring[1].PhaseGain = 0.001
+        simple_ring[1].TunerGain = 0.1
 
     all_z_means[:, iturn] = bmon.means[5, :, 0]
     all_dp_means[:, iturn] = bmon.means[4, :, 0]
