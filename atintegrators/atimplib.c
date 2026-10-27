@@ -1,4 +1,5 @@
 #include "atconstants.h"
+#include "atlalib.c"
 #include "atelem.c"
 #include "interpolate.c"
 #include <math.h>
@@ -9,6 +10,13 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
+void apply_all_Tarr(double *r_in, int num_particles, double *T_arr){
+    int c=0;
+    for(c=0; c<num_particles; c++){
+       double *r6 = r_in+c*6;
+       ATaddvv(r6, T_arr);
+    }
+}
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
 
@@ -208,7 +216,7 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                 if(wi>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
-                    index = binarySearch(waketableT,ds,nelem,0,0);          
+                    index = index_from_bisection(waketableT,ds,nelem,0,0);
                     if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index);
                     if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index);
                     if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableQX,waketableT,ds,index);

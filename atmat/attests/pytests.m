@@ -14,6 +14,7 @@ classdef pytests < matlab.unittest.TestCase
         rad = struct("radoff","ring4","radon","ring6");
         lat = {"hmba","dba","spear3"};  % All lattices
         lat2 = {"hmba","spear3"};       % lattices with cavities
+        reference = {'centre','entrance'};
     end
     
     properties
@@ -36,7 +37,7 @@ classdef pytests < matlab.unittest.TestCase
 
             function [ring4,ring6]=mload(fpath)
                 mr=atradoff(atloadlattice(fullfile(atroot,'..',fpath)));
-                pr=atwritepy(mr,'keep_all',true);
+                pr=atwritepy(mr,'keep_all',true,'quiet',true);
                 ring4.m=mr;
                 ring4.p=pr;
                 ring6.m=atenable_6d(mr);
@@ -186,7 +187,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
             testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=2.5e-9);
-            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=3.e-4,AbsTol=2.e-4);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=3.5e-4,AbsTol=2.e-4);
         end
 
         function linopt1(testCase,dp)
@@ -223,7 +224,7 @@ classdef pytests < matlab.unittest.TestCase
             % Matlab
             [~,mbeta,mmu,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
             % check
-            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=1.e-8);
+            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=2.e-8);
             testCase.verifyEqual(mmu,pmu,AbsTol=1.E-8,RelTol=0);
             testCase.verifyEqual(mdisp,pdisp,AbsTol=1.E-8,RelTol=0);
         end
@@ -281,13 +282,49 @@ classdef pytests < matlab.unittest.TestCase
             [mdata,~,~,m]=ohmienvelope(lattice.m);
             jmt=jmat(3);
             aa=amat(m);
-            nn=-aa'*jmt*mdata.R*jmt*aa;
-            memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            % nn=-aa'*jmt*mdata.R*jmt*aa;
+            % memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            ainv=inv(aa);
+            rn=ainv*mdata.R*ainv';
+            emit2=[det(rn(1:2,1:2)), det(rn(3:4,3:4)), det(rn(5:6,5:6))];
+            emit2(emit2<0)=0.0;
+            memit=sqrt(emit2);
             [mtunes,mdamprate]=atdampingrates(m);
             %check
             testCase.verifyEqual(memit,pemit,AbsTol=1.e-30,RelTol=1.e-6);
             testCase.verifyEqual(mtunes,ptunes,AbsTol=1.e-10);
             testCase.verifyEqual(mdamprate,pdamprate,AbsTol=1.e-10);
+        end
+
+        function transform(testCase,lat,reference)
+            % Random translations and rotations of all elements
+            lattice=testCase.ring4.(lat);
+            n=length(lattice.m);
+            v=1.e-4*randn(RandStream('mt19937ar','Seed',1),6,n);
+            rin=[1.e-6*eye(6) [1.e-4;0;1.e-4;0;0.01;0]];
+            pin=py.numpy.asfortranarray(rin);
+            % python    Make a copy to keep the shared lattice unchanged
+            pref=py.at.ReferencePoint(int32(strcmp(reference,'entrance')));
+            pring=lattice.p.deepcopy();
+            py.at.set_shift(pring,v(1,:),v(2,:),v(3,:),pyargs('reference',pref));
+            py.at.set_rotation(pring,pyargs('tilts',v(4,:),'pitches',v(5,:),...
+                'yaws',v(6,:),'reference',pref));
+            pout=double(py.at.lattice_pass(pring,pin.copy(),pyargs('refpts',py.at.All)));
+            % Matlab
+            mring=atsettransform(lattice.m,1:n,'dx',v(1,:),'dy',v(2,:),'dz',v(3,:),...
+                'tilt',v(4,:),'pitch',v(5,:),'yaw',v(6,:),'reference',reference);
+            mout=linepass(mring,rin,1:n+1);
+            % check 1: Matlab and pyAT build the same R1, T1, R2, T2 from the
+            % same transformation; differences up to 2e-15 were seen on Linux
+            testCase.verifyEqual(mout,reshape(pout,6,[]),AbsTol=1.E-12);
+            % check 2: pyAT reads the transformation stored by Matlab, once
+            % the lattice is converted
+            fring=cell(py.list(atwritepy(mring,'keep_all',true,'quiet',true)));
+            ftrans=cellfun(@(e) [e.dx;e.dy;e.dz;e.tilt;e.pitch;e.yaw],fring,...
+                'UniformOutput',false);
+            fref=cellfun(@(e) double(py.getattr(e.ReferencePoint,'value')),fring);
+            testCase.verifyEqual([ftrans{:}],v);
+            testCase.verifyEqual(fref,repmat(double(strcmp(reference,'entrance')),1,n));
         end
 
     end

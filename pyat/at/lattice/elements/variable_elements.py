@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from enum import IntEnum
+from warnings import warn
 
 import numpy as np
 
-from .conversions import _array
+from .conversions import _anyarray, _array
 from .element_object import Element
 
 
@@ -16,6 +17,8 @@ class ACMode(IntEnum):
     SINE = 0
     WHITENOISE = 1
     ARBITRARY = 2
+    INTERPOLATION_TABLE = 3
+    DERIVATIVE_TABLE = 4
 
 
 class VariableThinMultipole(Element):
@@ -36,8 +39,15 @@ class VariableThinMultipole(Element):
         Sinmax=float,
         NSamplesA=int,
         NSamplesB=int,
-        FuncA=_array,
-        FuncB=_array,
+        FuncA=_anyarray,
+        FuncB=_anyarray,
+        FuncDelay=float,
+        DOrderA=int,
+        DOrderB=int,
+        FinterpolateA=_array,
+        FinterpolateB=_array,
+        TinterpolateA=_array,
+        TinterpolateB=_array,
         Ramps=_array,
         Periodic=bool,
     )
@@ -55,6 +65,8 @@ class VariableThinMultipole(Element):
               * :py:attr:`at.ACMode.SINE`: sine function
               * :py:attr:`at.ACMode.WHITENOISE`: gaussian white noise
               * :py:attr:`at.ACMode.ARBITRARY`: user defined turn-by-turn kick list
+              * :py:attr:`at.ACMode.INTERPOLATION_TABLE`: linear interpolation from user curve
+              * :py:attr:`at.ACMode.DERIVATIVE_TABLE`: polynomial function per turn
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
@@ -69,8 +81,9 @@ class VariableThinMultipole(Element):
             Sinmin(float): Sine function min limit. Default -1.1
             Sinmax(float): Sine function max limit. Default +1.1
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            FuncA(list): User defined tbt kick list for PolynomA
-            FuncB(list): User defined tbt kick list for PolynomB
+            FuncA(list|array): User defined tbt kick list for PolynomA
+            FuncB(list|array): User defined tbt kick list for PolynomB
+            FuncDelay(float): Value to substract from the particles 6th coordinate
             Periodic(bool): If True (default) the user defined kick is repeated
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
                          of the excitation
@@ -96,6 +109,13 @@ class VariableThinMultipole(Element):
             ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
+            >>> fvst = at.VariableThinMultipole(
+            ...     "FvsT", at.ACMode.INTERPOLATION_TABLE, AmplitudeB=amp, FuncB=func, ...)
+            >>> derivative_table = at.VariableThinMultipole(
+            ...     "FUNC", at.ACMode.DERIVATIVE_TABLE, AmplitudeA=amp, ...
+            ...     FuncA=np.array([[1,.1,0.01],[0.2,0.02,0.002]]), ...
+            ...     FuncDelay=0.2)
+
 
         .. note::
 
@@ -104,11 +124,27 @@ class VariableThinMultipole(Element):
               ``Amplitude(A,B)`` has to be provided
             * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
+            * For ``mode=at.ACMode.INTERPOLATION_TABLE`` the ``Fnc(A,B)`` corresponding to the
+              ``Amplitude(A,B)`` needs to be of shape (2, n) with n >= 2. The first row
+              is time in seconds, and the second row is the function value.
+            * For ``mode=at.ACMode.DERIVATIVE_TABLE`` Func(A,B) could be an array of size
+              (m,n) where the n coefficients in the first row are the function values n turns,
+              and the other m-1 rows are higher order derivatives with respect to ct,
+              i.e. on the kth turn the ith component of the Polynom(A/B) seen by a particle
+              with 6th coordinate ct is calculated as,
+                .. math:: \begin{equation}
+                          Amp_i(A/B)[f(0,k) + (ct-delay) f(1,k) + ...
+                                            + (ct-delay)^{m-1} f(m-1,k) ]
+                          \end{equation}
         """
 
         def _default_amplitudes(ampa, ampb):
             if ampa is None and ampb is None:
                 ampb = np.array([0])
+            if np.ndim(ampa) == 0 and ampa is not None:
+                ampa = np.array([float(ampa)])
+            if np.ndim(ampb) == 0 and ampb is not None:
+                ampb = np.array([float(ampb)])
             if np.isscalar(ampa):
                 ampa = np.array([ampa])
             if np.isscalar(ampb):
@@ -124,6 +160,8 @@ class VariableThinMultipole(Element):
             return max(mxa, mxb)
 
         self.Mode = kwargs.get("Mode", mode.value)
+        AmplitudeA = kwargs.get("AmplitudeA", AmplitudeA)
+        AmplitudeB = kwargs.get("AmplitudeB", AmplitudeB)
         self.ModeName = kwargs.get("ModeName", mode.name)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
@@ -139,7 +177,9 @@ class VariableThinMultipole(Element):
         self.PolynomB = kwargs.get("PolynomB", np.zeros(self.MaxOrder + 1))
         ramps = kwargs.pop("Ramps", None)
         if ramps is not None:
-            assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
+            if len(ramps) != 4:
+                msg = "Ramps has to be a vector with 4 elements"
+                raise ValueError(msg)
             self.Ramps = ramps
         super().__init__(family_name, **kwargs)
 
@@ -161,6 +201,10 @@ class VariableThinMultipole(Element):
                 self._set_sine(ab, **kwargs)
             if self.Mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
+            if self.Mode == ACMode.INTERPOLATION_TABLE:
+                self._set_interpolate(ab, **kwargs)
+            if self.Mode == ACMode.DERIVATIVE_TABLE:
+                self._set_derivative(ab, **kwargs)
 
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop("Frequency" + ab, 0)
@@ -174,7 +218,59 @@ class VariableThinMultipole(Element):
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
+        if func is None:
+            msg = "Please provide a value for Func" + ab
+            raise TypeError(msg)
         nsamp = len(func)
-        assert func is not None, "Please provide a value for Func" + ab
         setattr(self, "Func" + ab, func)
         setattr(self, "NSamples" + ab, nsamp)
+
+    def _set_interpolate(self, ab, **kwargs):
+        interpolate = np.array(kwargs.get("Func" + ab))
+        ndim = np.ndim(interpolate)
+        if ndim != 2:
+            msg = "Func" + ab + " should be of 2 dimensions."
+            raise ValueError(msg)
+        _, nsamp = np.shape(interpolate)
+        if not (nsamp >= 2):
+            msg = "Func" + ab + " requires at least two points to interpolate."
+            raise ValueError(msg)
+        if np.any(np.isnan(interpolate)):
+            msg = "Function has nan values."
+            raise ValueError(msg)
+        if np.any(np.isinf(interpolate)):
+            msg = "Function has inf values."
+            raise ValueError(msg)
+        tsort = interpolate[0, :]
+        if len(tsort) != len(np.unique(tsort)):
+            msg = "Time array has repeated elements."
+            raise ValueError(msg)
+        idxsort = np.argsort(interpolate[0, :])
+        fsort = interpolate[1, :]
+        if ~np.all(np.diff(idxsort) == 1):
+            warn(UserWarning("Time is not sorted. It will be rearanged."), stacklevel=2)
+            tsort = interpolate[0, idxsort]
+            fsort = interpolate[1, idxsort]
+        if not ((tsort[-1] - tsort[0]) > 0):
+            msg = "Zero time cannot be interpolated"
+            raise ValueError(msg)
+        setattr(self, "Tinterpolate" + ab, tsort)
+        setattr(self, "Finterpolate" + ab, fsort)
+        setattr(self, "NSamples" + ab, nsamp)
+
+    def _set_derivative(self, ab, **kwargs):
+        func = kwargs.pop("Func" + ab, None)
+        if func is None:
+            msg = "Please provide a value for Func" + ab
+            raise TypeError(msg)
+        func = np.array(func)
+        ndim = np.ndim(func)
+        if ndim == 1:
+            nsamp = len(func)
+            dorder = 0
+        else:
+            rows, nsamp = np.shape(func)
+            dorder = rows - 1
+        setattr(self, "NSamples" + ab, nsamp)
+        setattr(self, "DOrder" + ab, dorder)
+        self.FuncDelay = kwargs.get("FuncDelay", 0)

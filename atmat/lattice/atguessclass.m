@@ -44,6 +44,8 @@ elseif isfield(elem,'PolynomB')
             atclass='Quadrupole';
         elseif loworder==2
             atclass='Sextupole';
+        elseif loworder==3
+            atclass='Octupole';
         else
             atclass='Multipole';
         end

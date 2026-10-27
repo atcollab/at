@@ -40,6 +40,7 @@ from .utils import (
     keep_elements,
     split_ignoring_parentheses,
     element_from_dict,
+    element_to_dict,
 )
 
 # Translation of RingParam attributes
@@ -138,18 +139,18 @@ def _matfile_generator(
         return params, key
 
     # noinspection PyUnresolvedReferences
-    check = params.pop("check", True)
+    check = params.pop("check", True)  # noqa: F841 # kept for compatibility
     quiet = params.pop("quiet", False)
     params.setdefault("in_file", str(mat_file))
     matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)
     if matlabfile_ver < (2, 0):
-        mat_input = scipy.io.loadmat(mat_file)
+        mat_input = scipy.io.loadmat(mat_file, mat_dtype=True)
         params, key = define_default_key(params, mat_input, ignore_chars="__")
         cell_array = mat_input[key].flat
         for index, mat_elem in enumerate(cell_array):
             elem = mat_elem[0, 0]
             kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
-            yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
+            yield element_from_dict(kwargs, index=index, quiet=quiet)
     else:
         mat_input = h5py.File(mat_file)
         params, key = define_default_key(params, mat_input, ignore_chars="#")
@@ -157,7 +158,7 @@ def _matfile_generator(
         for index, ref_elem in enumerate(cell_array):
             elem = mat_input[ref_elem]
             kwargs = {f: mcleanhdf5(elem[f]) for f in elem}
-            yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
+            yield element_from_dict(kwargs, index=index, quiet=quiet)
 
 
 def ringparam_filter(
@@ -230,8 +231,6 @@ def load_mat(filename: str | Path, **kwargs) -> Lattice:
           the lattice. Default: it there is a single variable, use it, otherwise
           select 'RING'
         mat_key (str):      deprecated alias for *use*
-        check (bool):       Run the coherence tests. Default:
-          :py:obj:`True`
         quiet (bool):       Suppress the warning for non-standard
           classes. Default: :py:obj:`False`
         keep_all (bool):    Keep RingParam elements as Markers.
@@ -308,29 +307,41 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
             result = makearray(value)
         elif value.startswith("struct"):
             result = dict(makedir(argsplit(value[7:-1])))
+        elif value == "false":
+            result = False
+        elif value == "true":
+            result = True
         else:
-            result = eval(value)
+            try:
+                result = eval(value)
+            except (NameError, SyntaxError):
+                msg = (
+                    f"In element {index}:\n"
+                    f"Cannot convert '{value}' to a Python object, replacing by None"
+                )
+                warn(AtWarning(msg), stacklevel=4)
+                result = None
         return result
 
     left = line.index("(")
     right = line.rindex(")")
     matcls = line[:left].strip()[2:]
-    build_attrs = _CLASS_MAP[matcls]._BUILD_ATTRIBUTES
+    cls = _CLASS_MAP[matcls]
+    build_attrs = cls._BUILD_ATTRIBUTES
     arguments = argsplit(line[left + 1 : right])
     ll = len(build_attrs)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
-    args = [convert(v) for v in arguments[:ll]]
-    kwargs = dict(zip(build_attrs, args, strict=True))
-    kwargs.update(makedir(arguments[ll:]))
-    kwargs["Class"] = matcls
+    elem_args = [convert(v) for v in arguments[:ll]]
+    elem_kwargs = dict(zip(build_attrs, elem_args, strict=True))
+    elem_kwargs.update(makedir(arguments[ll:]))
     if matcls == "rbend":
         # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
         # necessary for using the python sector bend
-        halfangle = 0.5 * args[2]
-        kwargs.setdefault("EntranceAngle", halfangle)
-        kwargs.setdefault("ExitAngle", halfangle)
-    return element_from_dict(kwargs, index=index)
+        halfangle = 0.5 * elem_args[2]
+        elem_kwargs.setdefault("EntranceAngle", halfangle)
+        elem_kwargs.setdefault("ExitAngle", halfangle)
+    return cls.init_from_dict(**elem_kwargs)
 
 
 def load_m(filename: str | Path, **kwargs) -> Lattice:
@@ -368,17 +379,20 @@ def load_m(filename: str | Path, **kwargs) -> Lattice:
                 if line.startswith("};"):
                     break
                 try:
-                    elem = _element_from_m(line, index=lineno)
+                    elem = _element_from_m(line, index=lineno - offset)
                 except ValueError:
-                    warn(AtWarning(f"Invalid line {lineno} skipped."), stacklevel=2)
+                    msg = f"Invalid line {lineno} skipped:\n{line!r}"
+                    warn(AtWarning(msg), stacklevel=2)
                     continue
                 except KeyError:
-                    warn(AtWarning(f"Line {lineno}: Unknown class."), stacklevel=2)
+                    msg = f"Line {lineno}: Unknown class:\n{line!r}"
+                    warn(AtWarning(msg), stacklevel=2)
                     continue
                 else:
                     yield elem
 
     filepath = Path(filename)
+    offset = 1 - int(kwargs.get("keep_all", False))
     return Lattice(
         ringparam_filter,
         mfile_generator,
@@ -412,8 +426,9 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
+        quiet = params.pop("quiet", False)
         for index, elem in enumerate(latt):
-            yield element_from_dict(elem, index=index)
+            yield element_from_dict(elem, index=index, quiet=quiet)
 
     return Lattice(
         ringparam_filter, var_generator, matlat, iterator=params_filter, **kwargs
@@ -458,11 +473,12 @@ def save_mat(ring: Lattice, filename: str | Path, **kwargs) -> None:
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
-    # Ensure the lattice is a Matlab column vector: list(list)
     use = kwargs.pop("mat_key", "RING")  # For backward compatibility
     use = kwargs.pop("use", use)
-    lring = [el.to_file(encoder=_mat_encoder) for el in matlab_ring(ring)]
-    scipy.io.savemat(filename, {use: lring}, long_field_names=True)
+    lring = [element_to_dict(el, _mat_encoder) for el in matlab_ring(ring)]
+    # Ensure that the lattice is a column cell array
+    aring = np.array(lring).reshape((-1, 1))
+    scipy.io.savemat(filename, {use: aring}, long_field_names=True)
 
 
 def _element_to_m(elem: Element) -> str:
@@ -518,20 +534,17 @@ def _element_to_m(elem: Element) -> str:
         else:
             return repr(arg)
 
-    def m_name(elclass):
-        classname = elclass.__name__
-        return _mat_constructor.get(classname, "".join(("at", classname.lower())))
-
-    _, args, kwds = elem.definition
-    argstrs = [convert(arg) for arg in args]
-    if "PassMethod" in kwds:
-        argstrs.append(convert(kwds.pop("PassMethod")))
+    elem_clsname, elem_args, elem_kwargs = elem.definition
+    argstrs = [convert(arg) for arg in elem_args]
+    if "PassMethod" in elem_kwargs:
+        argstrs.append(convert(elem_kwargs.pop("PassMethod")))
     argstrs.extend(
         ", ".join((repr(elem._convert_attr.get(k, k)), convert(v)))
-        for k, v in kwds.items()
+        for k, v in elem_kwargs.items()
         if k not in elem._drop_attr
     )
-    return "{:>15}({});...".format(m_name(elem.__class__), ", ".join(argstrs))
+    clsname = _mat_constructor.get(elem_clsname, f"at{elem_clsname.lower()}")
+    return f"{clsname:>15}({', '.join(argstrs)});..."
 
 
 def save_m(ring: Lattice, filename: str | Path | None = None) -> None:
@@ -580,7 +593,7 @@ def _mat_file(ring):
             raise AttributeError(msg)
     else:
         msg = "'Lattice' object has no attribute 'mat_file'"
-        raise AttributeError(msg)
+        raise AttributeError(msg)  # noqa: TRY004
     return in_file
 
 
@@ -594,7 +607,7 @@ def _mat_key(ring):
     return mat_key
 
 
-# noinspection PyUnusedLocal
+# noinspection unused-parameter
 def _ignore(ring, value):
     pass
 

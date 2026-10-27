@@ -56,8 +56,6 @@ class LongElement(Element):
     def _part(self, fr, sumfr):
         pp = self.copy()
         pp.Length = fr * self.Length
-        if hasattr(self, "KickAngle"):
-            pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:
@@ -443,6 +441,12 @@ class RFCavity(LongtMotion, LongElement):
             )
         return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
 
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> Element:
+        # Ensure that the optional TimeLag is set
+        elem_dict.setdefault("TimeLag", 0.0)
+        return super().new_from_dict(**elem_dict)
+
 
 class M66(Radiative, Element):
     """Linear (6, 6) transfer matrix."""
@@ -498,29 +502,29 @@ class DeltaQ(Radiative, Element):
     def __init__(
         self,
         family_name: str,
-        beta: Sequence[float] = [1.0, 1.0],
-        alpha: Sequence[float] = [0.0, 0.0],
+        beta: Sequence[float] = (1.0, 1.0),
+        alpha: Sequence[float] = (0.0, 0.0),
         dispersion: Sequence[float] | None = None,
         betarad: Sequence[float] | None = None,
         alpharad: Sequence[float] | None = None,
         dispersionrad: Sequence[float] | None = None,
-        qpx: Sequence[float] = [0.0],
-        qpy: Sequence[float] = [0.0],
-        detuning_coefficients: Sequence[float] = [0.0, 0.0, 0.0],
+        qpx: Sequence[float] = (0.0,),
+        qpy: Sequence[float] = (0.0,),
+        detuning_coefficients: Sequence[float] = (0.0, 0.0, 0.0),
         alphac: Sequence[float] | None = None,
         **kwargs,
     ):
-        """
+        r"""
         Object to lump sources of tune shifts from a ring in a single Element.
-        All optics imput argument and T1 /T2 have *Rad equivalent used to
+        All optics imput argument and T1 /T2 have \*Rad equivalent used to
         enable_6d.
 
         Args:
             family_name:    Name of the element
             beta:                   Beta functions at the entrance of the element
-                                    Default=[1.0, 1.0]
+                                    Default=(1.0, 1.0)
             alpha:                  Alpha function at the entrance of the element
-                                    Default=[0.0, 0.0]
+                                    Default=(0.0, 0.0)
             dispersion:             Dispersion function at the entrance of the element.
                                     Used to cancel dispersion contribution to the closed
                                     orbit for off-momentum particles before applying the
