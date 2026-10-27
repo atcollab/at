@@ -725,7 +725,7 @@ class RBend(Bend):
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
         hangle = abs(0.5 * self["angle"])
-        length = self.get("length_straight", 0.0) * sin(hangle) / hangle
+        length = self.get("length_straight", 0.0) * hangle / sin(hangle)
         if straight:
             if not (
                 exact
@@ -740,7 +740,7 @@ class RBend(Bend):
                 atparams["PassMethod"] = "ExactRectangularBendPass"
             rbs = self.get("rbend_shift", 0.0)
             ro = length / hangle / 2.0
-            atparams["X0ref"] = -rbs - (1.0 - cos(hangle)) * ro
+            atparams["X0ref"] = -rbs - (1.0 - cos(hangle)) * ro /2.0
         atparams["Length"] = length
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
@@ -751,7 +751,7 @@ class RBend(Bend):
 
         def X0ref_to_rbend_shift(hangle, length, X0ref):
             ro = length / hangle / 2.0
-            return -X0ref - (1.0 - cos(hangle)) * ro
+            return -X0ref - (1.0 - cos(hangle)) * ro / 2.0
 
         elem = super().from_at(match_model=match_model, **atparams)
         hangle = 0.5 * elem["angle"]
