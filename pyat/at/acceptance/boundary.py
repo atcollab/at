@@ -14,7 +14,7 @@ from scipy.ndimage import binary_dilation, binary_opening
 
 from at.lattice import AtError, AtWarning, Lattice, Refpts, axisdef
 
-from .floodfill_acceptance import floodfill
+from .floodfill_acceptance import floodfill, floodfillmomap
 
 __all__ = ["GridMode"]
 
@@ -32,7 +32,7 @@ class GridMode(Enum):
 
 def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
     """
-    Returns an object that defines the grid configuration
+    Returns an object that defines the grid configuration.
     """
     bounds = np.atleast_2d(bounds)
     bounds = tuple(map(tuple, bounds))
@@ -51,7 +51,7 @@ def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
 
 def grid(grid, offset):
     """
-    Returns a grid object
+    Returns a grid object.
     """
     d = {"grid": np.atleast_2d(grid), "offset": np.atleast_1d(offset)}
     return namedtuple("grid", d.keys())(**d)
@@ -59,7 +59,7 @@ def grid(grid, offset):
 
 def set_ring_orbit(ring, dp, obspt, orbit):
     """
-    Returns initial closed orbit and rotated ring
+    Returns initial closed orbit and rotated ring.
     """
     if obspt is not None:
         assert np.isscalar(obspt), "Scalar value needed for obspt"
@@ -77,8 +77,10 @@ def grid_configuration(
     planes, npoints, amplitudes, grid_mode, bounds=None, shift_zero=1.0e-6
 ):
     """
-    Return a grid configuration based on user input parameters, the ordering
-    is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
+    Return a grid configuration based on user input parameters.
+
+    The ordering is as follows:
+    CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
     Scalar inputs can be used for 1D grid
     """
     ndims = len(np.atleast_1d(planes))
@@ -110,9 +112,10 @@ def grid_configuration(
 
 def get_parts(config, offset):
     """
-    Generate a (6,n) particles array based on the grid configuration
-    and initial offset, returns a grid object containing the grid and
-    the offset from which the array can be reconstructed
+    Generate a (6,n) particles array.
+
+    Based on the grid configuration and initial offset, returns a grid object
+    containing the grid and the offset from which the array can be reconstructed
     """
 
     def get_part_grid_uniform(bnd, npt, amp):
@@ -149,7 +152,7 @@ def get_parts(config, offset):
 
 def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
-    Track a grid through the ring and extract survived particles
+    Track a grid through the ring and extract survived particles.
     """
     _, _, td = ring.track(
         parts,
@@ -165,7 +168,7 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
 
 def get_grid_boundary(mask, grid, config):
     """
-    Compute the boundary of survided particles array
+    Compute the boundary of survided particles array.
     """
 
     def nearest_order(grid):
@@ -277,6 +280,85 @@ def get_grid_boundary(mask, grid, config):
         raise AtError("GridMode {0} undefined.".format(grid.mode))
 
 
+def boundary_dp_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs):
+    data_ffmomap = floodfillmomap(
+        ring,
+        nturns=nturns,
+        amplitudes=config.amplitudes,
+        bounds=config.bounds,
+        npoints=config.shape,
+        offset=offset,
+        obspt=obspt,
+        verbose=False,
+        use_mp=use_mp,
+        pool_size=kwargs["pool_size"],
+    )
+
+    particlerefpts = data_ffmomap[0, :]
+    particleenergy = data_ffmomap[1, :]
+    mask_alive = data_ffmomap[4, :] == 0
+
+    refpts0 = np.unique(particlerefpts)
+    refpts = np.asarray(refpts0, dtype=int)
+
+    nmax = len(refpts)
+    dpP = np.zeros(nmax)
+    dpN = np.zeros(nmax)
+    estep = config.amplitudes / config.shape
+    s_ff = []
+    g_ff = []
+    for n, i in enumerate(refpts):
+        maskidx = particlerefpts == i
+        energyidx = particleenergy[maskidx]
+        dpP[n] = np.min(energyidx[energyidx > estep])
+        dpN[n] = np.max(energyidx[energyidx < estep])
+        s_ff.append(particleenergy[maskidx | mask_alive])
+        g_ff.append(particleenergy[maskidx])
+    # floodfill boundary needs to be sorted
+    b_ff = np.vstack((dpN, dpP)).T
+    # we return boundary, survived, tracked
+    return b_ff, s_ff, g_ff
+
+
+def boundary_2d_floodfill(ring, obspt, offset, dp, nturns, config, use_mp, **kwargs):
+    s_ffallrefpts = []
+    g_ffallrefpts = []
+    for obs, orbit in zip(obspt, offset, strict=True):
+        # set ring and offsets
+        _obs = 0 if obs is None else obs
+        _dpp = 0.0 if dp is None else dp
+        _orbit, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
+        _offset = _orbit + np.array([0, 0, 0, 0, _dpp, 0])
+        # flood fill
+        data_ff = floodfill(
+            _ringrot,
+            nturns=nturns,
+            planes=config.planes,
+            amplitudes=config.amplitudes,
+            bounds=config.bounds,
+            npoints=config.shape,
+            offset=_offset,
+            verbose=False,
+            use_mp=use_mp,
+            pool_size=kwargs["pool_size"],
+        )
+        mask_alive = data_ff[3, :] == 0
+        s_ffallrefpts.append(data_ff[0:2, mask_alive])
+        g_ffallrefpts.append(data_ff[0:2, :])
+    if len(obspt) == 1:
+        s_ff = s_ffallrefpts[0]
+        g_ff = g_ffallrefpts[0]
+    else:
+        s_ff = s_ffallrefpts
+        g_ff = g_ffallrefpts
+    # floodfill boundary and survived are the same,
+    # but they need to be sorted
+    _ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
+    b_ff = s_ff[:, _ia]
+    # we return boundary, survived, tracked
+    return b_ff, s_ff, g_ff
+
+
 def grid_boundary_search(
     ring,
     planes,
@@ -294,7 +376,7 @@ def grid_boundary_search(
     **kwargs,
 ):
     """
-    Search for the boundary by tracking a grid
+    Search for the boundary by tracking a grid.
     """
     config = grid_configuration(
         planes, npoints, amplitudes, grid_mode, bounds=bounds, shift_zero=shift_zero
@@ -328,45 +410,15 @@ def grid_boundary_search(
     grids = []
     if offset is None:
         offset = [None for _ in np.arange(len(obspt))]
-
     if grid_mode is GridMode.FLOODFILL:
-        s_ffallrefpts = []
-        g_ffallrefpts = []
-        for obs, orbit in zip(obspt, offset, strict=True):
-            # set ring and offsets
-            _obs = 0 if obs is None else obs
-            _dpp = 0.0 if dp is None else dp
-            _orbit, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
-            _offset = _orbit + np.array([0, 0, 0, 0, _dpp, 0])
-            # flood fill
-            data_ff = floodfill(
-                _ringrot,
-                nturns=nturns,
-                planes=config.planes,
-                amplitudes=config.amplitudes,
-                bounds=config.bounds,
-                npoints=config.shape,
-                offset=_offset,
-                verbose=False,
-                use_mp=use_mp,
-                pool_size=kwargs["pool_size"],
+        if len(planes) == 1 and planes[0] == "dp":
+            return boundary_dp_floodfill(
+                ring, obspt, offset, nturns, config, use_mp, **kwargs
             )
-            mask_alive = data_ff[3, :] == 0
-            s_ffallrefpts.append(data_ff[0:2, mask_alive])
-            g_ffallrefpts.append(data_ff[0:2, :])
-        if len(obspt) == 1:
-            s_ff = s_ffallrefpts[0]
-            g_ff = g_ffallrefpts[0]
         else:
-            s_ff = s_ffallrefpts
-            g_ff = g_ffallrefpts
-        # floodfill boundary and survived are the same,
-        # but they need to be sorted
-        _ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
-        b_ff = s_ff[:, _ia]
-        # we return boundary, survived, tracked
-        return b_ff, s_ff, g_ff
-
+            return boundary_2d_floodfill(
+                ring, obspt, offset, dp, nturns, config, use_mp, **kwargs
+            )
     for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
         orbit, _ = set_ring_orbit(ring, dp, obs, orbit)
         parts, grid = get_parts(config, orbit)
@@ -423,10 +475,12 @@ def recursive_boundary_search(
     **kwargs,
 ):
     """
-    Recursively search for the boundary in a given axis and direction (angle)
+    Recursively search for the boundary in a given axis and direction (angle).
     """
 
-    def search_boundary(planesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs):
+    def search_boundary(
+        planesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs
+    ):
         ftol = min(rtol / rsteps)
         cs = np.squeeze([np.cos(angles), np.sin(angles)])
         cs = np.around(cs, decimals=9)
@@ -534,7 +588,7 @@ def boundary_search(
     **kwargs,
 ):
     """
-    Computes the loss boundary at a single point in the machine
+    Computes the loss boundary at a single point in the machine.
     """
     if obspt is not None:
         rp = ring.uint32_refpts(obspt)
