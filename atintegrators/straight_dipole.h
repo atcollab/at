@@ -6,7 +6,7 @@
 #ifndef MAGNET_ENTRY
 #define MAGNET_ENTRY \
     /* Change to the magnet referential */ \
-    Yrot(r6, entrance_angle, bdiff); \
+    Yrot(r6, entrance_angle, NULL); /* don't propagate the diffusion matrix */ \
     \
     /* Entry face */ \
     r6[0] += x0ref; \
@@ -32,7 +32,7 @@
     r6[0] -= x0ref; \
     \
     /* Change back to the lattice referential */ \
-    Yrot(r6, exit_angle, bdiff);
+    Yrot(r6, exit_angle, NULL); /* don't propagate the diffusion matrix */
 #endif /*MAGNET_EXIT*/
 
 #ifndef MAGNET_ARGUMENTS

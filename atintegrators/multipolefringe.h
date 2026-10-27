@@ -41,7 +41,7 @@ static void quad_fringe(double* r6, const double b2, double edge)
   r6[px_] = pxf;
   r6[y_] -= dy;
   r6[py_] = pyf;
-  r6[ct_] -= dct;
+  r6[ct_] += dct;
 
 }
 
