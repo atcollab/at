@@ -2,6 +2,9 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "integrators.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #ifndef CHECK_NSTEPS
 #define CHECK_NSTEPS \
@@ -105,46 +108,66 @@ static void magnet(double *r, double le, double bending_angle,
 
     INTEGRATOR_STEPS(SL)
     double B1 = (max_order >= 1) ? B[1] : 0.0;
+    int block = PARTICLE_BLOCK;
+
+    #if defined(_OPENMP) && !defined(NO_OMP)
+    if (num_particles > OMP_PARTICLE_THRESHOLD) {
+        int chunk = (num_particles - 1) / omp_get_max_threads() + 1;
+        if (chunk < block) block = chunk;
+    }
+    #endif
 
     #ifndef NO_OMP
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared)
     #endif
-    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
-        double *r6 = r + 6*c;
-        if (!atIsNaN(r6[0])) {
-            /* Check for change of reference momentum */
-            if (scaling != 1.0) ATChangePRef(r6, scaling);
+    for (int c0 = 0; c0 < num_particles; c0 += block) { /* Loop over blocks of particles */
+        double *rb = r + 6*c0;
+        int nb = (num_particles - c0 < block) ? num_particles - c0 : block;
+        int alive[PARTICLE_BLOCK];
 
-            /*  misalignment at entrance  */
-            if (T1) ATaddvv(r6,T1);
-            if (R1) ATmultmv(r6,R1);
+        for (int c = 0; c < nb; c++) { /* Loop over particles */
+            double *r6 = rb + 6*c;
+            alive[c] = !atIsNaN(r6[0]);
+            if (alive[c]) {
+                /* Check for change of reference momentum */
+                if (scaling != 1.0) ATChangePRef(r6, scaling);
 
-            /* Check physical apertures at the entrance of the magnet */
-            if (RApertures) checkiflostRectangularAp(r6,RApertures);
-            if (EApertures) checkiflostEllipticalAp(r6,EApertures);
+                /*  misalignment at entrance  */
+                if (T1) ATaddvv(r6,T1);
+                if (R1) ATmultmv(r6,R1);
 
-            /* Entry face */
-            MAGNET_ENTRY
+                /* Check physical apertures at the entrance of the magnet */
+                if (RApertures) checkiflostRectangularAp(r6,RApertures);
+                if (EApertures) checkiflostEllipticalAp(r6,EApertures);
 
-            /* Integrator */
-            INTEGRATOR(r6, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
+                /* Entry face */
+                MAGNET_ENTRY
+            }
+        }
 
-            /* Compensate for absolute path length if necessary */
-            FIX_LENGTH(le+refdz);
+        /* Integrator */
+        INTEGRATOR(r6, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
 
-            /* Exit face*/
-            MAGNET_EXIT
+        for (int c = 0; c < nb; c++) { /* Loop over particles */
+            double *r6 = rb + 6*c;
+            if (alive[c]) {
+                /* Compensate for absolute path length if necessary */
+                FIX_LENGTH(le+refdz);
 
-            /* Check physical apertures at the exit of the magnet */
-            if (RApertures) checkiflostRectangularAp(r6, RApertures);
-            if (EApertures) checkiflostEllipticalAp(r6, EApertures);
+                /* Exit face*/
+                MAGNET_EXIT
 
-            /* Misalignment at exit */
-            if (R2) ATmultmv(r6,R2);
-            if (T2) ATaddvv(r6,T2);
+                /* Check physical apertures at the exit of the magnet */
+                if (RApertures) checkiflostRectangularAp(r6, RApertures);
+                if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
-            /* Check for change of reference momentum */
-            if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
+                /* Misalignment at exit */
+                if (R2) ATmultmv(r6,R2);
+                if (T2) ATaddvv(r6,T2);
+
+                /* Check for change of reference momentum */
+                if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
+            }
         }
     }
 }
