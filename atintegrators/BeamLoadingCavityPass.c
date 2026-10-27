@@ -69,7 +69,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
   
     // some wake definitions
     long nslice = Elem->nslice;
-    long nturnsw = Elem->nturnsw; /* can this attribute be removed? */
+    long nturnsw = Elem->nturnsw; 
     long buffersize = Elem->buffersize;
     double normfact = Elem->normfact;  
     
