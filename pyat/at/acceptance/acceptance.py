@@ -246,8 +246,11 @@ def get_1d_acceptance(
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+          * :py:attr:`.GridMode.FLOODFILL`: cartesian search from exterior
+             region to stable boundary. Only wiht at.MPMode.CPU tracking
         use_mp:         Flag to activate CPU or GPU multiprocessing
           (default: False). In case multiprocessing is not enabled,
+          and the grid_mode is other than at.GridMode.FLOODFILL,
           ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         gpu_pool:       List of GPU id to use when use_mp is
@@ -285,7 +288,7 @@ def get_1d_acceptance(
          full parallelization.
     """
     if not use_mp:
-        if grid_mode != GridMode.FLOODFILL and plane != "dp":
+        if grid_mode != GridMode.FLOODFILL:
             if verbose:
                 print("No parallel calculation selected, force to GridMode.RECURSIVE")
             grid_mode = GridMode.RECURSIVE
