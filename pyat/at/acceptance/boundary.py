@@ -330,7 +330,7 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
                     iaux2 = np.max(np.argwhere(idx_discontinuous)) + 1
                     vaux = particle_offset[iaux[iaux2]]
                 else:
-                    vaux = particle_offset[0]
+                    vaux = particle_offset[iaux[0]]
         bn[n] = vaux
 
         # start with the positive side
@@ -347,7 +347,7 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
                     iaux2 = np.min(np.argwhere(idx_discontinuous))
                     vaux = particle_offset[iaux[iaux2]]
                 else:
-                    vaux = particle_offset[-1]
+                    vaux = particle_offset[iaux[-1]]
         bp[n] = vaux
         s_ff.append(particle_offset[mask_refpt | mask_alive])
         g_ff.append(particle_offset[mask_refpt])
