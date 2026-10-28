@@ -416,6 +416,10 @@ class Multipole(XsElement):
         "order": "MaxOrder",
     }
 
+    @property
+    def _integration_length(self):
+        return self["length"]
+
     def _set_at_transforms(self) -> dict:
         """Generate AT element displacements."""
         tr = {
@@ -473,7 +477,7 @@ class Multipole(XsElement):
             # Convert to AT
             return porder, np.fromiter(poly_from_mad(poly), dtype=float, count=lpoly)
 
-        length = self.get("length", 0.0)
+        length = self._integration_length
         xsorder: int = self.get("order", 0)
         atorder: int = getattr(self._atClass, "DefaultOrder", xsorder)
         aorder, polya = xspoly(["k0s", "k1s", "k2s", "k3s"], "ksl")
@@ -553,7 +557,7 @@ class Multipole(XsElement):
         elif korder is not None:  # quadrupole, sextupole, octupole
             self["k" + str(korder)] = extract(polb, korder)
             self["k" + str(korder) + "s"] = extract(pola, korder)
-        if length > 0.0:
+        if (length := self._integration_length) > 0.0:
             polb *= length
             pola *= length
         if np.any(pola) or np.any(polb):
@@ -563,7 +567,7 @@ class Multipole(XsElement):
             self["num_multipole_kicks"] = 3 * numintsteps
         if (scaling := atparams.get("FieldScaling")) is not None:
             self["delta_taper"] = scaling - 1.0
-        self["_isthick"] = length != 0.0
+        self["_isthick"] = self["length"] != 0.0
 
     def _set_xs_fringe(self, atparams: dict) -> None:
         self["edge_entry_active"] = bool(atparams.get("FringeQuadEntrance", 0))
@@ -711,6 +715,12 @@ class RBend(Bend):
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
 
+    @property
+    def _integration_length(self):
+        length = self["length"]
+        hangle = 0.5 * self["angle"]
+        return length * sin(hangle) / hangle
+
     def _model_to_at(self) -> dict[str, str]:
         """Get the AT passmethod."""
         straight = self.get("rbend_model", "adaptive") == "straight-body"
@@ -727,10 +737,9 @@ class RBend(Bend):
         hangle = abs(0.5 * self["angle"])
         length = self.get("length_straight", 0.0) * hangle / sin(hangle)
         if straight:
-            if not (
-                exact
-                and np.all(atparams["PolynomA"] == 0.0)
-                and np.all(atparams["PolynomB"] == 0.0)
+            if not exact and (
+                np.any(atparams["PolynomA"] != 0.0)
+                or np.any(atparams["PolynomB"] != 0.0)
             ):
                 msg = (
                     "Multipole are present in the rectangular bend: "
@@ -740,7 +749,7 @@ class RBend(Bend):
                 atparams["PassMethod"] = "ExactRectangularBendPass"
             rbs = self.get("rbend_shift", 0.0)
             ro = length / hangle / 2.0
-            atparams["X0ref"] = -rbs - (1.0 - cos(hangle)) * ro /2.0
+            atparams["X0ref"] = -rbs - (1.0 - cos(hangle)) * ro / 2.0
         atparams["Length"] = length
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
@@ -760,7 +769,7 @@ class RBend(Bend):
         elem["rbend_model"] = "straight-body"
         elem["edge_entry_angle"] -= hangle
         elem["edge_exit_angle"] -= hangle
-        elem["length_straight"] = length * sin(hangle) / hangle
+        elem["length_straight"] = elem._integration_length
         elem["rbend_shift"] = X0ref_to_rbend_shift(hangle, length, X0ref)
         return elem
 
