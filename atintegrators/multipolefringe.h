@@ -1,53 +1,8 @@
 #include "linearquadfringe.h"
 #include "atlalib.c"
 
-static void quad_fringe(double* r6, const double b2, double edge)
-{
-/*	Lee-Whiting's thin lens limit formula as given in p. 390 of "Beam Dynamics..."by E. Forest */
-
-  const double x = r6[x_];
-  const double y = r6[y_];
-  const double p_norm = 1.0 / (1.0 + r6[delta_]);
-  const double u = edge * b2 / 12.0 * p_norm;
-  const double x2 = x*x;
-  const double y2 = y*y;
-  const double xy = x*y;
-  const double dx = u * (x2 + 3.0*y2) * x;
-  const double dy = u * (y2 + 3.0*x2) * y;
-/*
-  const double dpx = 3.0 * u * (2.0*xy*r6[py_] - (x2+y2)*r6[px_]);
-  const double dpy = 3.0 * u * (2.0*xy*r6[px_] - (x2+y2)*r6[py_]);
-
-  r6[ct_] -= (dy*r6[py_] - dx*r6[px_]) * p_norm;
-  r6[x_] += dx;
-  r6[px_] += dpx;
-  r6[y_] -= dy;
-  r6[py_] -= dpy;
-*/
-  const double fxx = -edge * b2 / 4.0 * (x2+y2);
-  const double fxy = -edge * b2 / 2.0 * xy;
-  const double fyx = -fxy;
-  const double fyy = -fxx;
-  const double A = 1.0 - fxx * p_norm;
-  const double B = -fyx * p_norm;
-  const double C = -fxy * p_norm;
-  const double D = 1.0 - fyy * p_norm;
-  const double det = A*D - B*C;
-  const double pxf = (D * r6[px_] - B * r6[py_]) / det;
-  const double pyf = (A * r6[py_] - C * r6[px_]) / det;
-  const double dct = (dx*pxf - dy*pyf) * p_norm;
-
-  r6[x_] += dx;
-  r6[px_] = pxf;
-  r6[y_] -= dy;
-  r6[py_] = pyf;
-  r6[ct_] += dct;
-
-}
-
-static void all_mult_fringe(double *r6,
-                             const double *polya, const double *polyb, int max_order,
-                             double edge)
+static void all_mult_fringe(double *r6, const double *polya, const double *polyb,
+                            int min_order, int max_order, double edge)
 {
   // Forest 13.29
   // note this is the sum over n of Forest 13.29
@@ -91,26 +46,26 @@ static void all_mult_fringe(double *r6,
     RX = DRX * x - DIX * y;
     IX = DRX * y + DIX * x;
 
-    if (n > 0) {  // Skip field order 0
+    if (n >= min_order) {  // Skip field order 0
       U = f1 * (B * RX - A * IX);
       V = f1 * (B * IX + A * RX);
       DU = f1 * (B * DRX - A * DIX);
       DV = f1 * (B * DIX + A * DRX);
+
+      const double DUX = j * DU;
+      const double DVX = j * DV;
+      const double DUY = -j * DV;
+      const double DVY = j * DU;
+
+
+      FX += U * x + nf * V * y;
+      FY += U * y - nf * V * x;
+
+      FX_X += DUX * x + U + nf * y * DVX;
+      FX_Y += DUY * x + nf * (V + y * DVY);
+      FY_X += DUX * y - nf * (V + x * DVX);
+      FY_Y += DUY * y + U - nf * x * DVY;
     }
-
-    const double DUX = j * DU;
-    const double DVX = j * DV;
-    const double DUY = -j * DV;
-    const double DVY = j * DU;
-
-
-    FX += U * x + nf * V * y;
-    FY += U * y - nf * V * x;
-
-    FX_X += DUX * x + U + nf * y * DVX;
-    FX_Y += DUY * x + nf * (V + y * DVY);
-    FY_X += DUX * y - nf * (V + x * DVX);
-    FY_Y += DUY * y + U - nf * x * DVY;
   }
 
 
@@ -139,7 +94,7 @@ static void multipole_fringe(double *r6, int method, double B1,
 {
     switch (method) {
         case 0: break;
-        case 1: quad_fringe(r6, B1, edge);
+        case 1: all_mult_fringe(r6, polya, polyb, 1, 1, edge);
                 break;
         case 2: if (fringeIntM0 && fringeIntP0) {
                     if (edge > 0)
@@ -148,9 +103,9 @@ static void multipole_fringe(double *r6, int method, double B1,
                         linearQuadFringeElegantExit(r6, B1, fringeIntM0, fringeIntP0);
                 }
                 else
-                    quad_fringe(r6, B1, edge);
+                    all_mult_fringe(r6, polya, polyb, 1, 1, edge);
                 break;
-        case 3: all_mult_fringe(r6, polya, polyb, max_order, edge);
+        case 3: all_mult_fringe(r6, polya, polyb, 1, max_order, edge);
                 break;
     }
 }
