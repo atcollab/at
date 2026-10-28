@@ -146,7 +146,7 @@ static void magnet(double *r, double le, double bending_angle,
         }
 
         /* Integrator */
-        INTEGRATOR(r6, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
+        INTEGRATOR(rb, nb, alive, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
 
         for (int c = 0; c < nb; c++) { /* Loop over particles */
             double *r6 = rb + 6*c;

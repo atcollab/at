@@ -36,7 +36,7 @@
 #define PARTICLE_BLOCK 64
 #endif
 
-#define PARTICLE_LOOP(...) \
+#define PARTICLE_LOOP(rb, nb, alive, ...) \
     for (int c = 0; c < nb; c++) { \
         if (alive[c]) { \
             double *r6 = rb + 6*c; \
@@ -44,7 +44,7 @@
         } \
     }
 
-#define SINGLE_PARTICLE(...) __VA_ARGS__
+#define SINGLE_PARTICLE(rb, nb, alive, ...) __VA_ARGS__
 
 #if defined(INTEGRATOR_4)
 
@@ -56,14 +56,14 @@
     double IK1 = KICK1 * sl; \
     double IK2 = KICK2 * sl;
 
-#define integrator_slice(STEP, r6, irho, A, B, max_order, rad_const, diff_const, bdiff) \
-        STEP(DRIFT(r6, ID1, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID2, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID2, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID1, irho, bdiff));
+#define integrator_slice(STEP, rb, nb, alive, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+        STEP(rb, nb, alive, DRIFT(r6, ID1, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID2, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID2, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID1, irho, bdiff));
 
 #elif defined(INTEGRATOR_6)
 
@@ -79,52 +79,52 @@
     double IK3 = YK3 * sl; \
     double IK4 = YK4 * sl;
 
-#define integrator_slice(STEP, r6, irho, A, B, max_order, rad_const, diff_const, bdiff) \
-        STEP(DRIFT(r6, ID1, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID2, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID3, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID4, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK4, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID4, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID3, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID2, irho, bdiff)); \
-        STEP(KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
-        STEP(DRIFT(r6, ID1, irho, bdiff));
+#define integrator_slice(STEP, rb, nb, alive, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+        STEP(rb, nb, alive, DRIFT(r6, ID1, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID2, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID3, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID4, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK4, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID4, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID3, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID2, irho, bdiff)); \
+        STEP(rb, nb, alive, KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff)); \
+        STEP(rb, nb, alive, DRIFT(r6, ID1, irho, bdiff));
 
 #endif /*INTEGRATOR_4*/
 
-#define integrator_particle(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
-    PARTICLE_LOOP( \
+#define integrator_particle(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+    PARTICLE_LOOP(rb, nb, alive, \
         for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */ \
             INTEGRATOR_PREFIX; \
-            integrator_slice(SINGLE_PARTICLE, r6, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+            integrator_slice(SINGLE_PARTICLE, rb, nb, alive, irho, A, B, max_order, rad_const, diff_const, bdiff) \
             INTEGRATOR_SUFFIX; \
         } \
     )
 
-#define integrator_block(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+#define integrator_block(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */ \
-        integrator_slice(PARTICLE_LOOP, r6, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+        integrator_slice(PARTICLE_LOOP, rb, nb, alive, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     }
 
 #ifdef QUANTUM
 
-#define integrator(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
-    integrator_particle(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff)
+#define integrator(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+    integrator_particle(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff)
 
 #else
 
-#define integrator(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+#define integrator(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     if (nb == 1) { \
-        integrator_particle(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+        integrator_particle(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     } \
     else { \
-        integrator_block(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+        integrator_block(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     }
 
 #endif /*QUANTUM*/
