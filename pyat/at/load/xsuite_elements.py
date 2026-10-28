@@ -13,6 +13,7 @@ import numpy as np
 
 from ..lattice import AtWarning, ReferencePoint, constants as cst
 from ..lattice import elements as elt
+from ..lattice.transformation import _rotation
 from .madx import poly_from_mad, poly_to_mad
 
 _INDEX_TO_EDGE_MODEL = {
@@ -22,6 +23,56 @@ _INDEX_TO_EDGE_MODEL = {
     2: "dipole-only",
 }
 _EDGE_MODEL_TO_INDEX = {k: v for v, k in _INDEX_TO_EDGE_MODEL.items()}
+_AT_MISALIGN_KEYS = ("dx", "dy", "dz", "pitch", "yaw", "tilt")
+
+
+def _xs_rotation(pitch: float, yaw: float, tilt: float) -> np.ndarray:
+    """Xsuite rotation matrix (``track_misalignments.h``): Ry, then Rx, then Rz.
+
+    The angles have AT's signs: Xsuite's ``rot_x_rad`` is ``-pitch``.
+    """
+    return _rotation([0.0, yaw, 0.0]) @ _rotation([pitch, 0.0, tilt])
+
+
+def _pivot_offset(length: float, angle: float) -> np.ndarray:
+    """Position of AT's centre (chord midpoint) relative to Xsuite's (arc midpoint).
+
+    AT rotates a bend around the midpoint of its chord, Xsuite around the point of
+    the design orbit at half the length. Both frames have their z axis along the
+    chord, they are separated by the sagitta.
+    """
+    if angle == 0.0 or length == 0.0:
+        return np.zeros(3)
+    return np.array([-length / angle * (1.0 - np.cos(0.5 * angle)), 0.0, 0.0])
+
+
+def _at2xs_misalignment(tr: dict, reference, length, angle) -> None:
+    """Convert in place the AT misalignment to the same rigid motion in Xsuite.
+
+    AT composes the rotations as Rx(pitch) Ry(yaw) Rz(tilt) (Venturini and Hellert,
+    Eq. 3), Xsuite as Ry Rx Rz: the rotation matrix is decomposed again in
+    Xsuite's order, keeping AT's signs.
+    """
+    ra = _rotation([tr["pitch"], tr["yaw"], tr["tilt"]])
+    offsets = np.array([tr["dx"], tr["dy"], tr["dz"]])
+    if reference == ReferencePoint.CENTRE:
+        offsets = offsets + (np.identity(3) - ra) @ _pivot_offset(length, angle)
+    tr.update(zip(("dx", "dy", "dz"), offsets.tolist(), strict=True))
+    tr["pitch"] = float(-np.arcsin(ra[1, 2]))
+    tr["yaw"] = float(np.arctan2(ra[0, 2], ra[2, 2]))
+    tr["tilt"] = float(np.arctan2(ra[1, 0], ra[1, 1]))
+
+
+def _xs2at_misalignment(tr: dict, reference, length, angle) -> None:
+    """Inverse of :py:func:`_at2xs_misalignment`, applied in place to *tr*."""
+    rx = _xs_rotation(tr["pitch"], tr["yaw"], tr["tilt"])
+    offsets = np.array([tr["dx"], tr["dy"], tr["dz"]])
+    if reference == ReferencePoint.CENTRE:
+        offsets = offsets - (np.identity(3) - rx) @ _pivot_offset(length, angle)
+    tr.update(zip(("dx", "dy", "dz"), offsets.tolist(), strict=True))
+    tr["pitch"] = float(np.arctan2(-rx[1, 2], rx[2, 2]))
+    tr["yaw"] = float(np.arcsin(rx[0, 2]))
+    tr["tilt"] = float(np.arctan2(-rx[0, 1], rx[0, 0]))
 
 
 class _XsFactory(Protocol):
@@ -76,21 +127,34 @@ class XsElement(dict, _XsFactory):
 
     def _set_xs_transforms(self, atelem) -> None:
         """Generate Xsuite element displacements."""
-        tr = {
-            "shift_x": getattr(atelem, "_dx", 0.0),
-            "shift_y": getattr(atelem, "_dy", 0.0),
-            "shift_s": getattr(atelem, "_dz", 0.0),
-            "rot_s_rad_no_frame": getattr(atelem, "_tilt", 0.0),
-            "rot_x_rad": -getattr(atelem, "_pitch", 0.0),
-            "rot_y_rad": getattr(atelem, "_yaw", 0.0),
-        }
-        misalign = {k: v for k, v in tr.items() if v != 0.0}
-        if misalign and not self._allow_rot_shift:
+        attr = {k: getattr(atelem, "_" + k, 0.0) for k in _AT_MISALIGN_KEYS}
+        if not any(attr.values()):
+            attr = {}
+        if attr and not self._allow_rot_shift:
             msg = "Misalignment and rotations are not avalaible in Xsuite, ignored"
             self._warn(msg)
             return
-        refpoint = getattr(atelem, "_reference", ReferencePoint.CENTRE)
+        # The reference point is stored as its integer value
+        refpoint = ReferencePoint(
+            getattr(atelem, "_referencepoint", ReferencePoint.CENTRE.value)
+        )
         rots_frame = getattr(atelem, "_tilt_frame", 0.0)
+        if attr:
+            _at2xs_misalignment(
+                attr,
+                refpoint,
+                getattr(atelem, "Length", 0.0),
+                getattr(atelem, "BendingAngle", 0.0),
+            )
+        tr = {
+            "shift_x": attr.get("dx", 0.0),
+            "shift_y": attr.get("dy", 0.0),
+            "shift_s": attr.get("dz", 0.0),
+            "rot_s_rad_no_frame": attr.get("tilt", 0.0),
+            "rot_x_rad": -attr.get("pitch", 0.0),
+            "rot_y_rad": attr.get("yaw", 0.0),
+        }
+        misalign = {k: v for k, v in tr.items() if v != 0.0}
 
         if rots_frame != 0.0:
             if misalign:
@@ -144,6 +208,8 @@ class XsElement(dict, _XsFactory):
                 )
                 self._warn(msg)
                 reference = ReferencePoint.CENTRE
+            _xs2at_misalignment(tr, reference, self["length"], self.get("angle", 0.0))
+            transforms = {k: v for k, v in tr.items() if v != 0.0}
             transforms["reference"] = reference.value
         return transforms
 
@@ -576,7 +642,11 @@ class Bend(Multipole):
     def _set_at_params(self, **kwargs) -> dict[str, Any]:
         atparams = {"EntranceAngle": 0.0, "ExitAngle": 0.0}
         atparams.update(super()._set_at_params(**kwargs))
-        if not self.get("k0_from_h", "k0" not in self):
+        if self.get("k0_from_h", "k0" not in self):
+            # Xsuite ignores k0 and uses h: remove a stored k0 from PolynomB[0]
+            atparams["PolynomB"][0] -= self.get("k0", 0.0)
+        else:
+            # Xsuite k0 is the total dipole field, AT PolynomB[0] excludes h
             atparams["PolynomB"][0] -= self["angle"] / self["length"]
         return atparams
 
