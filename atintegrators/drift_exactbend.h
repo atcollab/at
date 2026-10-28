@@ -37,14 +37,24 @@ static void drift(double *r6, double L, double irho)
         r6[ct_] += NormL * dp1;   /* Absolute path length */
     }
     else {
-        double pzmx = pz-(1.0+r6[x_]*irho);
-        double cs = cos(irho*L);
+        /* Rearranged to avoid cancellations between O(1) terms divided by irho.
+           Half-angle: asin(px0/d) - asin(px/d) = 2 atan2(px0 - px, pz + pz1) */
+        double rho = 1.0/irho;
+        double px0 = r6[px_];
+        double py0 = r6[py_];
         double sn = sin(irho*L);
-        double px = r6[px_]*cs + pzmx*sn;
-        double d2 = pxyz(dp1, 0.0, r6[py_]);
-        double dasin = L + (asin(r6[px_]/d2) - asin(px/d2))/irho;
-        double x = (pxyz(dp1,px,r6[py_]) - pzmx*cs + r6[px_]*sn - 1.0)/irho;
-        double dy = r6[py_]*dasin;
+        double cs = cos(irho*L);
+        double shalf = sin(0.5*irho*L);
+        double omc = 2.0*shalf*shalf;                   /* 1 - cos(irho*L) */
+        double pzm1 = pz - 1.0;
+        double q = pzm1 - r6[x_]*irho;
+        double px = px0*cs + q*sn;
+        double dpx = px0*omc - q*sn;                    /* px0 - px, accurate */
+        double pz1 = pxyz(dp1, px, py0);
+        double spz = pz + pz1;
+        double x = r6[x_]*(1.0-omc) + (px0*sn + pzm1*omc + dpx*(px0+px)/spz)*rho;
+        double dasin = L + 2.0*atan2(dpx, spz)*rho;
+        double dy = py0*dasin;
         double dct = dp1*dasin;     /* Absolute path length */
 
         r6[x_] = x;
