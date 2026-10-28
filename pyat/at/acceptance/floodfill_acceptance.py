@@ -15,7 +15,7 @@ from at.tracking.track import MPMode
 #                                    JACoW-IPAC25-MOPB065
 # Edited : O. Blanco, ALBA,          2025 pyat parallel version
 
-__all__ = ["floodfill", "floodfillmomap"]
+__all__ = ["floodfill", "floodfill_1d"]
 
 
 def floodfill(
@@ -234,10 +234,11 @@ def floodfill(
     return np.vstack((points_tracked, turns_per_point, lost_after_track))
 
 
-def floodfillmomap(
+def floodfill_1d(
     ring: Lattice,
     nturns: int = 1024,
-    amplitudes: list | tuple = (10e-2),
+    plane: list | tuple = ("dp"),
+    amplitude: list | tuple = (10e-2),
     bounds: list | tuple = ((-1, 1)),
     npoints: list | tuple = (10),
     offset: list | np.ndarray | None = None,
@@ -254,7 +255,10 @@ def floodfillmomap(
     Parameters:
         ring: pyat lattice
         nturns: Number of turns for the tracking. Default: 1024
-        amplitudes: (2,) array, set the search range per plane.
+        plane: max. dimension 1, Plane to scan for the acceptance.
+          Allowed values are: ``'x'``, ``'px'``, ``'y'``,
+          ``'py'``, ``'dp'``, ``'ct'``
+        amplitude: (2,) array, set the search range.
           Default [10e-3]
         bounds: (2,2) array, defines the tracked range: range=bounds*amplitude
             Default ((-1,1),(0,1))
@@ -262,7 +266,7 @@ def floodfillmomap(
         offset: Offset to be added. Default is the closed orbit per obspt.
           This is useful to study to add a small deviation in the transverse plane
           to the tracked coordinates
-          e.g. [10e-5 10e-5] in the transverse planes.
+          e.g. 10e-5 in the transverse planes.
         obspt: reference points (default len(ring))
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
@@ -278,8 +282,16 @@ def floodfillmomap(
           5) Flag set to 1 if the nth particle is lost, otherwise 0.
 
     Example:
-        >>> ffmomap_data = floodfillmomap(ring, nturns=500)
-        >>> alive_mask = ffmomap_data[3,:] == 0
+        >>> data_ff1d = floodfill_1d(ring, plane=["dp"], nturns=1024)
+        >>> alive_mask = data_ff1d[4,:] == 0
+
+        >>> particle_turns = data_ff1d[3,:]
+        >>> particle_refpts = data_ff1d[0,:]
+        >>> particle_spos = data_ff1d[2,:]
+        >>> particle_offset = data_ff1d[1,:]
+        >>> plt.scatter(particle_spos,particle_offset,c=particle_turns)
+        >>> plt.show()
+
 
     .. Note::
 
@@ -350,7 +362,7 @@ def floodfillmomap(
     verboseprint("Flood fill starts.")
     verboseprint(f"Maximum number of turns: {nturns}")
 
-    window = np.ravel((np.array(bounds).reshape((1, 2)).T * np.array(amplitudes)).T)
+    window = np.ravel((np.array(bounds).reshape((1, 2)).T * np.array(amplitude)).T)
     if window[0] == window[1]:
         verboseprint("Window is too narrow")
         return data_tracked
@@ -384,10 +396,12 @@ def floodfillmomap(
     else:
         offset_repeat = np.repeat(offset, n_y, axis=0)
 
+    planesi = np.atleast_1d(axisdef.axis_(tuple(plane), key="index"))
+
     ndims = 6
     particles = np.zeros((nparticles, ndims))
     particles = offset_repeat
-    particles[:, 4] = particles[:, 4] + points[1, :]
+    particles[:, planesi[0]] = particles[:, planesi[0]] + points[1, :]
 
     # parallel parameters
     nproc = pool_size if use_mp else 1
@@ -395,12 +409,14 @@ def floodfillmomap(
     task_to_accomplish = Queue()
     processes = []
 
+    leftside = np.arange(1, n_y - 1)
+    rightside = np.arange((n_x - 1) * n_y + 1, n_x * n_y - 1)
     lowerline = np.asarray([*range(0, n_y * n_x, n_y)])
     upperline = lowerline + n_y - 1
 
     manager = Manager()
     registered_for_tracking = manager.list(nparticles * [False])
-    for i in np.concatenate((upperline, lowerline)):
+    for i in np.concatenate((upperline, leftside, lowerline, rightside)):
         task_to_accomplish.put(i)
         registered_for_tracking[i] = True
 
