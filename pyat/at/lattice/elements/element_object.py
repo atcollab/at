@@ -83,6 +83,7 @@ class Element:
         "NumIntSteps": lambda v: _int(v, vmin=0),
         "Energy": _float,
         "_referencepoint": _int,
+        "ExactMisalign": lambda v: _int(v, vmin=0, vmax=1),
     }
     _file_classname: ClassVar[str]
 
