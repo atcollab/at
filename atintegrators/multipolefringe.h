@@ -136,20 +136,20 @@ static void multipole_fringe(double *r6, int method, int methodm, double B1,
                              double *fringeIntM0, double *fringeIntP0,
                              double edge)
 {
-    int max_o = 1;
+    int max_o = (methodm == 1) ? max_order : 1;
     switch (method) {
         case 0: break;
-        case 1: max_o = (methodm == 1) ? max_order : 1;
-                all_mult_fringe(r6, polya, polyb, 1, max_order, edge);
+        case 1: all_mult_fringe(r6, polya, polyb, 1, max_o, edge);
                 break;
         case 2: if (fringeIntM0 && fringeIntP0) {
                     if (edge > 0)
                         linearQuadFringeElegantEntrance(r6, B1, fringeIntM0, fringeIntP0);
                     else
                         linearQuadFringeElegantExit(r6, B1, fringeIntM0, fringeIntP0);
+                    all_mult_fringe(r6, polya, polyb, 2, max_o, edge);
                 }
                 else
-                    all_mult_fringe(r6, polya, polyb, 1, 1, edge);
+                    all_mult_fringe(r6, polya, polyb, 1, max_o, edge);
                 break;
         case 3: quad_fringe(r6, B1, edge);
                 break;
