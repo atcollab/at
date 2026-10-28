@@ -71,7 +71,7 @@ static void edge_fringe2B(double* r, double h, double edge_angle, double gK, dou
     if (FringeBendEntrance == 4) { \
         Yrot(r6, entrance_angle, bdiff); \
         bend_fringe(r6, irho, gK_entrance); \
-        multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
+        multipole_fringe(r6, FringeQuadEntrance, FringeMultipoleEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
         if (entrance_angle != 0.0) { \
             if (B1 != 0.0 && FringeQuadEntrance) quad_wedge(r6, -B1 * entrance_angle); \
             bend_wedge(r6, irho, -entrance_angle, bdiff); \
@@ -79,7 +79,7 @@ static void edge_fringe2B(double* r, double h, double edge_angle, double gK, dou
     } \
     else { \
         edge_fringe2A(r6, irho, entrance_angle, gK_entrance, h1, B1); \
-        multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
+        multipole_fringe(r6, FringeQuadEntrance, FringeMultipoleEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
     }
 
 #define MAGNET_EXIT \
@@ -89,12 +89,12 @@ static void edge_fringe2B(double* r, double h, double edge_angle, double gK, dou
             bend_wedge(r6, irho, -exit_angle, bdiff); \
             if (B1 != 0.0 && FringeQuadExit) quad_wedge(r6, -B1 * exit_angle); \
         } \
-        multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
+        multipole_fringe(r6, FringeQuadExit, FringeMultipoleExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
         bend_fringe(r6, -irho, gK_exit); \
         Yrot(r6, exit_angle, bdiff); \
     } \
     else { \
-        multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
+        multipole_fringe(r6, FringeQuadExit, FringeMultipoleExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
         edge_fringe2B(r6, irho, exit_angle, gK_exit, h2, B1); \
     }
 

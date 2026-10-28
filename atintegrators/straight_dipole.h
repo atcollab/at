@@ -12,7 +12,7 @@
     r6[0] += x0ref; \
     if (FringeBendEntrance) \
         bend_fringe(r6, irho, gK_entrance); \
-    multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
+    multipole_fringe(r6, FringeQuadEntrance, FringeMultipoleEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
     if (phi_entrance != 0.0) { \
         if (B1 != 0.0) quad_wedge(r6, -B1 * phi_entrance); \
         bend_wedge(r6, irho, phi_entrance, bdiff); \
@@ -26,7 +26,7 @@
         bend_wedge(r6, irho, phi_exit, bdiff); \
         if (B1 != 0.0) quad_wedge(r6, -B1 * phi_exit); \
     } \
-    multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
+    multipole_fringe(r6, FringeQuadExit, FringeMultipoleExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
     if (FringeBendExit) \
         bend_fringe(r6, -irho, gK_exit); \
     r6[0] -= x0ref; \

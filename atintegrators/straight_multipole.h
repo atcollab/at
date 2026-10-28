@@ -5,13 +5,13 @@
 #ifndef MAGNET_ENTRY
 #define MAGNET_ENTRY \
     /* Entry face */ \
-    multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0);
+    multipole_fringe(r6, FringeQuadEntrance, FringeMultipoleEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0);
 #endif /*MAGNET_ENTRY*/
 
 #ifndef MAGNET_EXIT
 #define MAGNET_EXIT \
     /* Exit face */ \
-    multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0);
+    multipole_fringe(r6, FringeQuadExit, FringeMultipoleExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0);
 #endif /*MAGNET_EXIT*/
 
 #define MAGNET_ARGUMENTS

@@ -33,6 +33,8 @@ struct elem
     double gK_exit;
     int FringeQuadEntrance;
     int FringeQuadExit;
+    int FringeMultipoleEntrance;
+    int FringeMultipoleExit;
     double *fringeIntM0;
     double *fringeIntP0;
     double *R1;
@@ -58,6 +60,7 @@ static void magnet(double *r, double le, double bending_angle,
     int FringeBendEntrance, int FringeBendExit,
     double gK_entrance, double gK_exit,
     int FringeQuadEntrance, int FringeQuadExit,
+    int FringeMultipoleEntrance, int FringeMultipoleExit,
     double *fringeIntM0,  /* I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1 */
     double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */
     double *T1, double *T2,
@@ -188,6 +191,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
+        int FringeMultipoleEntrance=atGetOptionalLong(ElemData,"FringeMultipoleEntrance",0); check_error(); \
+        int FringeMultipoleExit=atGetOptionalLong(ElemData,"FringeMultipoleExit",0); check_error();
         double *fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
         double *fringeIntP0=atGetOptionalDoubleArray(ElemData,"fringeIntP0"); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
@@ -210,6 +215,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->Scaling=Scaling;
         Elem->FringeQuadEntrance=FringeQuadEntrance; \
         Elem->FringeQuadExit=FringeQuadExit; \
+        Elem->FringeMultipoleEntrance=FringeMultipoleEntrance; \
+        Elem->FringeMultipoleExit=FringeMultipoleExit; \
         Elem->fringeIntM0=fringeIntM0; \
         Elem->fringeIntP0=fringeIntP0; \
         Elem->R1=R1;
@@ -234,6 +241,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                 Elem->FringeBendEntrance,Elem->FringeBendExit,
                 Elem->gK_entrance, Elem->gK_exit,
                 Elem->FringeQuadEntrance, Elem->FringeQuadExit,
+                Elem->FringeMultipoleEntrance, Elem->FringeMultipoleExit,
                 Elem->fringeIntM0, Elem->fringeIntP0,
                 Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                 Elem->RApertures, Elem->EApertures,
@@ -282,6 +290,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
+        int FringeMultipoleEntrance=atGetOptionalLong(ElemData,"FringeMultipoleEntrance",0); check_error(); \
+        int FringeMultipoleExit=atGetOptionalLong(ElemData,"FringeMultipoleExit",0); check_error();
         double *fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
         double *fringeIntP0=atGetOptionalDoubleArray(ElemData,"fringeIntP0"); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
@@ -310,6 +320,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             FringeBendEntrance, FringeBendExit,
             gK_entrance, gK_exit,
             FringeQuadEntrance, FringeQuadExit,
+            FringeMultipoleEntrance, FringeMultipoleExit,
             fringeIntM0, fringeIntP0,
             T1, T2, R1, R2, RApertures, EApertures,
             Scaling,
@@ -342,12 +353,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[0], i0++, mxCreateString(required[i]));
         if (nlhs>1) {    /* list of optional fields */
             int i1 = 0;
-            plhs[1] = mxCreateCellMatrix(12+N_OPTIONAL, 1);
+            plhs[1] = mxCreateCellMatrix(14+N_OPTIONAL, 1);
             for (int i=0; i<N_OPTIONAL; i++)
                 mxSetCell(plhs[1], i1++, mxCreateString(optional[i]));
             mxSetCell(plhs[1], i1++, mxCreateString("NumIntSteps"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FringeMultipoleEntrance"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FringeMultipoleExit"));
             mxSetCell(plhs[1], i1++, mxCreateString("fringeIntM0"));
             mxSetCell(plhs[1], i1++, mxCreateString("fringeIntP0"));
             mxSetCell(plhs[1], i1++, mxCreateString("T1"));
