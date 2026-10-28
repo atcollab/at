@@ -14,7 +14,7 @@ from scipy.ndimage import binary_dilation, binary_opening
 
 from at.lattice import AtError, AtWarning, Lattice, Refpts, axisdef
 
-from .floodfill_acceptance import floodfill, floodfillmomap
+from .floodfill_acceptance import floodfill, floodfill_1d
 
 __all__ = ["GridMode"]
 
@@ -280,11 +280,12 @@ def get_grid_boundary(mask, grid, config):
         raise AtError("GridMode {0} undefined.".format(grid.mode))
 
 
-def boundary_dp_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs):
-    data_ffmomap = floodfillmomap(
+def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs):
+    data_ff1d = floodfill_1d(
         ring,
         nturns=nturns,
-        amplitudes=config.amplitudes,
+        plane=config.planes,
+        amplitude=config.amplitudes,
         bounds=config.bounds,
         npoints=config.shape,
         offset=offset,
@@ -294,28 +295,64 @@ def boundary_dp_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
         pool_size=kwargs["pool_size"],
     )
 
-    particlerefpts = data_ffmomap[0, :]
-    particleenergy = data_ffmomap[1, :]
-    mask_alive = data_ffmomap[4, :] == 0
+    particle_refpt = data_ff1d[0, :]
+    particle_offset = data_ff1d[1, :]
+    mask_alive = data_ff1d[4, :] == 0
 
-    refpts0 = np.unique(particlerefpts)
+    refpts0 = np.unique(particle_refpt)
     refpts = np.asarray(refpts0, dtype=int)
 
     nmax = len(refpts)
-    dpP = np.zeros(nmax)
-    dpN = np.zeros(nmax)
-    estep = config.amplitudes / config.shape
+    bp = np.zeros(nmax)
+    bn = np.zeros(nmax)
+    step = config.amplitudes[0] / config.shape[0]
+    mask_neg = data_ff1d[1, :] < -1 * step
+    mask_pos = data_ff1d[1, :] > 1 * step
     s_ff = []
     g_ff = []
     for n, i in enumerate(refpts):
-        maskidx = particlerefpts == i
-        energyidx = particleenergy[maskidx]
-        dpP[n] = np.min(energyidx[energyidx > estep])
-        dpN[n] = np.max(energyidx[energyidx < estep])
-        s_ff.append(particleenergy[maskidx | mask_alive])
-        g_ff.append(particleenergy[maskidx])
-    # floodfill boundary needs to be sorted
-    b_ff = np.vstack((dpN, dpP)).T
+        mask_refpt = particle_refpt == i
+        # the boundary is defined as the alive particle with
+        # the largest offset inside the window and below
+        # the smallest lost particle
+
+        # start with the negative side
+        iaux = np.argwhere(mask_alive & mask_refpt & mask_neg)[:, 0]
+        if iaux.size == 0:
+            vaux = 0
+        else:
+            diffaux = np.diff(iaux)
+            if diffaux.size == 0:
+                vaux = particle_offset[iaux[0]]
+            else:
+                idx_discontinuous = diffaux > 1
+                if np.any(idx_discontinuous):
+                    iaux2 = np.max(np.argwhere(idx_discontinuous)) + 1
+                    vaux = particle_offset[iaux[iaux2]]
+                else:
+                    vaux = particle_offset[0]
+        bn[n] = vaux
+
+        # start with the positive side
+        iaux = np.argwhere(mask_alive & mask_refpt & mask_pos)[:, 0]
+        if iaux.size == 0:
+            vaux = 0
+        else:
+            diffaux = np.diff(iaux)
+            if diffaux.size == 0:
+                vaux = particle_offset[iaux[0]]
+            else:
+                idx_discontinuous = diffaux > 1
+                if np.any(idx_discontinuous):
+                    iaux2 = np.min(np.argwhere(idx_discontinuous))
+                    vaux = particle_offset[iaux[iaux2]]
+                else:
+                    vaux = particle_offset[-1]
+        bp[n] = vaux
+        s_ff.append(particle_offset[mask_refpt | mask_alive])
+        g_ff.append(particle_offset[mask_refpt])
+    # floodfill boundary needs to be formatted
+    b_ff = np.vstack((bn, bp)).T
     # we return boundary, survived, tracked
     return b_ff, s_ff, g_ff
 
@@ -411,8 +448,8 @@ def grid_boundary_search(
     if offset is None:
         offset = [None for _ in np.arange(len(obspt))]
     if grid_mode is GridMode.FLOODFILL:
-        if len(planes) == 1 and planes[0] == "dp":
-            return boundary_dp_floodfill(
+        if len(planes) == 1:
+            return boundary_1d_floodfill(
                 ring, obspt, offset, nturns, config, use_mp, **kwargs
             )
         else:
