@@ -12,7 +12,7 @@ import at
 # set point for the passive cavity
 volt_set = 1e5
 
-parking_detune = 35e3  # initial detuning for the passive cavity
+parking_detune = 50e3  # initial detuning for the passive cavity
 
 I0 = 400e-3  # Total Current [A]
 
@@ -35,14 +35,13 @@ Q0 = 3688*(1+beta_main)
 Rs0 = 0.32e6*(1+beta_main)
 Nmain = 4
 
-
 Nbunches = ring_dict["harmonic_number"]
 Nslice = 1
 
 nparts_per_bunch = 1
 Nparts = int(Nbunches * nparts_per_bunch)
 
-Nturns = 100000
+Nturns = 50000
 
 sigma_matrix = at.sigma_matrix(
     betax=1,
@@ -113,7 +112,7 @@ at.add_beamloading(
     fbmode=at.FeedbackMode.PROP,
     TunerGain=0.01,
     TunerAveragingPeriod=500,
-    TuneOffset=0.0
+    TunerOffset=0.0
 )
 
 at.add_beamloading(
@@ -125,11 +124,12 @@ at.add_beamloading(
     cavpts=[1],
     Nslice=Nslice,
     cavitymode=at.CavityMode.PASSIVE_SETVOLTAGE,
-    passive_voltage=volt_set,
+    PassiveVoltage=volt_set,
     TunerGain=0.0,
     TunerAveragingPeriod=500,
     TunerOffset=0.0
 )
+
 
 # at.add_beamloading(simple_ring, QL, Rsl, detune=parking_detune, cavpts=[1],
 #                   Nslice=Nslice, cavitymode=at.CavityMode.PASSIVE)
@@ -161,7 +161,7 @@ for iturn in np.arange(Nturns):
 
     _ = simple_ring.track(parts, in_place=True, refpts=None, nturns=1)
     if iturn == turn_passive_fb_on:
-        simple_ring[1].TunerGain = 0.05
+        simple_ring[1].TunerGain = 0.1
 
     all_z_means[:, iturn] = bmon.means[5, :, 0]
     all_dp_means[:, iturn] = bmon.means[4, :, 0]

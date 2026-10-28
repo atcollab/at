@@ -322,6 +322,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     /* The vbeam_complex will always be sent to the center of the next bucket */
 
     double bucket_z_center = 0.0;
+
     for(ibucket=0; ibucket<ring_harmn; ibucket++){
         is_filled = fillpattern[ibucket]; 
         bucket_z_center = ibucket*main_bucket;
@@ -331,9 +332,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                 wi = turnhistoryW[total_slice_counter];
                 selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
                 if(islice==0){
-                    // TurnhistoryZ goes from -bucket991 to bucket0 
-                    // so the bucket center in the turnhistory reference is one bucket shifted,
-                    dt = (turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc; 
+                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1] - bucket_z_center)/bc; 
                 }else{
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
@@ -345,7 +344,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                
             }
             /* back to the center of the bucket */
-            dt = -(turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc;
+            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1] - bucket_z_center)/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             bunch_counter += 1;
         }
