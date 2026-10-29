@@ -84,7 +84,7 @@ void compute_mean_dp(double *r_in, int num_particles, double *mdp, double *npart
     #endif
     
     
-    if (npart>0.0){
+    if (npart[0]>0.0){
         mdp[0] /= npart[0];
     }
 
@@ -191,7 +191,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     // Load M0 Damper Attributes
     long dampermode = Elem->dampermode;
-    double *M0_Gain = Elem->M0_gain;
+    double *M0_Gain = Elem->M0_Gain;
     double *M0_PID_Params = Elem->M0_PID_Params;
     long M0_Delay = Elem->M0_Delay;
     double *M0_Buffer = Elem->M0_Buffer;
