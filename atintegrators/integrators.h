@@ -20,6 +20,10 @@
 #define KICK kick
 #endif
 
+#if defined(INTEGRATOR_PREFIX) || defined(INTEGRATOR_SUFFIX)
+#define PARTICLE_INTEGRATOR
+#endif
+
 #ifndef INTEGRATOR_PREFIX
 #define INTEGRATOR_PREFIX
 #endif
@@ -112,7 +116,7 @@
         integrator_slice(PARTICLE_LOOP, rb, nb, alive, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     }
 
-#ifdef QUANTUM
+#ifdef PARTICLE_INTEGRATOR
 
 #define integrator(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     integrator_particle(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff)
@@ -120,11 +124,11 @@
 #else
 
 #define integrator(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
-    if (nb == 1) { \
+    if ((nb == 1) || bdiff) { \
         integrator_particle(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     } \
     else { \
         integrator_block(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     }
 
-#endif /*QUANTUM*/
+#endif /*PARTICLE_INTEGRATOR*/

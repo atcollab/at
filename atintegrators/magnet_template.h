@@ -92,7 +92,7 @@ static void magnet(double *r, double le, double bending_angle,
     double rad_const = RAD_CONST*pow(gamma0, 3);
     double diff_const = DIF_CONST*pow(gamma0, 5);
     #else
-    double *bdiff = NULL;
+    double *const bdiff = NULL;
     #endif
 
     #ifdef STRAIGHT_DIPOLE
@@ -113,7 +113,8 @@ static void magnet(double *r, double le, double bending_angle,
     #if defined(_OPENMP) && !defined(NO_OMP)
     if (num_particles > OMP_PARTICLE_THRESHOLD) {
         int chunk = (num_particles - 1) / omp_get_max_threads() + 1;
-        if (chunk < block) block = chunk;
+        int nsub = (chunk - 1) / block + 1;
+        block = (chunk - 1) / nsub + 1;
     }
     #endif
 
