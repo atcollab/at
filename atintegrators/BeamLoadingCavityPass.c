@@ -485,7 +485,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay"); check_error();
         M0_Buffer=atGetOptionalDoubleArray(ElemData,"_M0_Buffer"); check_error();
         M0_PID_Params=atGetOptionalDoubleArray(ElemData,"_M0_PID_Params"); check_error();
-        M0_Vratio=atGetOptionalDouble(ElemData,"M0_VRatio"); check_error();
+        M0_VRatio=atGetOptionalDouble(ElemData,"M0_VRatio", 1.0); check_error();
         
         /* Check energy */
         Energy = atEnergy(Param->energy, Energy); check_error();
@@ -704,7 +704,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay"); check_error();
       M0_Buffer=atGetOptionalDoubleArray(ElemData,"_M0_Buffer"); check_error();
       M0_PID_Params=atGetOptionalDoubleArray(ElemData,"_M0_PID_Params"); check_error();
-      M0_VRatio=atGetOptionalDouble(ElemData,"M0_VRatio"); check_error();
+      M0_VRatio=atGetOptionalDouble(ElemData,"M0_VRatio", 1.0); check_error();
       
       Elem = (struct elem*)atMalloc(sizeof(struct elem));
       Elem->Length=Length;
@@ -771,7 +771,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->M0_Delay = M0_Delay; 
       Elem->M0_Buffer = M0_Buffer;
       Elem->M0_PID_Params = M0_PID_Params;
-      Elem->M0_Vratio = M0_VRatio;
+      Elem->M0_VRatio = M0_VRatio;
 
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
