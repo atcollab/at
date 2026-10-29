@@ -386,7 +386,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
         #Mode 0 damper settings
         self._dampermode = int(dampermode) 
-        self.M0_Gain = kwargs.pop("M0_Gain", [0.0, 0.0, 0.0])
+        self.M0_Gain = kwargs.pop("M0_Gain", np.array([0.0, 0.0, 0.0]))
         self._M0_Delay = kwargs.pop("M0_Delay", 1)
         if self._M0_Delay < 1 or self._M0_Delay % 1 != 0.0:
             error_string = "M0_Delay must be an integer that is >= 1"
@@ -394,7 +394,7 @@ class BeamLoadingElement(RFCavity, Collective):
         assert len(self.M0_Gain) == 3, "M0_Gain must have length of 3"                         
         self.M0_VRatio = kwargs.pop("M0_VRatio", 1.0)
         self._M0_Buffer = np.zeros(self._M0_Delay)
-        self._M0_PID_Params = np.zeros(2)        
+        self._M0_PID_Params = np.zeros(3)        
         
         
         ####################################
