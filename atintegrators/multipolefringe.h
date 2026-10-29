@@ -14,7 +14,7 @@ static void quad_fringe(double* r6, const double b2, double edge)
   const double xy = x*y;
   const double dx = u * (x2 + 3.0*y2) * x;
   const double dy = u * (y2 + 3.0*x2) * y;
-
+/*
   const double dpx = 3.0 * u * (2.0*xy*r6[py_] - (x2+y2)*r6[px_]);
   const double dpy = 3.0 * u * (2.0*xy*r6[px_] - (x2+y2)*r6[py_]);
 
@@ -23,7 +23,7 @@ static void quad_fringe(double* r6, const double b2, double edge)
   r6[px_] += dpx;
   r6[y_] -= dy;
   r6[py_] -= dpy;
-/*
+*/
   const double fxx = -edge * b2 / 4.0 * (x2+y2);
   const double fxy = -edge * b2 / 2.0 * xy;
   const double fyx = -fxy;
@@ -41,8 +41,8 @@ static void quad_fringe(double* r6, const double b2, double edge)
   r6[px_] = pxf;
   r6[y_] -= dy;
   r6[py_] = pyf;
-  r6[ct_] -= dct;
-*/
+  r6[ct_] += dct;
+
 }
 
 static void all_mult_fringe(double *r6,

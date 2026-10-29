@@ -50,6 +50,8 @@ from . import (
 _new_methods = {
     "BndMPoleSymplectic4RadPass",
     "StrMPoleSymplectic4RadPass",
+    "BndMPoleSymplectic6RadPass",
+    "StrMPoleSymplectic6RadPass",
     "ExactMultipoleRadPass",
     "GWigSymplecticRadPass",
     "EnergyLossRadPass",

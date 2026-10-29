@@ -83,6 +83,7 @@ class Element:
         "NumIntSteps": lambda v: _int(v, vmin=0),
         "Energy": _float,
         "_referencepoint": _int,
+        "ExactMisalign": lambda v: _int(v, vmin=0, vmax=1),
     }
     _file_classname: ClassVar[str]
 
@@ -319,11 +320,11 @@ class Element:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
 
         Returns:
-            element(Element):       :py:class:`.Element`
+            elem(Element):       :py:class:`.Element`
         """
-        # Create the elem
+        # Create the element
         elem = cls.__new__(cls)
-        # Set the elem attributes
+        # Set the element attributes
         for k, vdef in (("FamName", ""), ("Length", 0.0), ("PassMethod", "DriftPass")):
             elem.__dict__[k] = elem._conversions.get(k, _nop)(elem_dict.pop(k, vdef))
         for k, v in elem_dict.items():
