@@ -482,7 +482,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         
 
         M0_Gain=atGetOptionalDoubleArray(ElemData,"M0_Gain"); check_error();
-        M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay"); check_error();
+        M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay",1); check_error();
         M0_Buffer=atGetOptionalDoubleArray(ElemData,"_M0_Buffer"); check_error();
         M0_PID_Params=atGetOptionalDoubleArray(ElemData,"_M0_PID_Params"); check_error();
         M0_VRatio=atGetOptionalDouble(ElemData,"M0_VRatio", 1.0); check_error();
@@ -701,7 +701,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
       M0_Gain=atGetOptionalDoubleArray(ElemData,"M0_Gain"); check_error();
-      M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay"); check_error();
+      M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay", 1); check_error();
       M0_Buffer=atGetOptionalDoubleArray(ElemData,"_M0_Buffer"); check_error();
       M0_PID_Params=atGetOptionalDoubleArray(ElemData,"_M0_PID_Params"); check_error();
       M0_VRatio=atGetOptionalDouble(ElemData,"M0_VRatio", 1.0); check_error();
