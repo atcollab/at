@@ -12,7 +12,7 @@
     /* Entry face */ \
     if (FringeBendEntrance == 4) { \
         Yrot(r6, entrance_angle, NULL); /* don't propagate the diffusion matrix */ \
-        bend_fringe(r6, irho, gK_entrance); \
+        bend_fringe(r6, irho + B[0], gK_entrance); \
         multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
         if (entrance_angle != 0.0) { \
             if (B1 != 0.0) quad_wedge(r6, -B1 * entrance_angle); \
@@ -20,7 +20,7 @@
         } \
     } \
     else { \
-        bend_linear_fringe(r6, irho, entrance_angle, gK_entrance, FringeBendEntrance, 1.0, bdiff); \
+        bend_linear_fringe(r6, irho + B[0], entrance_angle, gK_entrance, FringeBendEntrance, 1.0, bdiff); \
         multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
     }
 #endif /*MAGNET_ENTRY*/
@@ -34,12 +34,12 @@
             if (B1 != 0.0) quad_wedge(r6, -B1 * exit_angle); \
         } \
         multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
-        bend_fringe(r6, -irho, gK_exit); \
+        bend_fringe(r6, -(irho + B[0]), gK_exit); \
         Yrot(r6, exit_angle, NULL); /* don't propagate the diffusion matrix */ \
     } \
     else { \
         multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
-        bend_linear_fringe(r6, irho, exit_angle, gK_exit, FringeBendExit, -1.0, bdiff); \
+        bend_linear_fringe(r6, irho + B[0], exit_angle, gK_exit, FringeBendExit, -1.0, bdiff); \
     }
 #endif /*MAGNET_EXIT*/
 

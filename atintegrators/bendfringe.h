@@ -254,7 +254,6 @@ void bend_fringe(double *r6, double irho, double gK)
     const double new_y = 2.0 * y / (1.0 + sqrt(1.0 - 2.0 * dPhi0_dpy * y));
     const double delta_x = dPhi0_dpx * SQR(new_y) / 2;
     const double delta_py = -Phi0 * new_y - factor / dp1 * SQR(new_y) * new_y;
-//  const double delta_l = -dPhi0_ddelta * SQR(new_y) / 2.0;
     const double delta_l = -dPhi0_ddelta * SQR(new_y) / 2.0 + factor / SQR(dp1) * SQR(SQR(new_y)) / 4.0;
 
     r6[x_]  += delta_x;

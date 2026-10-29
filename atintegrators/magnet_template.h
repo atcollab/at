@@ -164,7 +164,7 @@ static void magnet(double *r, double le, double bending_angle,
                 }
             }
             #endif
-            }
+        }
     }
 }
 
