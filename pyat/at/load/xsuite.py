@@ -745,6 +745,20 @@ class Bend(Multipole):
         edge_model("edge_exit_model", "FringeBendExit", "FringeQuadExit")
         return atparams
 
+    @property
+    def _h(self) -> float:
+        """Curvature of the reference trajectory."""
+        return self["angle"] / self["length"]
+
+    def _set_at_poly(self) -> dict[str, Any]:
+        atparams = super()._set_at_poly()
+        # Xsuite k0 is the total dipole field, AT PolynomB[0] excludes the curvature
+        if self.get("k0_from_h", "k0" not in self):
+            atparams["PolynomB"][0] -= self.get("k0", 0.0)
+        else:
+            atparams["PolynomB"][0] -= self._h
+        return atparams
+
     def _set_xs_fringe(self, atparams: dict):
         def edge_model(bendkey, quadkey):
             at_quad_fringe = atparams.get(quadkey, 0)
