@@ -196,8 +196,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     long M0_Delay = Elem->M0_Delay;
     double *M0_Buffer = Elem->M0_Buffer;
     double M0_VRatio = Elem->M0_VRatio;
-    double *mdp[] = {0.0};
-    double *npart[] = {0.0};
+    double mdp[] = {0.0};
+    double npart[] = {0.0};
     //
     
     double vbeam_set[] = {vbeam[0], vbeam[1]}; 
@@ -247,7 +247,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         M0_PID_Params[0] = delta;
         M0_PID_Params[1] += delta/f0;
     
-        double derivative = (M0_PID_Params[1] - e_before)*f0;
+        double derivative = (M0_PID_Params[1] - error_before)*f0;
     
         double fb_value = M0_PID_Params[0]*M0_Gain[0] + M0_PID_Params[1]*M0_Gain[1] + M0_PID_Params[2]*M0_Gain[2];
         roll_array(M0_Buffer, M0_Delay, 1);
