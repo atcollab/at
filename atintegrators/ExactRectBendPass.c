@@ -5,12 +5,12 @@
 #include "kick_exactkn.h"
 #include "straight_dipole.h"
 
-#define INTEGRATOR(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+#define INTEGRATOR(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     if (num_int_steps == 0) { \
-        DRIFT(r6, slength, irho, bdiff); \
+        PARTICLE_LOOP(rb, nb, alive, DRIFT(r6, slength, irho, bdiff)); \
     } \
     else { \
-        integrator(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff); \
+        integrator(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff); \
     }
 
 #define CHECK_NSTEPS \

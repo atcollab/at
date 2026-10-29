@@ -49,6 +49,12 @@
 #define ExportMode
 #endif
 
+#if defined(_MSC_VER)
+#define ForceInline __forceinline
+#else
+#define ForceInline inline __attribute__((always_inline))
+#endif
+
 
 #ifdef MATLAB_MEX_FILE
 /* Matlab only */
