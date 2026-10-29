@@ -48,6 +48,18 @@ class FeedbackMode(IntEnum):
     PROP = 1
     PROP_INTEGRAL = 2
 
+class DamperMode(IntEnum):
+    """
+    DamperModel.IDEAL means the means the mode 0 damper will simply
+    compute the mean energy offset directly, and apply a change 
+    by computing the new optimum phase according to its current energy
+    offset. A PID controller with a delay is used to control the gains
+    and performances. 
+    """
+
+    NONE = 1
+    IDEAL = 2
+
 
 def add_beamloading(
     ring: Lattice,
@@ -207,6 +219,7 @@ class BeamLoadingElement(RFCavity, Collective):
         detune: float | None = 0.0,
         cavitymode: CavityMode | None = CavityMode.ACTIVE,
         fbmode: FeedbackMode | None = FeedbackMode.PROP,
+        dampermode: DamperMode | None = DamperMode.NONE,
         **kwargs,
     ):
         r"""
@@ -282,6 +295,15 @@ class BeamLoadingElement(RFCavity, Collective):
             OpenLoop (bool): Do you want to apply the changes or just monitor?
                 Only the PROP or PROP_INTEGRAL loop is opened, the tuner
                 is controlled by TunerGain.
+
+
+            M0_Delay (int): Delay of the Mode 0 damper in units of turns.  
+            M0_Gain ([float, float, float): Gains for the PID controller
+                of the Mode 0 damper. 
+            M0_VRatio (float): For DamperMode=IDEAL, a new synchronous phase is
+                computed. It is therefore required to know what the total cavity
+                voltage is. It is given by CavityVoltage*M0_Vratio. This allows
+                the case where some cavities are used for M0 correction, but not all.
 
         Returns:
             bl_elem (Element): beam loading element
@@ -361,6 +383,20 @@ class BeamLoadingElement(RFCavity, Collective):
         # Initialise CavityMode=Passive_SetVoltage parameters
         self._passive_vset = kwargs.pop("PassiveVoltage", 0.0)
 
+
+        #Mode 0 damper settings
+        self._dampermode = int(dampermode) 
+        self.M0_Gain = kwargs.pop("M0_Gain", [0.0, 0.0, 0.0])
+        self._M0_Delay = kwargs.pop("M0_Delay", 1)
+        if self._M0_Delay < 1 or self._M0_Delay % 1 != 0.0:
+            error_string = "M0_Delay must be an integer that is >= 1"
+            raise AtError(error_string)
+        assert len(self.M0_Gain) == 3, "M0_Gain must have length of 3"                         
+        self.M0_VRatio = kwargs.pop("M0_VRatio", 1.0)
+        self._M0_buffer = np.zeros(self._M0_delay)
+        self._M0_PID_Params = np.zeros(2)        
+        
+        
         ####################################
         ### Next we perform all the checks #
         ####################################
@@ -379,6 +415,10 @@ class BeamLoadingElement(RFCavity, Collective):
         else:
             self._fbmode = 0
 
+        if not isinstance(dampermode, DamperMode):
+            error_string = "DamperMode has to be an instance of DamperMode"
+            raise TypeError(error_string)
+            
         # Here we make checks relating to the passive cavity with FB
         if self.detune == 0 and self._cavitymode == 3:
             err_string = (

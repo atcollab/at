@@ -49,6 +49,12 @@ struct elem
   long *samplestart;
   double *I_record; double *FFconst; double *IIRout; double *IIRcoef;
   double *pil_init;
+  long dampermode;
+  long M0_Delay;
+  double *M0_PID_Params;
+  double *M0_Gain;
+  double *M0_Buffer;
+  double M0_VRatio;
   }; 
 
 
@@ -59,6 +65,31 @@ void write_buffer(double *data, double *buffer, int datasize, int buffersize){
     memcpy(buffer + datasize*(buffersize-1), data, datasize*sizeof(double));
 }
    
+
+void compute_mean_dp(double *r_in, int num_particles, double *mdp, double *npart){
+    int c = 0;
+    for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
+        double *r6 = r_in+c*6;
+
+        if (!atIsNaN(r6[0])) {
+            npart[0] += 1; 
+            mdp[0] += r6[4]; //dp
+        }
+    }
+
+    #ifdef MPI
+    MPI_Allreduce(MPI_IN_PLACE, &npart, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &mdp, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
+    MPI_Barrier(MPI_COMM_WORLD);
+    #endif
+    
+    
+    if (npart>0.0){
+        mdp[0] /= npart[0];
+    }
+
+}
+
 
 void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                            double *bunch_spos, double *bunch_currents, 
@@ -89,7 +120,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         
     // ring parameters
     int ring_harmn = harmonic_number; // Ring harmonic number (number of buckets)
-
+    
     // cavity related parameters
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
@@ -100,7 +131,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double rshunt = Elem->Rshunt; // loaded 
     double beta = Elem->Beta; //relativist beta not cavity beta
     double ts = Elem->ts; // expected beam final position
-
+    double f0 = beta *C0 / circumference; // revolution frequency
+    
     long cavitymode = Elem->cavitymode;
     long fbmode = Elem->fbmode;
 
@@ -157,7 +189,17 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     // End of loading element attributes.
 
-            
+    // Load M0 Damper Attributes
+    long dampermode = Elem->dampermode;
+    double *M0_Gain = Elem->M0_gain;
+    double *M0_PID_Params = Elem->M0_PID_Params;
+    long M0_Delay = Elem->M0_Delay;
+    double *M0_Buffer = Elem->M0_Buffer;
+    double M0_VRatio = Elem->M0_VRatio;
+    double *mdp[] = {0.0};
+    double *npart[] = {0.0};
+    //
+    
     double vbeam_set[] = {vbeam[0], vbeam[1]}; 
     double vcav_meas[] = {0.0, 0.0, 0.0};
 
@@ -191,8 +233,35 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         tot_current += bunch_currents[i];
     }
     
+    
+    // Mode 0 computation
+    if(dampermode==2){
+        double error_before = M0_PID_Params[1];
+        double total_voltage = vcav_set[0] / M0_VRatio;
+        double M0_U0 = total_voltage * sin(vcav_set[1]);
+        compute_mean_dp(r_in, num_particles, mdp, npart);
+        double dp_eV = mdp * energy;
+        double new_phis = -asin((M0_U0 - dp_eV)/total_voltage);
+        double new_timelag = -new_phis*C0/(TWOPI*rffreq);        
+        double delta = new_timelag - tlag;
+        M0_PID_Params[0] = delta;
+        M0_PID_Params[1] += delta/f0;
+    
+        double derivative = (M0_PID_Params[1] - e_before)*f0;
+    
+        double fb_value = M0_PID_Params[0]*M0_Gain[0] + M0_PID_Params[1]*M0_Gain[1] + M0_PID_Params[2]*M0_Gain[2];
+        roll_array(M0_Buffer, M0_Delay, 1);
+        M0_Buffer[M0_Delay-1] = fb_value;
+        double m0_lagshift = M0_Buffer[0];
+    }else{
+        double m0_lagshift = 0.0;
+    }
+    
+    //
+    
+    
     /*Track RF cavity is always done. */
-    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
+    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag + m0_lagshift, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
 
     #ifndef _MSC_VER
     /*Only allocate memory if current is > 0*/
@@ -310,7 +379,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double energy;
     int nturn = Param->nturn;
     if (!Elem) {
-        long nslice, nturns, cavitymode, fbmode, buffersize;
+        long nslice, nturns, cavitymode, fbmode, dampermode, buffersize;
         long delay, every, samplenum, ff, recordsize, openloop;
         double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
         double *VoltDelay, *PhaseDelay, *pil_init;
@@ -340,6 +409,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *FFconst;
         double *IIRcoef;
         double *IIRout;
+        
+        double *M0_Gain, *M0_Buffer, *M0_PID_Params;
+        long M0_Delay;
+        double M0_VRatio;
         
         /*attributes for RF cavity*/
         Length=atGetDouble(ElemData,"Length"); check_error();
@@ -373,7 +446,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         ts=atGetDouble(ElemData,"_ts"); check_error();
         
         openloop=atGetLong(ElemData,"OpenLoop"); check_error();
-       
+        dampermode=atGetLong(ElemData,"_dampermode"); check_error();
         /*optional attributes*/        
         delay=atGetOptionalLong(ElemData,"_delay",1); check_error();
         
@@ -406,6 +479,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         TunerOffset=atGetOptionalDouble(ElemData,"TunerOffset", 0.0); check_error();
         TunerAveragingPeriod=atGetOptionalDouble(ElemData,"TunerAveragingPeriod",1); check_error();
         TunerParams=atGetOptionalDoubleArray(ElemData,"_TunerParams"); check_error();
+        
+
+        M0_Gain=atGetOptionalDoubleArray(ElemData,"M0_Gain"); check_error();
+        M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay"); check_error();
+        M0_Buffer=atGetOptionalDoubleArray(ElemData,"_M0_Buffer"); check_error();
+        M0_PID_Params=atGetOptionalDoubleArray(ElemData,"_M0_PID_Params"); check_error();
+        M0_Vratio=atGetOptionalDouble(ElemData,"M0_VRatio"); check_error();
         
         /* Check energy */
         Energy = atEnergy(Param->energy, Energy); check_error();
@@ -472,6 +552,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->IIRout=IIRout;
         Elem->pil_init=pil_init;
 
+        Elem->dampermode=dampermode;
+        Elem->M0_Gain = M0_Gain;
+        Elem->M0_Delay = M0_Delay;
+        Elem->M0_Buffer = M0_Buffer;
+        Elem->M0_PID_Params = M0_PID_Params;
+        Elem->M0_VRatio = M0_VRatio;
     }
     energy = atEnergy(Param->energy, Elem->Energy); check_error();
 
@@ -486,6 +572,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if(Elem->fbmode>=3){
         atError("Unknown fbmode provided."); check_error();
     } 
+    if(Elem->fbmode>=3){
+        atError("Unknown dampermode provided."); check_error();
+    } 
+    
 
     #ifdef _MSC_VER
     atError("Beam loading module not implemented in Windows."); check_error();
@@ -511,7 +601,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       const mxArray *ElemData = prhs[0];
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
-      long nslice, nturns, cavitymode, fbmode, buffersize;
+      long nslice, nturns, cavitymode, fbmode, dampermode, buffersize;
       long delay, every, samplenum, ff, recordsize, openloop;
 
       double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
@@ -542,7 +632,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *diff_record;
       long *samplestart;
 
-
+      double *M0_Gain, *M0_Buffer, *M0_PID_Params;
+      long M0_Delay;
+      double M0_VRatio;
       
       /*attributes for RF cavity*/
       Length=atGetDouble(ElemData,"Length"); check_error();
@@ -573,7 +665,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       phis=atGetDouble(ElemData,"_phis"); check_error();
       ts=atGetDouble(ElemData,"_ts"); check_error();
       openloop=atGetLong(ElemData,"OpenLoop"); check_error();
-      
+      dampermode=atGetLong(ElemData,"_dampermode"); check_error();
       /*optional attributes*/
       Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
@@ -607,6 +699,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       IIRout=atGetOptionalDoubleArray(ElemData,"_IIRout"); check_error();
       pil_init=atGetOptionalDoubleArray(ElemData,"_pil_init"); check_error();
 
+
+      M0_Gain=atGetOptionalDoubleArray(ElemData,"M0_Gain"); check_error();
+      M0_Delay=atGetOptionalLong(ElemData,"_M0_Delay"); check_error();
+      M0_Buffer=atGetOptionalDoubleArray(ElemData,"_M0_Buffer"); check_error();
+      M0_PID_Params=atGetOptionalDoubleArray(ElemData,"_M0_PID_Params"); check_error();
+      M0_VRatio=atGetOptionalDouble(ElemData,"M0_VRatio"); check_error();
       
       Elem = (struct elem*)atMalloc(sizeof(struct elem));
       Elem->Length=Length;
@@ -667,6 +765,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->IIRout=IIRout;
       
       Elem->fbmode = fbmode;
+
+      Elem->dampermode = dampermode;
+      Elem->M0_Gain = M0_Gain;
+      Elem->M0_Delay = M0_Delay; 
+      Elem->M0_Buffer = M0_Buffer;
+      Elem->M0_PID_Params = M0_PID_Params;
+      Elem->M0_Vratio = M0_VRatio;
+
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
@@ -682,7 +788,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   else if (nrhs == 0)
   {   /* return list of required fields */
 
-      plhs[0] = mxCreateCellMatrix(27,1);
+      plhs[0] = mxCreateCellMatrix(28,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -710,10 +816,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],24,mxCreateString("_ts"));
       mxSetCell(plhs[0],25,mxCreateString("OpenLoop"));
       mxSetCell(plhs[0],26,mxCreateString("TunerGain"));
-                                
+      mxSetCell(plhs[0],27,mxCreateString("_dampermode"));
+                                      
       if(nlhs>1) /* optional fields */
       {
-          plhs[1] = mxCreateCellMatrix(24,1);
+          plhs[1] = mxCreateCellMatrix(29,1);
           mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
           mxSetCell(plhs[1],1,mxCreateString("ZCuts"));
           mxSetCell(plhs[1],2,mxCreateString("TunerOffset"));
@@ -738,6 +845,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           mxSetCell(plhs[1],21,mxCreateString("_voltdelay"));
           mxSetCell(plhs[1],22,mxCreateString("_phasedelay"));
           mxSetCell(plhs[1],23,mxCreateString("_pil_init"));
+          mxSetCell(plhs[1],24,mxCreateString("M0_Delay"));
+          mxSetCell(plhs[1],25,mxCreateString("_M0_Buffer"));
+          mxSetCell(plhs[1],26,mxCreateString("_M0_PID_Params"));
+          mxSetCell(plhs[1],27,mxCreateString("M0_Gain"));
+          mxSetCell(plhs[1],28,mxCreateString("M0_VRatio"));
+
       }
   }
   else
