@@ -240,7 +240,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         double total_voltage = vcav_set[0] / M0_VRatio;
         double M0_U0 = total_voltage * sin(vcav_set[1]);
         compute_mean_dp(r_in, num_particles, mdp, npart);
-        double dp_eV = mdp * energy;
+        double dp_eV = mdp[0] * energy;
         double new_phis = -asin((M0_U0 - dp_eV)/total_voltage);
         double new_timelag = -new_phis*C0/(TWOPI*rffreq);        
         double delta = new_timelag - tlag;
