@@ -235,6 +235,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     
     
     // Mode 0 computation
+    double m0_lagshift = 0.0;    
     if(dampermode==2){
         double error_before = M0_PID_Params[1];
         double total_voltage = vcav_set[0] / M0_VRatio;
@@ -252,9 +253,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         double fb_value = M0_PID_Params[0]*M0_Gain[0] + M0_PID_Params[1]*M0_Gain[1] + M0_PID_Params[2]*M0_Gain[2];
         roll_array(M0_Buffer, M0_Delay, 1);
         M0_Buffer[M0_Delay-1] = fb_value;
-        double m0_lagshift = M0_Buffer[0];
-    }else{
-        double m0_lagshift = 0.0;
+        m0_lagshift = M0_Buffer[0];
     }
     
     //
