@@ -764,7 +764,7 @@ class RBend(Bend):
 
         elem = super().from_at(match_model=match_model, **atparams)
         hangle = 0.5 * elem["angle"]
-        length = elem.pop("length")
+        length = elem.get("length", 0.0)
         X0ref = atparams.get("X0ref", 0.0)
         elem["rbend_model"] = "straight-body"
         elem["edge_entry_angle"] -= hangle
