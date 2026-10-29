@@ -394,12 +394,12 @@ def floodfill_1d(
         _, co = ring.find_orbit(obspt_unique)
         offset_repeat = np.repeat(co, n_y, axis=0)
     else:
+        offset = offset[obspt_unique]
         offset_repeat = np.repeat(offset, n_y, axis=0)
 
     planesi = np.atleast_1d(axisdef.axis_(tuple(plane), key="index"))
 
     ndims = 6
-    particles = np.zeros((nparticles, ndims))
     particles = offset_repeat
     particles[:, planesi[0]] = particles[:, planesi[0]] + points[1, :]
 
