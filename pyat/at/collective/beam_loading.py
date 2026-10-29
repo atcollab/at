@@ -393,7 +393,7 @@ class BeamLoadingElement(RFCavity, Collective):
             raise AtError(error_string)
         assert len(self.M0_Gain) == 3, "M0_Gain must have length of 3"                         
         self.M0_VRatio = kwargs.pop("M0_VRatio", 1.0)
-        self._M0_buffer = np.zeros(self._M0_delay)
+        self._M0_Buffer = np.zeros(self._M0_Delay)
         self._M0_PID_Params = np.zeros(2)        
         
         
