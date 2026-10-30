@@ -281,6 +281,8 @@ def get_grid_boundary(mask, grid, config):
 
 
 def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs):
+    obspt = np.array([0 if obs is None else obs for obs in obspt], dtype=int)
+
     data_ff1d = floodfill_1d(
         ring,
         nturns=nturns,
