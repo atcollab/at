@@ -295,7 +295,6 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
         obspt=obspt,
         verbose=False,
         use_mp=use_mp,
-        pool_size=kwargs["pool_size"],
         **kwargs,
     )
 
@@ -381,7 +380,7 @@ def boundary_2d_floodfill(ring, obspt, offset, dp, nturns, config, use_mp, **kwa
             offset=_offset,
             verbose=False,
             use_mp=use_mp,
-            pool_size=kwargs["pool_size"],
+            **kwargs,
         )
         mask_alive = data_ff[3, :] == 0
         s_ffallrefpts.append(data_ff[0:2, mask_alive])
