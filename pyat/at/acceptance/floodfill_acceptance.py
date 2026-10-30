@@ -35,7 +35,9 @@ def track_queue(
 
     Parameters:
         ring: pyat ring
-        points : array containing the pairs (obspt, energy offset) per
+        points : array containing the pairs (2,n), where possible pairs are:
+                for 1d (obspt, offset)
+                for 2d (offset_axis1, offset_axis2)
         input particle
         zin: particles coordinates (6,nparticles)
         nturns: number of tracking turns
@@ -278,7 +280,7 @@ def floodfill_1d(
           e.g. 10e-5 in the transverse planes.
         shift_zero = small offset added to the 6d coordinates. Default 0.0.
         dp: static momentum offset. Default 0.0
-        obspt: reference points (default len(ring))
+        obspt: reference points
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
           not at.MPMode.GPU.
@@ -312,15 +314,17 @@ def floodfill_1d(
     # Initialize output in case we return earlier
     data_tracked = np.zeros((5, 0))
 
-    # obspt
-    if obspt is None:
-        obspt = np.arange(len(ring))
-    obspt = np.asarray(obspt)
-    s_obspt = ring.get_s_pos(refpts=obspt)
-    s_unique, idx_unique = np.unique(s_obspt, return_index=True)
-    obspt_unique = obspt[idx_unique]
-
     verboseprint = print if verbose else lambda *a, **k: None
+
+    # obspt
+    zero_length = np.zeros(len(obspt), dtype=bool)
+    for n, idx in enumerate(obspt):
+        zero_length[n] = ring[idx].Length == 0
+    if np.any(zero_length):
+        print("Observation points with zero length are not supported.")
+        return data_tracked
+
+    s_obspt = ring.get_s_pos(refpts=obspt)
 
     verboseprint("Flood fill starts.")
     verboseprint(f"Maximum number of turns: {nturns}")
@@ -334,8 +338,8 @@ def floodfill_1d(
     n_y = npoints[0]
     min_y = min(window[0:2])
     max_y = max(window[0:2])
-    xvals = obspt_unique
-    n_x = len(obspt_unique)
+    xvals = obspt
+    n_x = len(obspt)
     yvals = np.linspace(min_y, max_y, n_y)
 
     nparticles = n_x * n_y
@@ -358,10 +362,10 @@ def floodfill_1d(
     if offset is None:
         offset = [None]
     if None in offset:
-        _, co = ring.find_orbit(obspt_unique)
+        _, co = ring.find_orbit(obspt)
         offset_repeat = np.repeat(co, n_y, axis=0)
     else:
-        offset = offset[obspt_unique]
+        offset = offset[obspt]
         offset_repeat = np.repeat(offset, n_y, axis=0)
 
     planesi = np.atleast_1d(axisdef.axis_(tuple(plane), key="index"))
@@ -425,8 +429,8 @@ def floodfill_1d(
     turns_per_point = np.zeros(sum(mask_tracked))
 
     points_tracked = points[:, mask_tracked]
-    s_unique_rep = np.repeat(s_unique, n_y, axis=0)
-    s_tracked = s_unique_rep[mask_tracked]
+    s_obspt_rep = np.repeat(s_obspt, n_y, axis=0)
+    s_tracked = s_obspt_rep[mask_tracked]
     lost_after_track = mask_islost[mask_tracked]
     turns_per_point[lost_after_track] = ft_[mask_islost]
     turns_per_point[~lost_after_track] = nturns
