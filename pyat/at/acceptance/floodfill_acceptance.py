@@ -392,7 +392,7 @@ def floodfill_1d(
     upperline = lowerline + n_y - 1
 
     # only one obspt, left side and right side are the same
-    if nx == 1:
+    if n_x == 1:
         rightside = np.array([])
 
     manager = Manager()
