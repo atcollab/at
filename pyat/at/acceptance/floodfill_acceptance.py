@@ -240,7 +240,7 @@ def floodfill_1d(
     plane: list | tuple = ("dp"),
     amplitude: list | tuple = (10e-2,),
     bounds: list | tuple = ((-1, 1),),
-    npoints: list | tuple = (10),
+    npoints: list | tuple = (10,),
     offset: list | np.ndarray | None = None,
     obspt: list | np.ndarray | None = None,
     verbose: bool = False,
