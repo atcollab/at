@@ -349,7 +349,7 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
                 else:
                     vaux = particle_offset[iaux[-1]]
         bp[n] = vaux
-        s_ff.append(particle_offset[mask_refpt | mask_alive])
+        s_ff.append(particle_offset[mask_refpt & mask_alive])
         g_ff.append(particle_offset[mask_refpt])
     # floodfill boundary needs to be formatted
     b_ff = np.vstack((bn, bp)).T
