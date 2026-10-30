@@ -404,7 +404,6 @@ def floodfill_1d(
 
     planesi = np.atleast_1d(axisdef.axis_(tuple(plane), key="index"))
 
-    ndims = 6
     particles = offset_repeat
     particles[4, :] = particles[4, :] + dp
     particles[:, planesi[0]] = particles[:, planesi[0]] + points[1, :]
