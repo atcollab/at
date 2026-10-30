@@ -269,18 +269,19 @@ def floodfill_1d(
           Allowed values are: ``'x'``, ``'px'``, ``'y'``,
           ``'py'``, ``'dp'``, ``'ct'``
           Default ("dp")
-        amplitude: (2,) array, set the search range.
+        amplitude: (1,) array, set the search range.
           Default [10e-3]
-        bounds: (2,2) array, defines the tracked range: range=bounds*amplitude
-            Default ((-1,1),(0,1))
-        npoints: Number of steps per axis. Default (10,10).
-        offset: Offset to be added. Default is the closed orbit per obspt.
+        bounds: (2,) array, defines the tracked range: range=bounds*amplitude
+            Default ((-1,1),)
+        npoints: Number of steps per axis, at least 2. Default (10,).
+        offset: (6,len(obspt)) Offset to be added.
+          Default is the closed orbit per obspt.
           This is useful to study to add a small deviation in the transverse plane
           to the tracked coordinates
           e.g. 10e-5 in the transverse planes.
         shift_zero = small offset added to the 6d coordinates. Default 0.0.
-        dp: static momentum offset. Default 0.0
-        obspt: reference points
+        dp: static momentum offset. Default 0.0.
+        obspt: reference points.
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
           not at.MPMode.GPU.
@@ -321,7 +322,7 @@ def floodfill_1d(
     for n, idx in enumerate(obspt):
         zero_length[n] = ring[idx].Length == 0
     if np.any(zero_length):
-        print("Observation points with zero length are not supported.")
+        print("Observation points at elements with zero length are not supported.")
         return data_tracked
 
     s_obspt = ring.get_s_pos(refpts=obspt)
@@ -335,11 +336,15 @@ def floodfill_1d(
         return data_tracked
 
     # set the grid
+    n_x = len(obspt)
+    xvals = obspt
+
     n_y = npoints[0]
+    if n_y < 1:
+        print("npoints should be at least two.")
+        return data_tracked
     min_y = min(window[0:2])
     max_y = max(window[0:2])
-    xvals = obspt
-    n_x = len(obspt)
     yvals = np.linspace(min_y, max_y, n_y)
 
     nparticles = n_x * n_y
@@ -385,6 +390,10 @@ def floodfill_1d(
     rightside = np.arange((n_x - 1) * n_y + 1, n_x * n_y - 1)
     lowerline = np.asarray([*range(0, n_y * n_x, n_y)])
     upperline = lowerline + n_y - 1
+
+    # only one obspt, left side and right side are the same
+    if nx == 1:
+        rightside = np.array([])
 
     manager = Manager()
     registered_for_tracking = manager.list(nparticles * [False])
