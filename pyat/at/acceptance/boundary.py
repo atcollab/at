@@ -394,8 +394,9 @@ def boundary_2d_floodfill(ring, obspt, offset, dp, nturns, config, use_mp, **kwa
         g_ff = g_ffallrefpts
     # floodfill boundary and survived are the same,
     # but they need to be sorted
-    _ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
-    b_ff = s_ff[:, _ia]
+    b_ff = [s[:, np.argsort(np.arctan2(s[1, :], s[0, :]))] for s in s_ffallrefpts]
+    if len(obspt) == 1:
+        b_ff = b_ff[0]
     # we return boundary, survived, tracked
     return b_ff, s_ff, g_ff
 
