@@ -309,8 +309,8 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
     bp = np.zeros(nmax)
     bn = np.zeros(nmax)
     step = config.amplitudes[0] / config.shape[0]
-    mask_neg = data_ff1d[1, :] < -1 * step
-    mask_pos = data_ff1d[1, :] > 1 * step
+    mask_neg = particle_offset < -1 * step
+    mask_pos = particle_offset > 1 * step
     s_ff = []
     g_ff = []
     for n, i in enumerate(refpts):
