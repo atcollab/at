@@ -246,6 +246,7 @@ def floodfill_1d(
     verbose: bool = False,
     use_mp: bool | MPMode = True,
     pool_size: int = 10,
+    **kwargs,
 ) -> np.ndarray:
     """Find the momentum acceptance of the ring using Flood Fill.
 
@@ -380,6 +381,10 @@ def floodfill_1d(
 
     verboseprint(f"Number of grid points: {nparticles}")
 
+    # include option dp
+    dp = kwargs.get("dp", 0.0)
+    verboseprint(f"Using dp {dp:.6g}")
+
     # set the order
     ii_ = 0
     for ix_ in range(n_x):
@@ -401,6 +406,7 @@ def floodfill_1d(
 
     ndims = 6
     particles = offset_repeat
+    particles[4, :] = particles[4, :] + dp
     particles[:, planesi[0]] = particles[:, planesi[0]] + points[1, :]
 
     # parallel parameters
