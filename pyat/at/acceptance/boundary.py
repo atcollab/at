@@ -293,6 +293,7 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
         verbose=False,
         use_mp=use_mp,
         pool_size=kwargs["pool_size"],
+        **kwargs,
     )
 
     particle_refpt = data_ff1d[0, :]
