@@ -18,6 +18,53 @@ from at.tracking.track import MPMode
 __all__ = ["floodfill", "floodfill_1d"]
 
 
+def track_queue(
+    ring: Lattice,
+    rotatering: bool,
+    points: np.ndarray,
+    zin: np.ndarray,
+    nturns: int,
+    n_x: int,
+    n_y: int,
+    task_to_accomplish: list,
+    islost: list,
+    final_turn: list,
+    registered_for_tracking: list,
+) -> None:
+    """Track particles with index inside queue.
+
+    Parameters:
+        ring: pyat ring
+        points : array containing the pairs (obspt, energy offset) per
+        input particle
+        zin: particles coordinates (6,nparticles)
+        nturns: number of tracking turns
+        n_x: horizontal grid size
+        n_y: vertical grid size
+        task_to_accomplish: list with indexes of particles to track
+        islost: list with particle loss result from tracking
+        final_turn: turn when the particle is lost
+        registered_for_tracking: particle tracked or to be tracked
+    """
+    while not task_to_accomplish.empty():
+        task_id = task_to_accomplish.get(block=True, timeout=10)
+        registered_for_tracking[task_id] = True
+        newring = ring.rotate(int(points[0, task_id])) if rotatering else ring
+        *_, losses_data = newring.track(zin[:, task_id], nturns, losses=True)
+        islost[task_id] = losses_data["loss_map"]["islost"][0]
+        final_turn[task_id] = losses_data["loss_map"]["turn"][0]
+        if islost[task_id]:
+            # next particles
+            id_move = np.array([task_id + 1, task_id - 1, task_id + n_y, task_id - n_y])
+            # use only valid index
+            mask = np.logical_and(id_move >= 0, id_move < (n_x * n_y))
+            newid = id_move[mask]
+            for i in newid:
+                if not registered_for_tracking[i]:
+                    registered_for_tracking[i] = True
+                    task_to_accomplish.put(i)
+
+
 def floodfill(
     ring: Lattice,
     nturns: int = 1024,
@@ -81,50 +128,6 @@ def floodfill(
          doi:10.1103/PhysRevAccelBeams.27.094002
 
     """
-
-    def track_queue(
-        ring: Lattice,
-        zin: np.ndarray,
-        nturns: int,
-        n_x: int,
-        n_y: int,
-        task_to_accomplish: list,
-        islost: list,
-        final_turn: list,
-        registered_for_tracking: list,
-    ) -> None:
-        """Track particles with index inside queue.
-
-        Parameters:
-            ring: pyat ring
-            zin: particles coordinates (6,nparticles)
-            nturns: number of tracking turns
-            n_x: horizontal grid size
-            n_y: vertical grid size
-            task_to_accomplish: list with indexes of particles to track
-            islost: list with particle loss result from tracking
-            final_turn: turn when the particle is lost
-            registered_for_tracking: particle tracked or to be tracked
-        """
-        while not task_to_accomplish.empty():
-            task_id = task_to_accomplish.get(block=True, timeout=10)
-            registered_for_tracking[task_id] = True
-            *_, losses_data = ring.track(zin[:, task_id], nturns, losses=True)
-            islost[task_id] = losses_data["loss_map"]["islost"][0]
-            final_turn[task_id] = losses_data["loss_map"]["turn"][0]
-            if islost[task_id]:
-                # next particles
-                id_move = np.array(
-                    [task_id + 1, task_id - 1, task_id + n_y, task_id - n_y]
-                )
-                # use only valid index
-                mask = np.logical_and(id_move >= 0, id_move < (n_x * n_y))
-                newid = id_move[mask]
-                for i in newid:
-                    if not registered_for_tracking[i]:
-                        registered_for_tracking[i] = True
-                        task_to_accomplish.put(i)
-
     # Initialize variables
     if offset is None:
         offset = 6 * [0]
@@ -199,11 +202,14 @@ def floodfill(
     # creating processes
     islost = manager.list(nparticles * [False])
     final_turn = manager.list(nparticles * [-1])
+    rotate_ring = False
     for _worker in range(nproc):
         prc = Process(
             target=track_queue,
             args=(
                 ring,
+                rotate_ring,
+                points,
                 particles.T,
                 nturns,
                 n_x,
@@ -303,54 +309,6 @@ def floodfill_1d(
        This method is recommended for single or low number of CPUs, and does
        not scale well for parallel computing.
     """
-
-    def track_queue(
-        ring: Lattice,
-        points: np.ndarray,
-        zin: np.ndarray,
-        nturns: int,
-        n_x: int,
-        n_y: int,
-        task_to_accomplish: list,
-        islost: list,
-        final_turn: list,
-        registered_for_tracking: list,
-    ) -> None:
-        """Track particles with index inside queue.
-
-        Parameters:
-            ring: pyat ring
-            points : array containing the pairs (obspt, energy offset) per
-            input particle
-            zin: particles coordinates (6,nparticles)
-            nturns: number of tracking turns
-            n_x: horizontal grid size
-            n_y: vertical grid size
-            task_to_accomplish: list with indexes of particles to track
-            islost: list with particle loss result from tracking
-            final_turn: turn when the particle is lost
-            registered_for_tracking: particle tracked or to be tracked
-        """
-        while not task_to_accomplish.empty():
-            task_id = task_to_accomplish.get(block=True, timeout=10)
-            registered_for_tracking[task_id] = True
-            newring = ring.rotate(int(points[0, task_id]))
-            *_, losses_data = newring.track(zin[:, task_id], nturns, losses=True)
-            islost[task_id] = losses_data["loss_map"]["islost"][0]
-            final_turn[task_id] = losses_data["loss_map"]["turn"][0]
-            if islost[task_id]:
-                # next particles
-                id_move = np.array(
-                    [task_id + 1, task_id - 1, task_id + n_y, task_id - n_y]
-                )
-                # use only valid index
-                mask = np.logical_and(id_move >= 0, id_move < (n_x * n_y))
-                newid = id_move[mask]
-                for i in newid:
-                    if not registered_for_tracking[i]:
-                        registered_for_tracking[i] = True
-                        task_to_accomplish.put(i)
-
     # Initialize output in case we return earlier
     data_tracked = np.zeros((5, 0))
 
@@ -435,11 +393,13 @@ def floodfill_1d(
     # creating processes
     islost = manager.list(nparticles * [False])
     final_turn = manager.list(nparticles * [-1])
+    rotate_ring = True
     for _worker in range(nproc):
         prc = Process(
             target=track_queue,
             args=(
                 ring,
+                rotate_ring,
                 points,
                 particles.T,
                 nturns,
