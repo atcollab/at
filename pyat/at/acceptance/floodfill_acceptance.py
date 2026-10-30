@@ -77,7 +77,7 @@ def floodfill(
     offset: list | np.ndarray | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
-    pool_size: int = 10,
+    **kwargs,
 ) -> np.ndarray:
     """Find the 2D acceptance of the ring using Flood Fill [1]_.
 
@@ -104,7 +104,7 @@ def floodfill(
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
           not at.MPMode.GPU.
-        pool_size:  Number of cpus.
+        pool_size: Number of cpus.
 
     Returns:
         A (4,n) array with the following rows:
@@ -140,6 +140,8 @@ def floodfill(
     data_tracked = np.zeros((4, 0))
 
     verboseprint = print if verbose else lambda *a, **k: None
+
+    pool_size = kwargs.get("pool_size", 10)
 
     verboseprint("Flood fill starts.")
     verboseprint(f"Maximum number of turns: {nturns}")
@@ -254,7 +256,6 @@ def floodfill_1d(
     obspt: list | np.ndarray | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
-    pool_size: int = 10,
     **kwargs,
 ) -> np.ndarray:
     """Find the 1D acceptance of the ring using Flood Fill.
@@ -317,6 +318,8 @@ def floodfill_1d(
 
     verboseprint = print if verbose else lambda *a, **k: None
 
+    pool_size = kwargs.get("pool_size", 10)
+
     # obspt
     zero_length = np.zeros(len(obspt), dtype=bool)
     for n, idx in enumerate(obspt):
@@ -356,6 +359,8 @@ def floodfill_1d(
     dp = kwargs.get("dp", 0.0)
     verboseprint(f"Using dp {dp:.6g}")
 
+    verboseprint(f"shift_zero {shift_zero:.6g}")
+
     # set the order
     ii_ = 0
     for ix_ in range(n_x):
@@ -370,15 +375,14 @@ def floodfill_1d(
         _, co = ring.find_orbit(obspt)
         offset_repeat = np.repeat(co, n_y, axis=0)
     else:
-        offset = offset[obspt]
         offset_repeat = np.repeat(offset, n_y, axis=0)
 
     planesi = np.atleast_1d(axisdef.axis_(tuple(plane), key="index"))
 
-    particles = offset_repeat
+    particles = offset_repeat.T
     particles = particles + shift_zero
-    particles[4, :] = particles[4, :] + dp
-    particles[:, planesi[0]] = particles[:, planesi[0]] + points[1, :]
+    particles[:, 4] = particles[:, 4] + dp
+    particles[planesi[0], :] = particles[planesi[0], :] + points[1, :]
 
     # parallel parameters
     nproc = pool_size if use_mp else 1
@@ -386,6 +390,7 @@ def floodfill_1d(
     task_to_accomplish = Queue()
     processes = []
 
+    # define border
     leftside = np.arange(1, n_y - 1)
     rightside = np.arange((n_x - 1) * n_y + 1, n_x * n_y - 1)
     lowerline = np.asarray([*range(0, n_y * n_x, n_y)])
@@ -393,7 +398,7 @@ def floodfill_1d(
 
     # only one obspt, left side and right side are the same
     if n_x == 1:
-        rightside = np.array([])
+        rightside = np.array([], dtype=int)
 
     manager = Manager()
     registered_for_tracking = manager.list(nparticles * [False])
@@ -414,7 +419,7 @@ def floodfill_1d(
                 ring,
                 rotate_ring,
                 points,
-                particles.T,
+                particles,
                 nturns,
                 n_x,
                 n_y,
