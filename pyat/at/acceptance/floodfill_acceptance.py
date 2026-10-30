@@ -237,18 +237,19 @@ def floodfill(
 def floodfill_1d(
     ring: Lattice,
     nturns: int = 1024,
-    plane: list | tuple = ("dp"),
+    plane: list | tuple = ("dp",),
     amplitude: list | tuple = (10e-2,),
     bounds: list | tuple = ((-1, 1),),
     npoints: list | tuple = (10,),
     offset: list | np.ndarray | None = None,
+    shift_zero: float = 0.0,
     obspt: list | np.ndarray | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
     pool_size: int = 10,
     **kwargs,
 ) -> np.ndarray:
-    """Find the momentum acceptance of the ring using Flood Fill.
+    """Find the 1D acceptance of the ring using Flood Fill.
 
     Flood fill tracks particles from the exterior to the border of the
     acceptance.
@@ -259,6 +260,7 @@ def floodfill_1d(
         plane: max. dimension 1, Plane to scan for the acceptance.
           Allowed values are: ``'x'``, ``'px'``, ``'y'``,
           ``'py'``, ``'dp'``, ``'ct'``
+          Default ("dp")
         amplitude: (2,) array, set the search range.
           Default [10e-3]
         bounds: (2,2) array, defines the tracked range: range=bounds*amplitude
@@ -268,6 +270,8 @@ def floodfill_1d(
           This is useful to study to add a small deviation in the transverse plane
           to the tracked coordinates
           e.g. 10e-5 in the transverse planes.
+        shift_zero = small offset added to the 6d coordinates. Default 0.0.
+        dp: static momentum offset. Default 0.0
         obspt: reference points (default len(ring))
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
@@ -277,7 +281,7 @@ def floodfill_1d(
     Returns:
         A (5,n) array with the following rows:
           1) Observation points.
-          2) energy of the tracked points
+          2) offset of the tracked points
           3) `s` postions of the observation points.
           4) Number of turns the n particle did during tracking.
           5) Flag set to 1 if the nth particle is lost, otherwise 0.
@@ -405,6 +409,7 @@ def floodfill_1d(
     planesi = np.atleast_1d(axisdef.axis_(tuple(plane), key="index"))
 
     particles = offset_repeat
+    particles = particles + shift_zero
     particles[4, :] = particles[4, :] + dp
     particles[:, planesi[0]] = particles[:, planesi[0]] + points[1, :]
 
