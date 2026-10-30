@@ -289,6 +289,7 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
         bounds=config.bounds,
         npoints=config.shape,
         offset=offset,
+        shift_zero=config.shift_zero,
         obspt=obspt,
         verbose=False,
         use_mp=use_mp,
