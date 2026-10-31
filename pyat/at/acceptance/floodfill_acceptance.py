@@ -319,19 +319,11 @@ def floodfill_1d(
     verboseprint = print if verbose else lambda *a, **k: None
 
     pool_size = kwargs.get("pool_size", 10)
+    nproc = pool_size if use_mp else 1
 
-    # obspt
-    zero_length = np.zeros(len(obspt), dtype=bool)
-    for n, idx in enumerate(obspt):
-        zero_length[n] = ring[idx].Length == 0
-    if np.any(zero_length):
-        print("Observation points at elements with zero length are not supported.")
-        return data_tracked
+    dp = kwargs.get("dp", 0.0)
 
     s_obspt = ring.get_s_pos(refpts=obspt)
-
-    verboseprint("Flood fill starts.")
-    verboseprint(f"Maximum number of turns: {nturns}")
 
     window = np.ravel((np.array(bounds).reshape((1, 2)).T * np.array(amplitude)).T)
     if window[0] == window[1]:
@@ -353,13 +345,14 @@ def floodfill_1d(
     nparticles = n_x * n_y
     points = np.zeros((2, nparticles))
 
+    verboseprint("Flood fill starts.")
+    verboseprint(f"Maximum number of turns: {nturns}")
+    verboseprint(f"Number of observation points: {n_x}")
+    verboseprint(f"Number of steps per observation point: {n_y}")
     verboseprint(f"Number of grid points: {nparticles}")
-
-    # include option dp
-    dp = kwargs.get("dp", 0.0)
     verboseprint(f"Using dp {dp:.6g}")
-
     verboseprint(f"shift_zero {shift_zero:.6g}")
+    verboseprint(f"Number of processors: {nproc}")
 
     # set the order
     ii_ = 0
@@ -384,12 +377,6 @@ def floodfill_1d(
     particles[:, 4] = particles[:, 4] + dp
     particles[planesi[0], :] = particles[planesi[0], :] + points[1, :]
 
-    # parallel parameters
-    nproc = pool_size if use_mp else 1
-    verboseprint(f"Number of processors: {nproc}")
-    task_to_accomplish = Queue()
-    processes = []
-
     # define border
     leftside = np.arange(1, n_y - 1)
     rightside = np.arange((n_x - 1) * n_y + 1, n_x * n_y - 1)
@@ -399,6 +386,10 @@ def floodfill_1d(
     # only one obspt, left side and right side are the same
     if n_x == 1:
         rightside = np.array([], dtype=int)
+
+    # parallel parameters
+    task_to_accomplish = Queue()
+    processes = []
 
     manager = Manager()
     registered_for_tracking = manager.list(nparticles * [False])
