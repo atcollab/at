@@ -460,7 +460,8 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     def _default_nb_kicks(self) -> int:
         # This must mirror what is done in magnet_template.h
         # It should be based on Length, h, PolynomA, PolynomB
-        return 42
+        return 30 if "4" in self.PassMethod else 42
+        #return 42
 
     @property
     def NumIntKicks(self) -> int:
