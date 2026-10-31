@@ -51,6 +51,11 @@ struct elem
 #endif /*E2_DIPOLE*/
 };
 
+static int default_nb_kicks(double l, double h, double *polya, double *polyb)
+{
+    return (KICKS_PER_STEP == 7) ? 42 : 30;
+}
+
 static void magnet(double *r, double le, double bending_angle,
     double *A, double *B,
     int max_order, int num_int_steps,
@@ -184,7 +189,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         #else
         double Energy=0.0;
         #endif
-        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", DEFAULT_NUM_INT_STEPS); check_error();
+        int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
+        div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
+        int def_nb_s = dvt.quot + 1;
+        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", def_nb_s); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
