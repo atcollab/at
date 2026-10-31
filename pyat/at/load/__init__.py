@@ -12,3 +12,10 @@ from .madx import *
 from .mad8 import *
 from .xsuite import *
 from .json import *
+try:
+    # noinspection PyPackageRequirements
+    import xtrack
+except (ImportError, RuntimeError):
+    pass
+else:
+    from .xtcompat import *
