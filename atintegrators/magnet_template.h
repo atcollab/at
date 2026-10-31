@@ -51,6 +51,12 @@ struct elem
 #endif /*E2_DIPOLE*/
 };
 
+static int default_nb_kicks(double l, double h, double *polya, double *polyb)
+{
+//    return 42;
+    return (KICKS_PER_STEP == 7) ? 42 : 30;
+}
+
 static void magnet(double *r, double le, double bending_angle,
     double *A, double *B,
     int max_order, int num_int_steps,
@@ -85,6 +91,10 @@ static void magnet(double *r, double le, double bending_angle,
 {
     double irho = bending_angle / le;
 
+    #if defined(RADIATION) || defined(QUANTUM)
+    /* Inside the element, momenta are relative to scaling*P0 */
+    if (scaling != 1.0) gamma0 = sqrt(1.0 + scaling*scaling*(gamma0*gamma0 - 1.0));
+    #endif
     #ifdef RADIATION
     double rad_const = RAD_CONST*pow(gamma0, 3);
     double diff_const = DIF_CONST*pow(gamma0, 5);
@@ -145,6 +155,21 @@ static void magnet(double *r, double le, double bending_angle,
 
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
+
+            #ifdef DIFFUSION
+            /* The diffusion matrix goes through the exit transformations */
+            if (bdiff) {
+                if (R2) ATsandwichmmt(R2, bdiff);
+                if (scaling != 1.0) {   /* Jacobian of ATChangePRef(r6, 1/scaling) */
+                    const int pidx[3] = {px_, py_, delta_};
+                    for (int k = 0; k < 3; k++)
+                        for (int m = 0; m < 6; m++) {
+                            bdiff[pidx[k] + 6*m] *= scaling;
+                            bdiff[m + 6*pidx[k]] *= scaling;
+                        }
+                }
+            }
+            #endif
         }
     }
 }
@@ -165,7 +190,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         #else
         double Energy=0.0;
         #endif
-        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", DEFAULT_NUM_INT_STEPS); check_error();
+        int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
+        div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
+        int def_nb_s = dvt.quot + 1;
+        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", def_nb_s); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -259,7 +287,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         MAGNET_ARGUMENTS
         /*optional fields*/
-        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", DEFAULT_NUM_INT_STEPS); check_error();
+        int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
+        div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
+        int def_nb_s = dvt.quot + 1;
+        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", def_nb_s); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();

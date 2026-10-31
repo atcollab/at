@@ -444,7 +444,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        kwargs.setdefault("NumIntSteps", 10)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
@@ -457,6 +456,37 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             return True
         else:
             return False
+
+    def _default_nb_kicks(self) -> int:
+        # This must mirror what is done in magnet_template.h
+        # It should be based on Length, h, PolynomA, PolynomB
+        return 30 if "4" in self.PassMethod else 42
+        #return 42
+
+    @property
+    def NumIntKicks(self) -> int:
+        r"""Number of multipole kicks.
+
+        The number of multipole kicks is equal to *NumIntSteps * *kicks_per_step*\ ,
+        where *kicks_per_step* is 3 for 4th order integrators and 7 for 6th order
+        integrators.
+
+        If *NumIntKicks* is set to zero, the default number of kicks is applied.
+
+        """
+        if (num_int_steps := getattr(self, "NumIntSteps", -1)) >= 0:
+            kicks_per_step = 3 if "4" in self.PassMethod else 7
+            return kicks_per_step * num_int_steps
+        else:
+            return self._default_nb_kicks()
+
+    @NumIntKicks.setter
+    def NumIntKicks(self, value):
+        if value == 0:
+            del self.NumIntSteps
+        else:
+            kicks_per_step = 3 if "4" in self.PassMethod else 7
+            self.NumIntSteps =  (value - 1) // kicks_per_step + 1
 
     def _setter(self, attrname: str) -> Callable[[int, Any], None]:
         def setr(key, value):
