@@ -53,8 +53,8 @@ struct elem
 
 static int default_nb_kicks(double l, double h, double *polya, double *polyb)
 {
-    return 42;
-//    return (KICKS_PER_STEP == 7) ? 42 : 30;
+//    return 42;
+    return (KICKS_PER_STEP == 7) ? 42 : 30;
 }
 
 static void magnet(double *r, double le, double bending_angle,
