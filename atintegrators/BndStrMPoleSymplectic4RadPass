@@ -306,9 +306,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
+        NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
+        if (NumIntSteps == 0) NumIntSteps = 10;
         Gap=atGetOptionalDouble(ElemData,"FullGap", 0); check_error();
         Fint1=atGetOptionalDouble(ElemData,"FringeInt1", 0); check_error();
         Fint2=atGetOptionalDouble(ElemData,"FringeInt2", 0); check_error();
@@ -373,9 +374,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
+        NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
+        if (NumIntSteps == 0) NumIntSteps = 10;
         Gap=atGetOptionalDouble(ElemData,"FullGap", 0); check_error();
         Fint1=atGetOptionalDouble(ElemData,"FringeInt1", 0); check_error();
         Fint2=atGetOptionalDouble(ElemData,"FringeInt2", 0); check_error();
