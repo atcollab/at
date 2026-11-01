@@ -94,8 +94,7 @@ are converting according to a ``match_model`` keyword:
   ``num_multipole_kicks`` are set to their default value. This way, the default
   behaviour in AT is turned into the default behaviour in Xsuite,
 - ``match_model`` is True (the default): a model matching at best the AT model is
-  selected, the integrator is set to ``yoshida4`` and ``num_multipole_kicks`` is set
-  equal to ``NumIntKicks``.
+  selected, the integrator is set to ``yoshida4``.
 
 This is summarised in this table:
 
@@ -388,6 +387,7 @@ class Multipole(XsElement):
     _at_integrator = "yoshida4"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "order": "MaxOrder",
+        "num_multipole_kicks": "NumIntKicks",
     }
 
     @property
@@ -462,8 +462,6 @@ class Multipole(XsElement):
             "PolynomB": polyb[: maxorder + 1],
             "PolynomA": polya[: maxorder + 1],
         }
-        if (nk := self.get("num_multipole_kicks", 0)) != 0:
-            atparams["NumIntKicks"] = nk
         if (taper := self.get("delta_taper")) is not None:
             atparams["FieldScaling"] = 1.0 + taper
         return atparams
@@ -536,8 +534,6 @@ class Multipole(XsElement):
         if np.any(pola) or np.any(polb):
             self["knl"] = list(polb)
             self["ksl"] = list(pola)
-        if match_model and isinstance(atelem, elt.Multipole):
-            self["num_multipole_kicks"] = atelem.NumIntKicks
         if (scaling := getattr(atelem, "FieldScaling", None)) is not None:
             self["delta_taper"] = scaling - 1.0
         self["_isthick"] = self["length"] != 0.0

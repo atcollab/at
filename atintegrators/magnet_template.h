@@ -190,10 +190,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         #else
         double Energy=0.0;
         #endif
-        int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
-        div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
-        int def_nb_s = dvt.quot + 1;
-        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", def_nb_s); check_error();
+        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
+        if (NumIntSteps == 0) {
+            int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
+            div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
+            NumIntSteps = dvt.quot + 1;
+        }
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -287,10 +289,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         MAGNET_ARGUMENTS
         /*optional fields*/
-        int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
-        div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
-        int def_nb_s = dvt.quot + 1;
-        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", def_nb_s); check_error();
+        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
+        if (NumIntSteps == 0) {
+            int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
+            div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
+            NumIntSteps = dvt.quot + 1;
+        }
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
