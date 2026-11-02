@@ -90,9 +90,9 @@ Model and integrator
 PyAT exact passmethods are converted to the equivalent Xsuite ``model``. Other methods
 are converting according to a ``match_model`` keyword:
 
-- ``match_model`` is False: ``model``, ``integrator``,
-  ``num_multipole_kicks`` are set to their default value. This way, the default
-  behaviour in AT is turned into the default behaviour in Xsuite,
+- ``match_model`` is False: ``model`` and ``integrator`` are set to their
+  default value. This way, the default behaviour in AT is turned into the
+  default behaviour in Xsuite,
 - ``match_model`` is True (the default): a model matching at best the AT model is
   selected, the integrator is set to ``yoshida4``.
 
@@ -133,7 +133,8 @@ The following AT attributes are ignored in writing Xsuite .json files:
 
 - ``RApertures``
 - ``EApertures``
-- ``RefDZ``. This defines the correction of path lengthening for rectangular bends.
+- ``RefDZ``. This defines the correction of path lengthening for rectangular bends. It
+  has no equivalent in Xsuite.
 
 
 .. _xsuite: https://xsuite.readthedocs.io
@@ -226,6 +227,10 @@ class XsElement(dict, _XsFactory):
         self.setdefault("length", 0.0)
         self.name = name
         self.origin = kwargs.get("__class__", "")
+
+    def _warn(self, msg: str):
+        """Issue a warning with the element name."""
+        warnings.warn(AtWarning(f"Element {self.name}: {msg}"), stacklevel=2)
 
     def _params_to_at(self, **atparams) -> dict:
         """Translate Xsuite parameters to AT parameters."""
@@ -352,10 +357,6 @@ class XsElement(dict, _XsFactory):
         xsclass = _at2xsclass.get(type(atelem), NotInXsuite)
         return xsclass.from_at(atelem, match_model=match_model)
 
-    @property
-    def _l_anchor(self) -> float:
-        return self.get("length", 0.0)
-
 
 class Marker(XsElement):
     """Xsuite Marker element."""
@@ -410,13 +411,10 @@ class Multipole(XsElement):
         rot_s_frame = self.get("rot_s_rad", 0.0)
         if rot_s_frame != 0.0:
             if ismisaligned:
-                msg = (
-                    f"{self.name}:alignment errors available only for H bends, ignored"
-                )
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                self._warn("alignment errors available only for H bends, ignored")
             transforms = {"tilt_frame": rot_s_frame}
         elif ismisaligned:
-            length = self._l_anchor
+            length = self._integration_length
             rot_shift_anchor = self.get("rot_shift_anchor", 0.0)
             anchor = 0.5 if length == 0.0 else rot_shift_anchor / length
             if anchor == 0.0:
@@ -428,7 +426,7 @@ class Multipole(XsElement):
                     f"Anchor point for rotation different from 0 or {length / 2.0},\n"
                     "setting reference to AT default: ReferencePoint.CENTRE"
                 )
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                self._warn(msg)
                 reference = ReferencePoint.CENTRE
             transforms["reference"] = reference.value
         return transforms
@@ -492,16 +490,13 @@ class Multipole(XsElement):
 
         if rots_frame != 0.0:
             if ismisaligned:
-                msg = (
-                    f"{self.name}: alignment errors available only for H bends, ignored"
-                )
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                self._warn("alignment errors available only for H bends, ignored")
             misalign = {"rot_s_rad": rots_frame}
         elif ismisaligned:
             if refpoint == ReferencePoint.ENTRANCE:
                 misalign["rot_shift_anchor"] = 0.0
             else:
-                misalign["rot_shift_anchor"] = atelem.Length / 2.0
+                misalign["rot_shift_anchor"] = self._integration_length / 2.0
 
         self.update(misalign)
 
@@ -608,8 +603,8 @@ class Bend(Multipole):
     }
     _mag_order = 0
     _default_bend_fringe: ClassVar[dict[bool, int]] = {
-        True: 4,
-        False: 1,
+        True: 4,  # exact methods
+        False: 1,  # non-exact methods
     }
     _at2xsuite_edge: ClassVar[dict[int, str]] = {
         0: "suppressed",
@@ -637,8 +632,7 @@ class Bend(Multipole):
         entry_hgap = self.get("edge_entry_hgap")
         exit_hgap = self.get("edge_exit_hgap")
         if entry_hgap != exit_hgap:
-            msg = "Entry and Exit gaps for dipole are different, use entry"
-            warnings.warn(AtWarning(msg), stacklevel=2)
+            self._warn("Entry and Exit gaps for dipole are different, keep entry")
         if entry_hgap is not None:
             atparams["FullGap"] = 2.0 * entry_hgap
 
@@ -665,9 +659,9 @@ class Bend(Multipole):
         self["edge_exit_model"] = edge_model("FringeBendExit", "FringeQuadExit")
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
-        if not self.get("k0_from_h", True):
-            self["k0"] = self.get("k0", 0.0) - self["angle"] / self["length"]
         atparams = super()._params_to_at(EntranceAngle=0.0, ExitAngle=0.0, **atparams)
+        if not self.get("k0_from_h", "k0" not in self):
+            atparams["PolynomB"][0] -= self["angle"] / self["length"]
         return atparams
 
     @classmethod
@@ -681,6 +675,10 @@ class RBend(Bend):
     """Xsuite RBend element."""
 
     _at2xsuite_model = {
+        "BndStrMPoleSymplectic4Pass": "drift-kick-drift-exact",
+        "BndStrMPoleSymplectic4RadPass": "drift-kick-drift-exact",
+        "ExactRectBendRadPass": "drift-kick-drift-exact",
+        "ExactRectBendPass": "drift-kick-drift-exact",
         "ExactRectangularBendRadPass": "drift-kick-drift-exact",
         "ExactRectangularBendPass": "drift-kick-drift-exact",
     }
@@ -707,21 +705,18 @@ class RBend(Bend):
         exact = atparams.get("PassMethod", "").startswith("Exact")
         hangle = 0.5 * self["angle"]
         length = self.get("length_straight", 0.0) / np.sinc(hangle / pi)
-        if straight:
-            if not exact and (
-                np.any(atparams["PolynomA"] != 0.0)
-                or np.any(atparams["PolynomB"] != 0.0)
-            ):
-                msg = (
-                    "Multipole are present in the rectangular bend: "
-                    "PassMethod is forced to ExactRectangularBendPass"
-                )
-                warnings.warn(AtWarning(msg), stacklevel=3)
-                atparams["PassMethod"] = "ExactRectangularBendPass"
-            rbs = self.get("rbend_shift", 0.0)
-            atparams["X0ref"] = (
-                -rbs - 0.125 * length * hangle * np.sinc(0.5 * hangle / pi) ** 2
+        if straight and not exact and (
+            np.any(atparams["PolynomA"] != 0.0)
+            or np.any(atparams["PolynomB"] != 0.0)
+        ):
+            msg = (
+                "Multipole are present in the rectangular bend: "
+                "PassMethod is forced to ExactRectangularBendPass"
             )
+            self._warn(msg)
+            atparams["PassMethod"] = "ExactRectangularBendPass"
+        if self.get("rbend_angle_diff", 0.0) != 0.0:
+            self._warn('"rbend_angle_diff" is not supported in AT, ignored.')
         atparams["Length"] = length
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
@@ -748,10 +743,6 @@ class RBend(Bend):
         elem["length_straight"] = elem._integration_length
         elem["rbend_shift"] = X0ref_to_rbend_shift(hangle, length, X0ref)
         return elem
-
-    @property
-    def _l_anchor(self) -> float:
-        return self.get("length_straight", 0.0)
 
 
 class Cavity(XsElement):
@@ -828,14 +819,7 @@ class Dipole(_XsFactory):
 
     @classmethod
     def from_at(cls, atelem: elt.Element, match_model: bool = True) -> XsElement:
-        if atelem.PassMethod in {
-            "ExactRectangularBendPass",
-            "ExactRectangularBendRadPass",
-            "ExactRectBendPass",
-            "ExactRectBendRadPass",
-            "BndStrMPoleSymplectic4Pass",
-            "BndStrMPoleSymplectic4RadPass",
-        }:
+        if atelem.PassMethod in RBend._at2xsuite_model:
             return RBend.from_at(atelem, match_model=match_model)
         else:
             return Bend.from_at(atelem, match_model=match_model)

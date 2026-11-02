@@ -16,7 +16,7 @@
         multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
         if (entrance_angle != 0.0) { \
             if (B1 != 0.0) quad_wedge(r6, -B1 * entrance_angle); \
-            bend_wedge(r6, irho, -entrance_angle, bdiff); \
+            bend_wedge(r6, irho + B[0], -entrance_angle, bdiff); \
         } \
     } \
     else { \
@@ -30,7 +30,7 @@
     /* Exit face */ \
     if (FringeBendExit == 4) { \
         if (exit_angle != 0.0) { \
-            bend_wedge(r6, irho, -exit_angle, bdiff); \
+            bend_wedge(r6, irho + B[0], -exit_angle, bdiff); \
             if (B1 != 0.0) quad_wedge(r6, -B1 * exit_angle); \
         } \
         multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
