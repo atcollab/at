@@ -443,7 +443,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
               index of non-zero polynomial coefficients
-            NumIntSteps:    Number of integration steps (default: 10)
+            NumIntSteps:    Number of integration steps (default: 0, automatic)
             FieldScaling:   Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -532,8 +532,8 @@ class Dipole(Radiative, Multipole):
         ExitAngle=float,
         FringeInt1=float,
         FringeInt2=float,
-        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
-        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
+        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=2),
+        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=2),
         FringeBendEntrance=lambda v: _int(v, vmin=0, vmax=4),
         FringeBendExit=lambda v: _int(v, vmin=0, vmax=4),
     )
@@ -592,17 +592,20 @@ class Dipole(Radiative, Multipole):
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
-            FringeBendEntrance: 1: legacy version Brown First Order (default)
+            FringeBendEntrance: 1: legacy version Brown First Order (default for
+              non-exact integrators)
 
               2: SOLEIL close to second order of Brown
 
               3: THOMX
+
+              4: Forests's exact wedge (default for exact integrators)
             FringeBendExit:     See *FringeBendEntrance*
             FringeQuadEntrance: 0: no fringe field effect (default)
 
-              1: Lee-Whiting's thin lens limit formula
+              1: Lee-Whiting's thin lens limit formula for all multipole orders
 
-              2: elegant-like
+              2: elegant-like linear quadrupole fringe
             FringeQuadExit:     See *FringeQuadEntrance*
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
