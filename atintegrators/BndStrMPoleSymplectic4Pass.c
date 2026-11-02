@@ -201,7 +201,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
         NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
-        NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
         if (NumIntSteps == 0) NumIntSteps = 10;
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();

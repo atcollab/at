@@ -46,10 +46,9 @@ def rbendtune(self: Dipole) -> None:
         "ExactRectangularBendPass",
         "ExactRectBendPass",
     }:
-        theta = elem.BendingAngle
-
         # Analytical estimate
-        x0ref = elem.Length * ((cos(0.5 * theta) - 1.0) / theta + sin(0.5 * theta) / 12)
+        htheta = 0.5 * elem.BendingAngle
+        x0ref = -0.125 * elem.Length * htheta * np.sinc(0.5 * htheta / np.pi)**2
 
         # Search if there are multipoles
         if checkmul(self):

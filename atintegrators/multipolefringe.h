@@ -94,7 +94,7 @@ static void multipole_fringe(double *r6, int method, double B1,
 {
     switch (method) {
         case 0: break;
-        case 1: all_mult_fringe(r6, polya, polyb, 1, 1, edge);
+        case 1: all_mult_fringe(r6, polya, polyb, 1, max_order, edge);
                 break;
         case 2: if (fringeIntM0 && fringeIntP0) {
                     if (edge > 0)
@@ -103,9 +103,7 @@ static void multipole_fringe(double *r6, int method, double B1,
                         linearQuadFringeElegantExit(r6, B1, fringeIntM0, fringeIntP0);
                 }
                 else
-                    all_mult_fringe(r6, polya, polyb, 1, 1, edge);
-                break;
-        case 3: all_mult_fringe(r6, polya, polyb, 1, max_order, edge);
+                    all_mult_fringe(r6, polya, polyb, 1, max_order, edge);
                 break;
     }
 }
