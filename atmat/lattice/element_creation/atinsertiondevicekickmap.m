@@ -74,6 +74,9 @@ if ~isempty(args) && isnumeric(args{1})
 end
 
 [rsrc,method] = decodeatargs({'DriftPass'},args);
+[kickmapFilename,rsrc] = getoption(rsrc,'Filename_in',kickmapFilename);
+[normalizationEnergy,rsrc] = getoption(rsrc,'Normalization_energy',normalizationEnergy);
+[nslice,rsrc] = getoption(rsrc,'Nslice',nslice);
 Elem = atbaselem(fname,method,'Class','InsertionDeviceKickMap', ...
     'Filename_in',kickmapFilename, ...
     'Normalization_energy',normalizationEnergy, ...
