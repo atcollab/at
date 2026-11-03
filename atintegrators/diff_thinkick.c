@@ -29,13 +29,13 @@ static void thinkickM(const double *r6, const double *A, const double *B, int ma
     M66[m*7] = 1.0;
 
   /*  [i, j] <---> [i+6*j] */
-  M66[1] = -L * ReSumN;       /* [1, 0] */
-  M66[13] = L * ImSumN;       /* [1, 2] */
-  M66[3] = L * ImSumN;        /* [3, 0] */
-  M66[15] = L * ReSumN;       /* [3, 2] */
-  M66[25] = L * irho;         /* [1, 4] */
-  M66[1] -= L * irho * irho; /* [1, 0] */
-  M66[5] = L * irho;          /* [5, 0] */
+  M66[1] = -L * ReSumN;             /* [1, 0] */
+  M66[13] = L * ImSumN;             /* [1, 2] */
+  M66[3] = L * ImSumN;              /* [3, 0] */
+  M66[15] = L * ReSumN;             /* [3, 2] */
+  M66[25] = L * irho;               /* [1, 4] */
+  M66[1] -= L * irho * (irho+B[0]); /* [1, 0] */
+  M66[5] = L * irho;                /* [5, 0] */
 
   ATsandwichmmt(M66, bdiff);
 }
