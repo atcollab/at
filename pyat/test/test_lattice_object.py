@@ -179,7 +179,8 @@ def test_radiation_change(hmba_lattice):
     rfs = [elem for elem in hmba_lattice if isinstance(elem, elements.RFCavity)]
     dipoles = [elem for elem in hmba_lattice if isinstance(elem, elements.Dipole)]
     quads = [elem for elem in hmba_lattice if isinstance(elem, elements.Quadrupole)]
-    hmba_lattice.radiation_on(None, "pass2", "auto")
+    with pytest.warns(AtWarning):
+        hmba_lattice.radiation_on(None, "pass2", "auto")
     assert hmba_lattice.radiation is True
     assert hmba_lattice.has_cavity is False
     for elem in rfs:

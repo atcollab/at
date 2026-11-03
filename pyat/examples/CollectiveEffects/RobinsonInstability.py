@@ -5,23 +5,24 @@ import at
 from at.collective import Wake, LongResonatorElement
 
 # Set up the ring
-nturns = 10000
+nturns = 6000
 Npart = 10000
 Nbunches = 1
 current = 0.1  # A
 
 ring = at.load_m("../../../machine_data/esrf.m")
-ring.radiation_off()
+ring.disable_6d()
 
 ring.set_rf_frequency()
 freqres = ring.rf_frequency
 
 ring.set_fillpattern(Nbunches)
-ring.beam_current = current
+ring.set_beam_current(current)
 
-fring, _ = at.fast_ring(ring)
+fring = at.fast_ring(ring)
 # Switch on RF cavity but have all other radiation sources off
-fring.enable_6d(cavity_pass="RFCavityPass", dipole_pass=None, quadrupole_pass=None)
+fring.disable_6d()
+fring[1].PassMethod = 'RFCavityPass'
 
 # Define the resonator parameters and current
 wturns = 50
@@ -54,8 +55,8 @@ fring.track(part, nturns=nturns, refpts=None, in_place=True)
 dp_all = bmon.means[4, 0, :]
 
 # Fit the results to obtain the simulated growth rate
-width = 1000
-step = 600
+width = 500
+step = 300
 xr = (2 * np.arange(int(nturns / step)) * step + width) / 2
 amp1 = np.array(
     [

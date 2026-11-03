@@ -15,19 +15,19 @@ jobs:
       SETUPTOOLS_SCM_OVERRIDES_FOR_ACCELERATOR_TOOLBOX: '{local_scheme = "no-local-version"}'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Necessary to fetch tags and allow setuptools_scm
           # see: https://github.com/pypa/setuptools_scm/issues/480
           fetch-depth: 0
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: 3.12
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.4
+        uses: pypa/cibuildwheel@v4.1
 
       - name: Upload wheels
         id: wheel-upload
@@ -46,14 +46,14 @@ jobs:
       SETUPTOOLS_SCM_OVERRIDES_FOR_ACCELERATOR_TOOLBOX: '{local_scheme = "no-local-version"}'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Necessary to fetch tags and allow setuptools_scm
           # see: https://github.com/pypa/setuptools_scm/issues/480
           fetch-depth: 0
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 

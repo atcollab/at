@@ -199,7 +199,7 @@ end
                 dampingtime=1.0./alpha;
                 dampingJ=4.0*alpha/sum(alpha);
                 if any(radindex)
-                    jmt=jmat(3);
+                    %jmt=jmat(3);
                     lindata=cellfun(@process,{envelope.R},reshape(num2cell(T,[1 2]),1,[]),num2cell(lindata));
                 else
                     lindata=arrayfun(@deflt,lindata);
@@ -267,9 +267,14 @@ end
         function lind=process(bm66,T,lind)            
             % aa=amat(T*m*jmt'*T'*jmt);     % symplectic only
             aa=amat(T*m/T);                 % even for non-symplectic
-            nn=-aa'*jmt*bm66*jmt*aa;
             % Mode emittances: should be constant
-            memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            %nn=-aa'*jmt*bm66*jmt*aa;
+            %memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            ainv=inv(aa);
+            rn=ainv*bm66*ainv';
+            emit2=[det(rn(1:2,1:2)), det(rn(3:4,3:4)), det(rn(5:6,5:6))];
+            emit2(emit2<0)=0.0;
+            memit=sqrt(emit2);
             lind.modemit=memit;
             if memit(2)/memit(1) > 1.e-4
                 siginv=inv(bm66);   % with dp/p==0  ( 4x4 betatron emittance)

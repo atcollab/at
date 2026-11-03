@@ -8,7 +8,7 @@ function atclass = atguessclass(elem, varargin)
 %
 %  NOTES
 %  1. atclass=atguessclass(atelem,'useclass')
-%  By default, ATGUESSCLASS will default "useless" elements (PolynopmB==0)
+%  By default, ATGUESSCLASS will default "useless" elements (PolynomB==0)
 %  to 'Drift' or 'Marker', depending on 'Length'. When specifying
 %  'UseClass', it it will preserve the 'Class' field for those elements.
 %
@@ -30,6 +30,8 @@ elseif isfield(elem,'Periodicity')
     atclass='RingParam';
 elseif isfield(elem,'Limits')
     atclass='Aperture';
+elseif isfield(elem,'Mode')
+    atclass='VariableThinMultipole';
 elseif isfield(elem,'PolynomB')
     if useclass && isfield(elem,'Class')
         atclass=elem.Class;
@@ -42,6 +44,8 @@ elseif isfield(elem,'PolynomB')
             atclass='Quadrupole';
         elseif loworder==2
             atclass='Sextupole';
+        elseif loworder==3
+            atclass='Octupole';
         else
             atclass='Multipole';
         end

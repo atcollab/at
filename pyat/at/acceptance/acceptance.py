@@ -515,7 +515,7 @@ def get_momentum_acceptance(
          do most of the work in a single function call and allows for
          full parallelization.
     """
-    return get_1d_acceptance(ring, "dp", resolution, amplitude, *args, **kwargs)
+    return get_1d_acceptance(ring, ["dp"], resolution, amplitude, *args, **kwargs)
 
 
 Lattice.get_acceptance = get_acceptance

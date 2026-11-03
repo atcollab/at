@@ -42,20 +42,19 @@ __all__ = [
     "Wiggler",
 ]
 
-import warnings
-from collections.abc import Generator, Callable
-from typing import Any
 import contextlib
-from warnings import warn
+import warnings
+from collections.abc import Callable
 from math import tan, atan
+from typing import Any
 
 import numpy as np
 
-from ..exceptions import AtError, AtWarning
-from .conversions import _float, _array
 from .abstract_elements import Radiative, _Radiative
-from .element_object import Element
 from .basic_elements import LongElement
+from .conversions import _int, _float, _array
+from .element_object import Element
+from ..exceptions import AtError, AtWarning
 
 # AtWarning from this module should always be issued (not only on the first occurrence)
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
@@ -63,16 +62,13 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 def _warn(doc: str) -> str:
     """Add a notice on AT / PALS field expansion."""
-    return "\n".join(
-        (
-            doc,
-            "",
-            "The AT field expansion differs from the MAD expansion by a factor n!. "
-            "See :ref:`here <at-field-expansion>` for the definition of the AT field "
-            "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
-            "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
-            "for the MAD/PALS field expansion.",
-        )
+    return (
+        f"{doc}\n\n"
+        "The AT field expansion differs from the MAD expansion by a factor n!. "
+        "See :ref:`here <at-field-expansion>` for the definition of the AT "
+        "field expansion and `PALS <https://pals-project.readthedocs.io/en/"
+        "latest/element-parameters.html#magneticmultipolep-magnetic-"
+        "multipole-parameters>`_ for the MAD/PALS field expansion."
     )
 
 
@@ -139,7 +135,7 @@ class ThinMultipole(Element):
 
     # Class attributes
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "PolynomA", "PolynomB"]
-    _conversions = dict(Element._conversions, K=float, H=float)
+    _conversions = dict(Element._conversions, K=float, H=float, FieldScaling=float)
     _stacklevel = 4  # Stacklevel for warnings
 
     # Instance attributes
@@ -164,7 +160,7 @@ class ThinMultipole(Element):
         """
 
         def make_same_length(arr1, arr2):
-            lmax = max(len(arr1), len(arr2))
+            lmax = max(len(arr1), len(arr2), order + 1)
             arr1 = np.pad(arr1, (0, lmax - len(arr1)), "constant")
             arr2 = np.pad(arr2, (0, lmax - len(arr2)), "constant")
             return arr1, arr2
@@ -172,7 +168,7 @@ class ThinMultipole(Element):
         def seterr(name, kname, kval, aname, aval):
             mess = (
                 f"Element {name}: Conflicting element data, {kname!r} ({kval}) "
-                f"in kwargs does not match positional argument {aname!r} ({aval})."
+                f"does not match positional argument {aname!r} ({aval})."
             )
             return AtError(mess)
 
@@ -189,20 +185,16 @@ class ThinMultipole(Element):
             if keyname in kwargs:
                 kvalue = self._conversions[keyname](kwargs.pop(keyname))
                 kvalue, argvalue = make_same_length(kvalue, argvalue)
-                if issubclass(self.__class__, (Dipole, Quadrupole)):
-                    if (
-                        keyname == "PolynomB"
-                        and argvalue[1] != 0.0
-                        and (kvalue.size < 2 or argvalue[1] != kvalue[1])
-                    ):
-                        raise seterr(family_name, "PolynomB", kvalue, "k", argvalue[1])
-                elif issubclass(self.__class__, Sextupole):
-                    if (
-                        keyname == "PolynomB"
-                        and argvalue[2] != 0.0
-                        and (kvalue.size < 3 or argvalue[2] != kvalue[2])
-                    ):
-                        raise seterr(family_name, "PolynomB", kvalue, "h", argvalue[2])
+                chk = argvalue[order]
+                if isinstance(self, (Dipole, Quadrupole)):
+                    if keyname == "PolynomB" and chk != 0.0 and chk != kvalue[order]:
+                        raise seterr(family_name, "PolynomB", kvalue, "K", chk)
+                elif isinstance(self, Sextupole):
+                    if keyname == "PolynomB" and chk != 0.0 and chk != kvalue[order]:
+                        raise seterr(family_name, "PolynomB", kvalue, "H", chk)
+                elif isinstance(self, Octupole):
+                    if keyname == "PolynomB" and chk != 0.0 and chk != kvalue[order]:
+                        raise seterr(family_name, "PolynomB", kvalue, "Kn3", chk)
                 elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
                     raise seterr(family_name, keyname, kvalue, argname, argvalue)
                 else:
@@ -233,6 +225,7 @@ class ThinMultipole(Element):
         #   error, otherwise we give a warning.
 
         # Check kwargs and poly_a & poly_b for compatibility and convert to ParamArray
+        order = getattr(self, "DefaultOrder", 0)
         prmpola = check_polynom("PolynomA", poly_a)
         prmpolb = check_polynom("PolynomB", poly_b)
         check_strength("K", 1)
@@ -243,14 +236,20 @@ class ThinMultipole(Element):
         deforder = max(getattr(self, "DefaultOrder", 0), len_a - 1, len_b - 1)
         # Remove MaxOrder
         maxorder = int(kwargs.pop("MaxOrder", deforder))
-        kwargs.setdefault("PassMethod", "ThinMPolePass")
-        super().__init__(family_name, **kwargs)
+        # Set the minimum attributes
+        super().__init__(
+            family_name,
+            Length=kwargs.pop("Length", 0),
+            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass"),
+        )
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super().__setattr__("MaxOrder", maxorder)
         # Adjust polynom lengths and set them
         len_ab = max(maxorder, deforder) + 1
         self.PolynomA = np.pad(prmpola, (0, len_ab - len_a))
         self.PolynomB = np.pad(prmpolb, (0, len_ab - len_b))
+        # Set the rest of attributes
+        self.update(kwargs)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB."""
@@ -272,7 +271,7 @@ class ThinMultipole(Element):
                 raise ValueError(msg)
             if ordp > lmin:
                 msg = f"Some values of {key} are truncated by MaxOrder={lmin}"
-                warn(AtWarning(msg), stacklevel=2)
+                warnings.warn(AtWarning(msg), stacklevel=2)
         elif key == "MaxOrder":
             intval = int(value)
             lens, ords = zip(*(ck(k) for k in polys), strict=True)
@@ -281,8 +280,14 @@ class ThinMultipole(Element):
                 raise ValueError(msg)
             if intval < max(ords):
                 msg = f"Some values are truncated by MaxOrder={intval}"
-                warn(AtWarning(msg), stacklevel=2)
+                warnings.warn(AtWarning(msg), stacklevel=2)
         super().__setattr__(key, value)
+
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> Element:
+        # Remove the KickAngle attribute possibly present in old files
+        elem_dict.pop("KickAngle", None)
+        return super().new_from_dict(**elem_dict)
 
     # noinspection PyPep8Naming
     @property
@@ -375,6 +380,38 @@ class ThinMultipole(Element):
         "Integrated strength of the main field component.",
     )
 
+    @property
+    def KickAngle(self) -> np.ndarray:
+        """Deviation angles (H, V).
+
+        Provided for backwards compatibility, use *HKick*, *VKick* instead.
+        """
+        return np.arctan([-self.Kn0L, self.Ks0L])
+
+    @KickAngle.setter
+    def KickAngle(self, value) -> None:
+        kicks = np.tan(value)
+        self.Kn0L = -kicks[0]
+        self.Ks0L = kicks[1]
+
+    @property
+    def HKick(self) -> float:
+        """Integrated horizontal momentum kick."""
+        return -self.Kn0L
+
+    @HKick.setter
+    def HKick(self, value: float) -> None:
+        self.Kn0L = -value
+
+    @property
+    def VKick(self) -> float:
+        """Integrated vertical momentum kick."""
+        return self.Ks0L
+
+    @VKick.setter
+    def VKick(self, value: float) -> None:
+        self.Ks0L = value
+
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element."""
@@ -401,7 +438,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             MaxOrder:       Number of desired multipoles. Default: highest
               index of non-zero polynomial coefficients
             NumIntSteps:    Number of integration steps (default: 10)
-            KickAngle:      Correction deviation angles (H, V)
             FieldScaling:   Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -471,10 +507,10 @@ class Dipole(Radiative, Multipole):
         ExitAngle=float,
         FringeInt1=float,
         FringeInt2=float,
-        FringeQuadEntrance=int,
-        FringeQuadExit=int,
-        FringeBendEntrance=int,
-        FringeBendExit=int,
+        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
+        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
+        FringeBendEntrance=lambda v: _int(v, vmin=0, vmax=4),
+        FringeBendExit=lambda v: _int(v, vmin=0, vmax=4),
     )
     _file_classname = "Bend"
     _stacklevel = 7  # Stacklevel for warnings
@@ -527,7 +563,7 @@ class Dipole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=0:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps:        Number of integration steps
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
@@ -545,7 +581,6 @@ class Dipole(Radiative, Multipole):
             FringeQuadExit:     See *FringeQuadEntrance*
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
-            KickAngle:          Correction deviation angles (H, V)
             FieldScaling:       Scaling factor applied to the magnetic field
 
         Available PassMethods: :ref:`BndMPoleSymplectic4Pass`,
@@ -561,9 +596,28 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "K", self.K
+    def to_dict(self) -> dict:
+        # Add a K field used by Matlab
+        elem_dict = super().to_dict()
+        elem_dict["K"] = self.K
+        return elem_dict
+
+    @classmethod
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
+
+    def divide(self, frac) -> list[Element]:
+        if self.PassMethod in {
+            "ExactRectangularBendPass",
+            "ExactRectangularBendRadPass",
+            "ExactRectBendPass",
+            "ExactRectBendRadPass",
+        }:
+            # Cannot split a rectangular bend
+            return [self]
+        else:
+            return super().divide(frac)
 
     def _part(self, fr, sumfr):
         pp = super()._part(fr, sumfr)
@@ -598,7 +652,9 @@ class Quadrupole(Radiative, Multipole):
 
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "K"]
     _conversions = dict(
-        Multipole._conversions, FringeQuadEntrance=int, FringeQuadExit=int
+        Multipole._conversions,
+        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
+        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
     )
     _stacklevel = 7  # Stacklevel for warnings
 
@@ -622,7 +678,7 @@ class Quadrupole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=1:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps :       Number of integration steps
             FringeQuadEntrance: 0: no fringe field effect (default)
 
               1: Lee-Whiting's thin lens limit formula
@@ -631,7 +687,6 @@ class Quadrupole(Radiative, Multipole):
             FringeQuadExit:     See ``FringeQuadEntrance``
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
-            KickAngle:          Correction deviation angles (H, V)
             FieldScaling:       Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -640,9 +695,16 @@ class Quadrupole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "K", self.K
+    def to_dict(self) -> dict:
+        # Add a K field used by Matlab
+        elem_dict = super().to_dict()
+        elem_dict["K"] = self.K
+        return elem_dict
+
+    @classmethod
+    def new_from_dict(cls, K=0.0, **elem_dict) -> Element:
+        # Remove the K attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
 
 
 class Sextupole(Multipole):
@@ -664,8 +726,7 @@ class Sextupole(Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder:           Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
-            KickAngle:          Correction deviation angles (H, V)
+            NumIntSteps:        Number of integration steps
             FieldScaling:       Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -674,13 +735,51 @@ class Sextupole(Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
+    @classmethod
+    def new_from_dict(cls, H=0.0, **elem_dict) -> Element:
+        # Remove the H attribute to avoid conflicts with PolynomB
+        return super().new_from_dict(**elem_dict)
+
 
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present."""
 
-    _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
+    _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "Kn3"]
+    _stacklevel = 7  # Stacklevel for warnings
 
     DefaultOrder = 3
+
+    def __init__(self, family_name: str, length: float, *args, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            strength:       Octupolar strength K3N [m^-4].
+
+        Keyword arguments:
+            PolynomB:           normal multipoles
+            PolynomA:           skew multipoles
+            MaxOrder:           Number of desired multipoles
+            NumIntSteps:        Number of integration steps
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
+        """
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        match args:
+            case [poly_a, poly_b]:
+                pass
+            case [k3n]:
+                poly_a = []
+                poly_b = [0.0, 0.0, 0.0, k3n]
+            case []:
+                poly_a = []
+                poly_b = [0.0, 0.0, 0.0, 0.0]
+            case _:
+                msg = "Octupole strength should be a float."
+                raise ValueError(msg)
+        super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
 
 class Corrector(LongElement):
@@ -688,6 +787,10 @@ class Corrector(LongElement):
 
     # Class attributes
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "KickAngle"]
+    _conversions = dict(
+        Element._conversions,
+        KickAngle=lambda v: _array(v, (2,)),
+    )
 
     # Instance attributes
     KickAngle: np.ndarray  #: (H, V) deviation angles
@@ -708,6 +811,11 @@ class Corrector(LongElement):
         kwargs.setdefault("PassMethod", "CorrectorPass")
         super().__init__(family_name, length, KickAngle=kick_angle, **kwargs)
 
+    def _part(self, fr, sumfr):
+        pp = super()._part(fr, sumfr)
+        pp.KickAngle = fr / sumfr * self.KickAngle
+        return pp
+
     @property
     def Kn0L(self) -> float:
         r"""Opposite of the horizontal momentum kick -
@@ -725,6 +833,24 @@ class Corrector(LongElement):
 
     @Ks0L.setter
     def Ks0L(self, value: float) -> None:
+        self.KickAngle[1] = atan(value)
+
+    @property
+    def HKick(self) -> float:
+        """Integrated horizontal momentum kick."""
+        return tan(self.KickAngle[0])
+
+    @HKick.setter
+    def HKick(self, value: float) -> None:
+        self.KickAngle[0] = atan(value)
+
+    @property
+    def VKick(self) -> float:
+        """Integrated vertical momentum kick."""
+        return tan(self.KickAngle[1])
+
+    @VKick.setter
+    def VKick(self, value: float) -> None:
         self.KickAngle[1] = atan(value)
 
 

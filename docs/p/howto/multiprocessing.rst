@@ -114,7 +114,7 @@ to a `MPI <https://www.mpi-forum.org/docs/>`_ one or vice-versa, remove the
 `GPU Tracking`_
 ---------------
 PyAT can be installed with GPU support, either `OpenCL <https://github.com/KhronosGroup/OpenCL-Guide/tree/main>`_ or
-`CUDA <https://developer.nvidia.com/cuda-toolkit>`_, compatibility. GPU are especially interesting for tracking large
+`CUDA <https://developer.nvidia.com/cuda-toolkit>`_, compatibility. CUDA is supported up to version 13. GPU are especially interesting for tracking large
 number of particle. The performance of the tracking is mainly related to the GPU double precision arithmetic performance.
 
 OpenCL Installation

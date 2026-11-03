@@ -79,14 +79,12 @@ void GWigSymplecticPass(double *r, double gamma, double Ltot, double Lw,
             double *By, double *Bx, double *T1, double *T2,
             double *R1, double *R2, int num_particles)
 {
-    int c;
-    double *r6;
     struct gwig pWig;
     /* Energy is defined in the lattice in eV but GeV is used by the gwig code. */
     GWigInit2(&pWig, gamma,Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0, 0, By,Bx,T1,T2,R1,R2);
 
-    for (c = 0;c<num_particles;c++) {
-        r6 = r+c*6;
+    for (int c = 0;c<num_particles;c++) {
+        double *r6 = r+c*6;
         pWig.Zw = 0.0;
         if (!atIsNaN(r6[0])) {
 			/* Misalignment at entrance */
@@ -137,6 +135,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         NVharm = atGetLong(ElemData, "NVharm"); check_error();
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
+        GWigCheckKz(NHharm, NVharm, By, Bx); check_error();
         /* Optional fields */
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
@@ -208,6 +207,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         NVharm = atGetLong(ElemData, "NVharm"); check_error();
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
+        GWigCheckKz(NHharm, NVharm, By, Bx); check_error();
         /* Optional fields */
         Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
