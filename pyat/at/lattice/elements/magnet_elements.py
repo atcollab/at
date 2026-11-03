@@ -418,6 +418,11 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     # Class attributes
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "PolynomA", "PolynomB"]
+    _conversions = dict(
+        ThinMultipole._conversions,
+        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=2),
+        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=2),
+    )
     _stacklevel = 6  # Stacklevel for warnings
 
     # Instance attributes
@@ -526,8 +531,6 @@ class Dipole(Radiative, Multipole):
         ExitAngle=float,
         FringeInt1=float,
         FringeInt2=float,
-        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=2),
-        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=2),
         FringeBendEntrance=lambda v: _int(v, vmin=0, vmax=4),
         FringeBendExit=lambda v: _int(v, vmin=0, vmax=4),
     )
@@ -673,11 +676,6 @@ class Quadrupole(Radiative, Multipole):
     """Quadrupole element."""
 
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "K"]
-    _conversions = dict(
-        Multipole._conversions,
-        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
-        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
-    )
     _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = [*Multipole._entrance_fields, "FringeQuadEntrance"]
