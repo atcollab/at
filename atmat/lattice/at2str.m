@@ -42,6 +42,18 @@ switch atclass
         if ~any(anom)
             options=rmfield2(options,{'PolynomB'});
         end
+    case 'Octupole'
+        create=@atoctupole;
+        args={elem.Length,elem.PolynomB(4)};
+        [options,args]=doptions(elem,create,{'Length'},{'PolynomB','PolynomA'},args);
+        if ~any(abs(getfield2(elem,'PolynomA',0))>0)
+            options=rmfield2(options,{'PolynomA'});
+        end
+        anom=abs(getfield2(elem,'PolynomB',0))~=0;
+        anom(4)=false;
+        if ~any(anom)
+            options=rmfield2(options,{'PolynomB'});
+        end
     case 'Bend'
         args={elem.Length,elem.BendingAngle,elem.PolynomB(2)};
         [options,args]=doptions(elem,@atsbend,{'Length','BendingAngle','K'},...

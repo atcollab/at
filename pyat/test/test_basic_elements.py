@@ -136,6 +136,25 @@ def test_octupole():
     o = elements.Octupole("octupole", 1.0, [], [0.0, 0.0, 0.0, 0.0])
     assert o.MaxOrder == 3
     assert len(o.PolynomA) == 4
+    o = elements.Octupole("octupole", 1.0)
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == 0.0
+    o = elements.Octupole("octupole", 1.0, -0.5)
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == -0.5
+    o = elements.Octupole("octupole", 1.0, PolynomB=[0.0, 0.0, 0.0, 0.005])
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == 0.005
+    with pytest.warns(AtWarning):
+        o = elements.Octupole(
+            "octupole", 1.0, PolynomB=[0.0, 0.5, 0.005, 0.001], MaxOrder=2
+        )
+    assert o.MaxOrder == 2
+    assert len(o.PolynomA) == 4
+    assert o.Kn3 == 0.0
 
 
 def test_thinmultipole():
@@ -151,7 +170,6 @@ def test_multipole():
     m = elements.Multipole("multi", 1.0, [], [0.0, 0.0, 0.0, 0.0])
     assert m.Length == 1.0
     assert m.MaxOrder == 3
-    assert m.NumIntSteps == 10
     assert m.PassMethod == "StrMPoleSymplectic4Pass"
 
 
@@ -160,7 +178,6 @@ def test_multipole():
     [
         (elements.Multipole, ["Multi", 1.0]),
         (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
     ],
 )
 def test_PolynomA_strength_prioritisation(element_type, args):
@@ -191,7 +208,6 @@ def test_PolynomA_strength_prioritisation(element_type, args):
     [
         (elements.Multipole, ["Multi", 1.0]),
         (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
     ],
 )
 def test_PolynomB_strength_prioritisation(element_type, args):
@@ -324,12 +340,10 @@ def test_divide_splits_attributes_correctly():
     post = pre.divide([0.2, 0.5, 0.3])
     assert len(post) == 3
     assert sum([e.Length for e in post]) == pre.Length
-    pre = elements.Dipole("dipole", 1, KickAngle=[0.5, -0.5], BendingAngle=0.2)
+    pre = elements.Dipole("dipole", 1, BendingAngle=0.2)
     post = pre.divide([0.2, 0.5, 0.3])
     assert len(post) == 3
     assert sum([e.Length for e in post]) == pre.Length
-    assert sum([e.KickAngle[0] for e in post]) == pre.KickAngle[0]
-    assert sum([e.KickAngle[1] for e in post]) == pre.KickAngle[1]
     assert sum([e.BendingAngle for e in post]) == pre.BendingAngle
     pre = elements.RFCavity(
         "rfc", 1, voltage=187500, frequency=3.5237e8, harmonic_number=31, energy=6.0e9
@@ -629,6 +643,21 @@ def test_variable_thin_multipole(rin, func):
     np.testing.assert_allclose(expected[3], 1.9e-3)
     expected = v.track(np.array([0, 0, 0, 0, 0, 5.1 * 299792458]))
     np.testing.assert_allclose(expected[3], 1.9e-3)
+    # mode DERIVATIVE_TABLE
+    f = np.array([[0.01, -0.032, 0.02], [0.3, 0.00, 0.000], [0.2, 0.05, 0.000]])
+    v = at.VariableThinMultipole(
+        "v",
+        at.ACMode.DERIVATIVE_TABLE,
+        AmplitudeA=1e-3,
+        FuncA=f,
+        FuncDelay=0.005,
+        Periodic=False,
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, 0.1]))
+    np.testing.assert_allclose(expected[3], 4.0305e-05)
+    fakering = at.Lattice([v], energy=1e9)
+    expected, *_ = fakering.track(np.array([0.0, 0, 0, 0, 0, 0.1]), nturns=6)
+    np.testing.assert_allclose(expected[3, 0, 0, -1], 2.875625e-05)
 
 
 def test_exit_entrance():

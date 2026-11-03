@@ -97,13 +97,12 @@ static void linearQuadFringeElegantEntrance(double* r6, double b2, double *fring
 {
     double R[6][6];
     double *fringeIntM, *fringeIntP;
-    double delta, inFringe;
+    double inFringe;
     double x, px, y, py, swap_temp;
     /* quadrupole linear fringe field, from elegant code */
     inFringe=1.0;
     fringeIntM = fringeIntM0;
     fringeIntP = fringeIntP0;
-    delta = r6[4];
     /* determine first linear matrix for this delta */
     quadPartialFringeMatrix(R, b2, inFringe, fringeIntP, 2);
     swap_temp = R[0][0]; R[0][0] = R[1][1]; R[1][1] = swap_temp;
@@ -135,13 +134,12 @@ static void linearQuadFringeElegantExit(double* r6, double b2, double *fringeInt
 {
     double R[6][6];
     double *fringeIntM, *fringeIntP;
-    double delta, inFringe;
+    double inFringe;
     double x, px, y, py;
     /* quadrupole linear fringe field, from elegant code */
     inFringe=1.0;
     fringeIntM = fringeIntM0;
     fringeIntP = fringeIntP0;
-    delta = r6[4];
     /* determine first linear matrix for this delta */
     quadPartialFringeMatrix(R, b2, inFringe, fringeIntM, 1);
     x = r6[0]; px = r6[1]; y = r6[2]; py = r6[3];
