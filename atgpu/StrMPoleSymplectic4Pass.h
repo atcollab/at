@@ -26,7 +26,6 @@ protected:
 
   AT_FLOAT *PolynomA;  // PolynomA
   AT_FLOAT *PolynomB;  // PolynomB
-  AT_FLOAT *KickAngle; // KickAngle
 
 private:
 
