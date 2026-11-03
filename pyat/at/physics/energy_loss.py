@@ -13,7 +13,7 @@ from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
 from at.lattice import Collective, SimpleQuantDiff, QuantumDiffusion
 from at.lattice import SimpleRadiation, VariableThinMultipole
-from at.lattice import check_radiation, AtError, AtWarning
+from at.lattice import check_radiation, AtError, AtWarning, All
 from at.lattice import get_bool_index, set_value_refpts
 from at.lattice import DConstant
 
@@ -108,6 +108,12 @@ def get_energy_loss(
                 for e in ring[VariableThinMultipole]:
                     e.enable()
                 delta = np.squeeze(o6l)[4] - o6[4]
+                # Particle lost within a turn
+                if np.isnan(o6l[0]):
+                    _, o6a = ring.find_orbit(method=ELossMethod.INTEGRAL, refpts=All)
+                    de = o6a[1:, 4] - o6a[:-1, 4]
+                    cavs = ring.get_bool_index(RFCavity)[:-1]
+                    delta = np.sum(de[~cavs])
             except AtError:
                 delta = 0.0
                 msg = (
