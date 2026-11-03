@@ -202,6 +202,22 @@ class InsertionDeviceKickMap(Element):
             attributes.pop("ActiveKickmap")
         return attributes
 
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> InsertionDeviceKickMap:
+        """Restore kickmap state when loading dictionary-based formats."""
+        elem = super().new_from_dict(**elem_dict)
+        if hasattr(elem, "KickmapStore"):
+            elem._normalise_kickmap_store()
+            if not hasattr(elem, "ActiveKickmap"):
+                elem.ActiveKickmap = next(iter(elem.KickmapStore), "")
+        elif hasattr(elem, "xkick"):
+            elem.KickmapStore = {"default": elem._snapshot()}
+            elem.ActiveKickmap = "default"
+        else:
+            elem.KickmapStore = {}
+            elem.ActiveKickmap = ""
+        return elem
+
     @staticmethod
     def _validate_kickmap_spec(
         key: str,

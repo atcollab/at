@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from importlib.resources import files
 from inspect import Parameter, signature
 
+import numpy as np
 import pytest
+import scipy.io
 from at.lattice import Lattice
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
 from numpy.testing import assert_array_equal
@@ -166,6 +169,47 @@ end
         assert loaded.Normalization_energy == 6.04
         assert loaded.list_kickmaps() == ["default"]
         assert loaded.active_kickmap == "default"
+
+    @pytest.mark.parametrize("suffix", [".json", ".mat"])
+    def test_legacy_data_file_loads(self, idkm_elem, tmp_path, suffix):
+        """Legacy dictionary formats create a default kickmap entry."""
+        legacy = idkm_elem.to_dict()
+        legacy.pop("KickmapStore")
+        legacy.pop("ActiveKickmap")
+        legacy["Class"] = "InsertionDeviceKickMap"
+        fname = tmp_path / f"legacy_idmap{suffix}"
+
+        if suffix == ".json":
+            data = {
+                "atjson": 1,
+                "elements": [legacy],
+                "properties": {"energy": 6.04e9},
+            }
+
+            def encode(value):
+                if isinstance(value, np.ndarray):
+                    return value.tolist()
+                if isinstance(value, np.integer):
+                    return int(value)
+                if isinstance(value, np.floating):
+                    return float(value)
+                raise TypeError
+
+            fname.write_text(json.dumps(data, default=encode), encoding="utf-8")
+        else:
+            ring = np.array([legacy]).reshape((-1, 1))
+            scipy.io.savemat(fname, {"RING": ring}, long_field_names=True)
+
+        loaded = Lattice.load(
+            fname, energy=6.04e9, periodicity=1
+        )[0]
+
+        assert loaded.list_kickmaps() == ["default"]
+        assert loaded.active_kickmap == "default"
+        assert_array_equal(loaded.xkick, idkm_elem.xkick)
+        assert_array_equal(
+            loaded.KickmapStore["default"]["xkick"], idkm_elem.xkick
+        )
 
     def test_list_kickmaps_on_new_element(self, idkm_elem):
         """A freshly constructed element has only the 'default' entry in the store."""
