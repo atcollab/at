@@ -11,6 +11,8 @@ static void thinkickM(const double *r6, const double *A, const double *B, int ma
   double ReSumNTemp;
   double ImSumN = max_order * A[max_order];
   double ReSumN = max_order * B[max_order];
+  double B0 = (max_order >= 0) ? B[0] : 0.0;
+  double B1 = (max_order >= 1) ? B[1] : 0.0;
 
   /* Recursively calculate the derivatives
           ReSumN = Re(d(By + iBx)/dx)
@@ -34,9 +36,11 @@ static void thinkickM(const double *r6, const double *A, const double *B, int ma
   M66[3] = L * ImSumN;              /* [3, 0] */
   M66[15] = L * ReSumN;             /* [3, 2] */
   M66[25] = L * irho;               /* [1, 4] */
-  M66[1] -= L * irho * (irho+B[0]); /* [1, 0] */
   M66[5] = L * irho;                /* [5, 0] */
-
+  M66[1] -= L * irho * (irho + B0 + 2.0*B1*r6[0]);   /* [1, 0] */
+  M66[13] += L * irho * B1 * r6[2]; /* [1, 2] */
+  M66[3] += L * irho * B1 * r6[2];  /* [3, 0] */
+  M66[15] += L * irho * B1 * r6[0]; /* [3, 2] */
   ATsandwichmmt(M66, bdiff);
 }
 
