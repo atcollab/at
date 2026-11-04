@@ -33,16 +33,13 @@ from ..lattice import (
     check_radiation,
     frequency_control,
     set_value_refpts,
-    test_mode,
 )
 from ..tracking import diffusion_matrix, internal_lpass
 from . import (
-    FDW,
     ELossMethod,
     Orbit,
     find_elem_m66,
     find_m66,
-    find_mpole_raddiff_matrix,
     find_orbit6,
     get_tunes_damp,
 )
@@ -74,7 +71,7 @@ ENVELOPE_DTYPE = [
 _b0 = np.zeros((6, 6), dtype=np.float64)
 
 
-def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
+def _dmatr(ring: Lattice, orbit: Orbit | None = None, keep_lattice: bool = False):
     """
     compute the cumulative diffusion and orbit
     matrices over the ring.
@@ -97,12 +94,7 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
 
     def elem_diffusion(elem: Element, elemorb):
         if elem.PassMethod.endswith("RadPass"):
-            if not test_mode():
-                return diffusion_matrix(substitute(elem), elemorb, energy=energy)
-            elif hasattr(elem, "Bmax"):
-                return FDW(elem, orbit, energy)
-            else:
-                return find_mpole_raddiff_matrix(elem, elemorb, energy)
+            return diffusion_matrix(substitute(elem), elemorb, energy=energy)
         else:
             return _b0
 
@@ -119,9 +111,9 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         axis=(1, 3),
     ).T
 
-    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs)]
+    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs, strict=False)]
 
-    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
+    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb, strict=False))), axis=0)
     return bbcum, orbs
 
 
@@ -151,7 +143,7 @@ def _lmat(dmat):
 def ohmi_envelope(
     ring: Lattice,
     refpts: Refpts = None,
-    orbit: Orbit = None,
+    orbit: Orbit | None = None,
     keep_lattice: bool = False,
 ):
     """Calculates the equilibrium beam envelope.
@@ -382,8 +374,9 @@ def get_radiation_integrals(
         return np.array([di1, di2, di3, di4, di5])
 
     def wiggler_radiation(elem: Wiggler, dini):
-        """Compute the radiation integrals in wigglers with the following
-        approximations:
+        """Compute the radiation integrals in wigglers.
+
+         Using the following approximations:
 
         - The wiggler is aligned with the closed orbit
         - The self-induced dispersion is neglected in I4 and I5, but is is used
@@ -455,7 +448,7 @@ def get_radiation_integrals(
     elif len(twiss) != len(ring) + 1:
         msg = f"length of Twiss data should be {len(ring) + 1}"
         raise ValueError(msg)
-    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:]):
+    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:], strict=False):
         if isinstance(el, (Dipole, Quadrupole)):
             integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != "DriftPass":
@@ -466,7 +459,7 @@ def get_radiation_integrals(
 
 
 @check_radiation(True)
-def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> np.ndarray:
+def quantdiffmat(ring: Lattice, orbit: Orbit | None = None) -> np.ndarray:
     """Computes the diffusion matrix of the whole ring.
 
     Parameters:
@@ -483,7 +476,7 @@ def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> np.ndarray:
 
 
 @check_radiation(True)
-def gen_quantdiff_elem(ring: Lattice, orbit: Orbit = None) -> QuantumDiffusion:
+def gen_quantdiff_elem(ring: Lattice, orbit: Orbit | None = None) -> QuantumDiffusion:
     """Generates a quantum diffusion element.
 
     Parameters:
