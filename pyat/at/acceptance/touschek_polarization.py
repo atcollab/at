@@ -23,7 +23,7 @@ from numbers import Real
 
 import numpy as np
 from scipy import integrate
-from scipy.special import iv
+from scipy.special import i0
 
 from .touschek import get_beam_sizes, _init_ma_rp
 from ..constants import qe, clight, _e_radius
@@ -52,7 +52,7 @@ def _int_c(k, um, B1, B2):
     )
 
     if B2 * t < 500:
-        intc = fact * np.exp(-B1 * t) * iv(0, B2 * t) * 2 * np.sqrt(t) * (1 + t)
+        intc = fact * np.exp(-B1 * t) * i0(B2 * t) * 2 * np.sqrt(t) * (1 + t)
     else:
         intc = (
             fact
@@ -79,7 +79,7 @@ def _int_f(k, um, B1, B2):
     fact = 0.5 * np.sqrt((1 + t) ** 5 / t**3) * np.log(um * (1 + t) / t)
 
     if B2 * t < 500:
-        intf = fact * np.exp(-B1 * t) * iv(0, B2 * t) * 2 * np.sqrt(t) * (1 + t)
+        intf = fact * np.exp(-B1 * t) * i0(B2 * t) * 2 * np.sqrt(t) * (1 + t)
     else:
         intf = (
             fact
