@@ -54,7 +54,7 @@ The :math:`a_n` coefficients describe the "skew" magnetic field and are given in
 .. note::
 
    This field expansion differs from the one used in MAD or other programs. See `PALS
-   <https://pals-project.readthedocs.io/en/latest/element-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_
+   <https://pals-project.readthedocs.io/en/latest/lattice-element-parameter-groups.html#magneticmultipolep-magnetic-multipole-parameters>`_
    for a definition of the MAD/PALS field expansion.
 
 Tracking
