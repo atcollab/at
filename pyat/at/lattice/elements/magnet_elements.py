@@ -386,8 +386,7 @@ class ThinMultipole(Element):
 
         Provided for backwards compatibility, use *HKick*, *VKick* instead.
         """
-        kicks = np.arctan([-self.Kn0L, self.Ks0L])
-        ka = _LinkedArray(kicks.shape, dtype=kicks.dtype, buffer=kicks)
+        ka = np.arctan([-self.Kn0L, self.Ks0L]).view(_LinkedArray)
 
         def setr(*_):
             self.KickAngle = ka
