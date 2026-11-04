@@ -53,8 +53,14 @@ def get_acceptance(
         planes:         max. dimension 2, Plane(s) to scan for the acceptance.
           Allowed values are: ``'x'``, ``'px'``, ``'y'``,
           ``'py'``, ``'dp'``, ``'ct'``
-        npoints:        (len(planes),) array: number of points in each
-          dimension
+        npoints:        (len(planes),) array: grid sampling. Its meaning
+          depends on ``grid_mode``:
+
+          * :py:attr:`GridMode.CARTESIAN/RADIAL/FLOODFILL <.GridMode.RADIAL>`:
+            number of points in each dimension
+          * :py:attr:`.GridMode.RECURSIVE`: for 2D, a tuple
+            (radial resolution divisor, number of angles); for 1D, the
+            radial resolution divisor
         amplitudes:     (len(planes),) array: set the search range:
 
           * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
