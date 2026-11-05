@@ -253,6 +253,7 @@ def floodfill_1d(
     npoints: list | tuple = (10,),
     offset: list | np.ndarray | None = None,
     shift_zero: float = 0.0,
+    dp: float | None = None,
     obspt: list | np.ndarray | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
@@ -321,7 +322,7 @@ def floodfill_1d(
     pool_size = kwargs.get("pool_size", 10)
     nproc = pool_size if use_mp else 1
 
-    dp = kwargs.get("dp", 0.0)
+    _dpp = 0.0 if dp is None else dp
 
     s_obspt = ring.get_s_pos(refpts=obspt)
 
@@ -350,7 +351,7 @@ def floodfill_1d(
     verboseprint(f"Number of observation points: {n_x}")
     verboseprint(f"Number of steps per observation point: {n_y}")
     verboseprint(f"Number of grid points: {nparticles}")
-    verboseprint(f"Using dp {dp:.6g}")
+    verboseprint(f"Using dp {_dpp:.6g}")
     verboseprint(f"shift_zero {shift_zero:.6g}")
     verboseprint(f"Number of processors: {nproc}")
 
@@ -374,7 +375,7 @@ def floodfill_1d(
 
     particles = offset_repeat.T
     particles = particles + shift_zero
-    particles[:, 4] = particles[:, 4] + dp
+    particles[:, 4] = particles[:, 4] + _dpp
     particles[planesi[0], :] = particles[planesi[0], :] + points[1, :]
 
     # define border
