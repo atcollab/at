@@ -368,8 +368,7 @@ def boundary_2d_floodfill(ring, obspt, offset, dp, nturns, config, use_mp, **kwa
         # set ring and offsets
         _obs = 0 if obs is None else obs
         _dpp = 0.0 if dp is None else dp
-        _orbit, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
-        _offset = _orbit + np.array([0, 0, 0, 0, _dpp, 0])
+        _offset, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
         # flood fill
         data_ff = floodfill(
             _ringrot,
