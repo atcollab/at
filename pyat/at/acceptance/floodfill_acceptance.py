@@ -77,7 +77,7 @@ def floodfill(
     offset: list | np.ndarray | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
-    **kwargs,
+    pool_size: int = 10,
 ) -> np.ndarray:
     """Find the 2D acceptance of the ring using Flood Fill [1]_.
 
@@ -140,8 +140,6 @@ def floodfill(
     data_tracked = np.zeros((4, 0))
 
     verboseprint = print if verbose else lambda *a, **k: None
-
-    pool_size = kwargs.get("pool_size", 10)
 
     verboseprint("Flood fill starts.")
     verboseprint(f"Maximum number of turns: {nturns}")
@@ -257,7 +255,7 @@ def floodfill_1d(
     obspt: list | np.ndarray | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
-    **kwargs,
+    pool_size: int = 10,
 ) -> np.ndarray:
     """Find the 1D acceptance of the ring using Flood Fill.
 
@@ -319,7 +317,6 @@ def floodfill_1d(
 
     verboseprint = print if verbose else lambda *a, **k: None
 
-    pool_size = kwargs.get("pool_size", 10)
     nproc = pool_size if use_mp else 1
 
     s_obspt = ring.get_s_pos(refpts=obspt)
