@@ -10,6 +10,7 @@ from warnings import warn
 import numpy as np
 
 from ...constants import clight, e_mass
+from ..exceptions import AtWarning
 from .element_object import Element
 
 
@@ -245,6 +246,12 @@ class InsertionDeviceKickMap(Element):
         if not isinstance(key, str):
             msg = "Kickmap names must be strings"
             raise TypeError(msg)
+        if key in self.KickmapStore:
+            msg = (
+                f"Kickmap {key!r} replaced in store. "
+                "Use a different name to avoid overwriting."
+            )
+            warn(AtWarning(msg), stacklevel=3)
         data = self._load_kickmap(nslice, fname, norm_energy)
         self.KickmapStore[key] = {
             field: data[field]
