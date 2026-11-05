@@ -327,7 +327,7 @@ def floodfill_1d(
         return data_tracked
 
     # set the grid
-    n_x = len(np.at_least_1d(obspt))
+    n_x = len(np.atleast_1d(obspt))
     xvals = obspt
 
     n_y = npoints[0]
