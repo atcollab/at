@@ -282,7 +282,7 @@ def floodfill_1d(
           to the tracked coordinates
           e.g. 10e-5 in the transverse planes.
         shift_zero = small offset added to the 6d coordinates. Default 0.0.
-        dp: static momentum offset. Default 0.0.
+        dp: static momentum offset. Default None.
         obspt: reference points.
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
@@ -322,8 +322,6 @@ def floodfill_1d(
     pool_size = kwargs.get("pool_size", 10)
     nproc = pool_size if use_mp else 1
 
-    _dpp = 0.0 if dp is None else dp
-
     s_obspt = ring.get_s_pos(refpts=obspt)
 
     window = np.ravel((np.array(bounds).reshape((1, 2)).T * np.array(amplitude)).T)
@@ -351,7 +349,7 @@ def floodfill_1d(
     verboseprint(f"Number of observation points: {n_x}")
     verboseprint(f"Number of steps per observation point: {n_y}")
     verboseprint(f"Number of grid points: {nparticles}")
-    verboseprint(f"Using dp {_dpp:.6g}")
+    verboseprint(f"Using dp {dp:.6g}")
     verboseprint(f"shift_zero {shift_zero:.6g}")
     verboseprint(f"Number of processors: {nproc}")
 
@@ -366,16 +364,14 @@ def floodfill_1d(
     if offset is None:
         offset = [None]
     if None in offset:
-        _, co = ring.find_orbit(obspt)
+        _, co = ring.find_orbit(obspt, dp=dp)
         offset_repeat = np.repeat(co, n_y, axis=0)
     else:
         offset_repeat = np.repeat(offset, n_y, axis=0)
 
     planesi = np.atleast_1d(axisdef.axis_(tuple(plane), key="index"))
 
-    particles = offset_repeat.T
-    particles = particles + shift_zero
-    particles[:, 4] = particles[:, 4] + _dpp
+    particles = offset_repeat.T + shift_zero
     particles[planesi[0], :] = particles[planesi[0], :] + points[1, :]
 
     # define border
