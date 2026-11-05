@@ -321,7 +321,9 @@ class InsertionDeviceKickMap(Element):
             """
             # np.asfortranarray makes a copy of contiguous memory positions
             table_out = np.copy(table_in)
-            for i, iis in zip(range(len(sorted_index)), sorted_index):
+            for i, iis in zip(
+                range(len(sorted_index)), sorted_index, strict=True
+            ):
                 if order_axis == "col":
                     table_out[:, i] = table_in[:, iis]
                 if order_axis == "row":
@@ -502,7 +504,7 @@ class InsertionDeviceKickMap(Element):
         lenkick_block_list = len(kick_block_list)
         if lenkick_block_list < 2 or lenkick_block_list == 3:
             _minimumblocknumbererrormsg = (
-                "Input file contains only " f"{len(kick_block_list)} block"
+                f"Input file contains only {len(kick_block_list)} block"
             )
             raise ValueError(_minimumblocknumbererrormsg)
         if lenkick_block_list == 2:
@@ -514,7 +516,7 @@ class InsertionDeviceKickMap(Element):
             _warn4kickblocks = (
                 "Input file contains more than 4 blocks. Additional blocks ignored"
             )
-            warn(_warn4kickblocks)
+            warn(AtWarning(_warn4kickblocks), stacklevel=2)
 
         return (
             el_length,
@@ -616,9 +618,8 @@ class InsertionDeviceKickMap(Element):
         """
         if not hasattr(self, "KickmapStore") or key not in self.KickmapStore:
             available = self.list_kickmaps()
-            raise KeyError(
-                f"Kickmap '{key}' not found. Available keys: {available}"
-            )
+            msg = f"Kickmap '{key}' not found. Available keys: {available}"
+            raise KeyError(msg)
         self.ActiveKickmap = key
         self._apply_kickmap_data(self.KickmapStore[key])
 
