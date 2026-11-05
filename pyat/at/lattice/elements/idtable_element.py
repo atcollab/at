@@ -246,6 +246,9 @@ class InsertionDeviceKickMap(Element):
         if not isinstance(key, str):
             msg = "Kickmap names must be strings"
             raise TypeError(msg)
+        if not key:
+            msg = "Kickmap names cannot be empty"
+            raise ValueError(msg)
         if key in self.KickmapStore:
             msg = (
                 f"Kickmap {key!r} replaced in store. "
