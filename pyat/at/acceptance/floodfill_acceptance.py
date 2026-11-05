@@ -321,6 +321,8 @@ def floodfill_1d(
 
     s_obspt = ring.get_s_pos(refpts=obspt)
 
+    _dpp = 0.0 if dp is None else dp
+
     window = np.ravel((np.array(bounds).reshape((1, 2)).T * np.array(amplitude)).T)
     if window[0] == window[1]:
         verboseprint("Window is too narrow")
@@ -346,7 +348,7 @@ def floodfill_1d(
     verboseprint(f"Number of observation points: {n_x}")
     verboseprint(f"Number of steps per observation point: {n_y}")
     verboseprint(f"Number of grid points: {nparticles}")
-    verboseprint(f"Using dp {dp:.6g}")
+    verboseprint(f"Using dp {_dpp:.6g}")
     verboseprint(f"shift_zero {shift_zero:.6g}")
     verboseprint(f"Number of processors: {nproc}")
 
