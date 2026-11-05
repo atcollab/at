@@ -1,5 +1,5 @@
 function element = swapKickmapData(element,kickmapKey)
-%SWAPKICKMAPDATA Activate a stored insertion-device kick map
+%SWAPKICKMAPDATA Activate a stored insertion-device kick map for atinsertiondevicekickmap element
 %
 % ELEMENT=SWAPKICKMAPDATA(ELEMENT,KICKMAPKEY) copies the tracking data from
 % ELEMENT.KickmapStore.(KICKMAPKEY) to ELEMENT and sets ActiveKickmap to
@@ -10,6 +10,7 @@ function element = swapKickmapData(element,kickmapKey)
 %
 % Example:
 %   ring{idindex} = swapKickmapData(ring{idindex},'LV');
+% See also atinsertiondevicekickmap
 
 if ~isstruct(element) || ~isfield(element,'KickmapStore') || ...
         ~isstruct(element.KickmapStore)
