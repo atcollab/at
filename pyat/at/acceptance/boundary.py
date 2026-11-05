@@ -280,7 +280,7 @@ def get_grid_boundary(mask, grid, config):
         raise AtError("GridMode {0} undefined.".format(grid.mode))
 
 
-def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs):
+def boundary_1d_floodfill(ring, obspt, offset, dp, nturns, config, use_mp, **kwargs):
     obspt = np.array([0 if obs is None else obs for obs in obspt], dtype=int)
 
     data_ff1d = floodfill_1d(
@@ -292,6 +292,7 @@ def boundary_1d_floodfill(ring, obspt, offset, nturns, config, use_mp, **kwargs)
         npoints=config.shape,
         offset=offset,
         shift_zero=config.shift_zero,
+        dp=dp,
         obspt=obspt,
         verbose=False,
         use_mp=use_mp,
@@ -454,7 +455,7 @@ def grid_boundary_search(
     if grid_mode is GridMode.FLOODFILL:
         if len(planes) == 1:
             return boundary_1d_floodfill(
-                ring, obspt, offset, nturns, config, use_mp, **kwargs
+                ring, obspt, offset, dp, nturns, config, use_mp, **kwargs
             )
         else:
             return boundary_2d_floodfill(
