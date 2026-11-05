@@ -54,7 +54,7 @@ function Elem = atinsertiondevicekickmap(fname,varargin)
 % and wigglers", EPAC92.
 %
 % Returns an element with Class 'InsertionDeviceKickMap'
-
+% See also atswapkickmapdata
 %------------------
 % Modification Log:
 % -----------------
