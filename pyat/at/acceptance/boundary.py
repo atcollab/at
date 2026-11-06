@@ -581,7 +581,7 @@ def recursive_boundary_search(
         bounds=bounds,
         shift_zero=shift_zero,
     )
-    rtol = min(np.atleast_1d(config.amplitudes / config.shape))
+    rtol = config.amplitudes / config.shape[0]
     rstep = config.amplitudes
     if len(np.atleast_1d(config.shape)) == 2:
         angles = np.linspace(*config.bounds[1], config.shape[1])
