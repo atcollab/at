@@ -25,7 +25,6 @@ _xtclass: dict[type[xs.XsElement], type[xt.BeamElement]] = {
     xs.Multipole: xt.Multipole,
     xs.Bend: xt.Bend,
     xs.RBend: xt.RBend,
-    xs.FirstOrderTaylorMap: xt.FirstOrderTaylorMap,
 }
 
 
@@ -38,7 +37,7 @@ def element_from_xtrack(xtelem: xt.BeamElement) -> Element:
     return xs.XsElement.static_from_dict(xtelem.to_dict()).to_at()
 
 
-def element_to_xtrack(atelem: Element, **kwargs) -> xt.BeamElement:
+def element_to_xtrack(atelem: Element, match_model: bool = True) -> xt.BeamElement:
     """Create an AT :py:class:`.Element` from an :py:class:`.xtrack.BeamElement`.
 
         Args:
@@ -49,7 +48,7 @@ def element_to_xtrack(atelem: Element, **kwargs) -> xt.BeamElement:
         Returns:
             xtelem:  new :py:class:`.xtrack.BeamElement` object
     """
-    xselem = xs.XsElement.static_from_at(atelem, **kwargs)
+    xselem = xs.XsElement.static_from_at(atelem, match_model=match_model)
     xtclass = _xtclass[type(xselem)]
     return xtclass.from_dict(xselem.to_dict())
 

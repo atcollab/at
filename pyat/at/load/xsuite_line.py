@@ -149,16 +149,15 @@ __all__ = [
 ]
 
 import json
-from math import sqrt, pi
+from math import sqrt
 from pathlib import Path
 from typing import Any, ClassVar
-from collections.abc import Iterator
 import contextlib
-import warnings
+from collections.abc import Iterable
 
 import numpy as np
 
-from ..lattice import AtWarning, constants as cst
+from ..lattice import constants as cst
 from ..lattice import Lattice, Particle, elements as elt
 from .xsuite_elements import XsElement
 
@@ -195,15 +194,10 @@ class _AtEncoder(json.JSONEncoder):
 
 
 class _FilterWarnings(dict):
-    """Summarises warnings for unknown classes."""
-
     def __init__(self, header: str):
-        """
-        Args:
-            header:     Header to print before the summary
-        """  # noqa: D415
         super().__init__()
         self.header = header
+        self._warned = {}
 
     def __call__(self, clname: str) -> bool:
         """Check if a warning should be issued for the given class name.
@@ -214,19 +208,13 @@ class _FilterWarnings(dict):
         Returns:
             bool:       True if a warning should be issued, False otherwise
         """
-        nbu = self.setdefault(clname, 0)
-        self[clname] += 1
+        nbu = self._warned.setdefault(clname, 0)
+        self._warned[clname] += 1
         return nbu == 0
 
     def __str__(self) -> str:
-        """Return a string representation of the warnings."""
-        flist = "\n".join(f"{clname:>20}: {nb}" for clname, nb in self.items())
+        flist = "\n".join(f"{clname:>20}: {nb}" for clname, nb in self._warned.items())
         return f"{self.header}\n{flist}" if flist else ""
-
-    def summarise(self) -> None:
-        """Print a summary of the warnings."""
-        if self:
-            warnings.warn(AtWarning(str(self)), stacklevel=3)
 
 
 def _separate_apertures(lattice: Lattice) -> Lattice:
@@ -241,62 +229,27 @@ def _separate_apertures(lattice: Lattice) -> Lattice:
     def create_aperture_marker(elem: elt.Element, attr: str) -> elt.Marker | None:
         if (ap := getattr(elem, attr, None)) is not None:
             at = {k: v for k in _transform_keys if (v := getattr(elem, k, 0.0)) != 0.0}
-            marker = elt.Marker(elem.FamName + "_aperture", **{attr: ap})
-            marker.transform(**at)
-            return marker
+            at[attr] = ap
+            return elt.Marker(elem.FamName + "_aperture", **at)
         return None
 
-    def same_transforms(mk1: elt.Marker, mk2: elt.Marker) -> bool:
-        at1 = {k: v for k in _transform_keys if (v := getattr(mk1, k, 0.0)) != 0.0}
-        at2 = {k: v for k in _transform_keys if (v := getattr(mk2, k, 0.0)) != 0.0}
-        return at1 == at2
-
-    def same_apertures(mk1: elt.Marker, mk2: elt.Marker, aname: str) -> bool:
-        return np.all(getattr(mk1, aname) == getattr(mk2, aname))
-
-    def compare_markers(mk2: list[elt.Marker | None], aname: str) -> list[elt.Marker]:
-        markers = [m for m in mk2 if m is not None]
-        if (
-            len(markers) == 2
-            and same_apertures(markers[0], markers[1], aname)
-            and same_transforms(markers[0], markers[1])
-        ):
-            return [markers[0]]
-        return markers
-
-    def split_marker(elem):
-        r_aperture = getattr(elem, "RApertures", None)
-        e_aperture = getattr(elem, "EApertures", None)
-        if not (r_aperture is None or e_aperture is None):
-            marker = create_aperture_marker(elem,"EApertures")
-            del elem.EApertures
-            return marker
-        return None
-
-    def element_generator(ring: Lattice) -> Iterator[elt.Element]:
-        """Insert aperture markers in the lattice."""
-        r_pending = None
-        e_pending = None
+    def element_generator(ring: Lattice) -> Iterable[elt.Element]:
         for el in ring:
             r_elem = None
             e_elem = None
-            if isinstance(el, elt.Marker):
-                e_elem = split_marker(el)
-            else:
-                r_elem = create_aperture_marker(el, "RApertures")
-                e_elem = create_aperture_marker(el, "EApertures")
-            yield from compare_markers([r_elem, r_pending], "RApertures")
-            yield from compare_markers([e_elem, e_pending], "EApertures")
-            r_pending = None
-            e_pending = None
+            if not isinstance(el, elt.Marker):
+                if (r_elem := create_aperture_marker(el, "RApertures")) is not None:
+                    yield r_elem
+                if (e_elem := create_aperture_marker(el, "EApertures")) is not None:
+                    yield e_elem
 
             yield el
 
             if el.Length > 0.0:
-                r_pending = r_elem
-                e_pending = e_elem
-        yield from compare_markers([r_pending], "RApertures")
-        yield from compare_markers([e_pending], "EApertures")
+                if r_elem is not None:
+                    yield r_elem
+                if e_elem is not None:
+                    yield e_elem
 
     return Lattice(
         element_generator(lattice),
@@ -373,7 +326,9 @@ class XsLine:
             element_names = self.element_names
             particle = self.particle_ref
             mass0 = float(particle["mass0"])
-            energy = float(particle["gamma0"][0]) * mass0
+            gamma0 = float(particle["gamma0"][0])
+            beta0 = float(particle["beta0"][0])
+            energy = gamma0 * mass0
 
             beam_params = {
                 "particle": Particle("", rest_energy=mass0, charge=particle["q0"]),
@@ -385,19 +340,13 @@ class XsLine:
             for k, v in beam_params.items():
                 params.setdefault(k, v)
 
-            particle = params["particle"]
-            if not isinstance(particle, Particle):
-                particle = Particle(particle)
-            gamma0 = params["energy"] / particle.rest_energy
-            beta0 = sqrt(1.0 - 1.0 / gamma0 / gamma0)
-
             cavities = []
             cell_length = 0.0
 
             for nm in element_names:
                 try:
-                    atelem = self.elements[nm].to_at(beta0=beta0)
-                    if isinstance(atelem, (elt.RFCavity, elt.CrabCavity)):
+                    atelem = self.elements[nm].to_at()
+                    if isinstance(atelem, elt.RFCavity):
                         cavities.append(atelem)
                     cell_length += getattr(atelem, "Length", 0.0)
                     yield atelem
@@ -413,11 +362,11 @@ class XsLine:
                     cav.Frequency = rev * cav.HarmNumber
                 elif cav.HarmNumber == 0:
                     cav.HarmNumber = round(cav.Frequency / rev)
-                phase = getattr(cav, "_phaselag", 0.0)
+                lag = getattr(cav, "_phaselag", 0.0)
                 with contextlib.suppress(AttributeError):
                     delattr(cav, "_phaselag")
-                tl = phase / 2.0 / pi * beta0 * cst.clight / cav.Frequency
-                cav.TimeLag = tl
+                tl = (180.0 - lag) * cst.clight / 360.0 / cav.Frequency
+                cav.Timelag = tl
 
         if in_file := getattr(self, "in_file", ""):
             kwargs["in_file"] = in_file
@@ -473,19 +422,15 @@ class XsLine:
         if root.get("__class__", defclass) == "Line":
             line = root
         else:
-            lines = root["lines"]
-            lkeys = list(lines.keys())
             if use is None:
+                lkeys = list(root["lines"].keys())
                 use = lkeys[0] if len(lkeys) == 1 else "ring"
-            if use not in lkeys:
-                msg = f"Selected '{use}' line does not exist, choose from: {lkeys}"
-                raise KeyError(msg)
-            line = lines[use]
+            line = root["lines"][use]
             line.setdefault("name", use)
         line.update(kwargs)
         ln = cls(elements, **line)
 
-        notavailable.summarise()
+        print(notavailable)
         return ln
 
     @classmethod
@@ -562,23 +507,21 @@ class XsLine:
                         names[ii] = ".".join((names[ii], str(i + 1)))
             return names
 
-        reference_particle = refpart(lattice)
-        beta0 = reference_particle["beta0"][0]
         ring = _separate_apertures(lattice)
         element_names = unique_names([el.FamName for el in ring])
         notavailable = _FilterWarnings("Unknown classes:")
         ln = cls(
             {
                 nm: XsElement.static_from_at(
-                    el, beta0=beta0, match_model=match_model, do_warn=notavailable
+                    el, match_model=match_model, do_warn=notavailable
                 )
                 for nm, el in zip(element_names, ring, strict=True)
             },
             element_names=element_names,
-            particle_ref=reference_particle,
+            particle_ref=refpart(ring),
             name=ring.name,
         )
-        notavailable.summarise()
+        print(notavailable)
         return ln
 
 
