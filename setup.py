@@ -38,6 +38,7 @@ print("** MPI:", os.environ.get("MPI", None))
 print("** OPENMP:", os.environ.get("OPENMP", None))
 print("** CUDA:", os.environ.get("CUDA", None))
 print("** OPENCL:", os.environ.get("OPENCL", None))
+print("** MARCH:", os.environ.get("MARCH", None))
 
 platform = sys.platform
 macros = [("PYAT", None)]
@@ -48,6 +49,20 @@ cppflags = []
 if not platform.startswith("win32"):
     cflags += ["-std=c99", "-Wno-unused-function", "-Wno-unknown-pragmas"]
     cppflags += ["-Wno-unused-function", "-Wno-unknown-pragmas"]
+    # -O3 enables the vectorisation of the integrator loops. -fno-math-errno
+    # allows the vectorisation of sqrt and other math functions (errno is
+    # never checked in AT).
+    optflags = ["-O3", "-fno-math-errno"]
+    cflags += optflags
+    cppflags += optflags
+    # Optional target architecture, for instance MARCH=native or
+    # MARCH=x86-64-v3 (AVX2). The resulting binaries are not portable to
+    # processors lacking these instructions: do not use it for distribution.
+    march = os.environ.get("MARCH", None)
+    if march:
+        # Keep FMA contraction disabled for reproducibility (default for C++)
+        cflags += [f"-march={march}", "-ffp-contract=off"]
+        cppflags += [f"-march={march}", "-ffp-contract=off"]
 
 if platform.startswith("darwin"):
     cflags += ["-ffp-contract=off"]

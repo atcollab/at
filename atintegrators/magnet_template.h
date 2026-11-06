@@ -146,8 +146,21 @@ static void magnet(double *r, double le, double bending_angle,
             }
         }
 
+        /* Transpose the block: rt[k*PARTICLE_BLOCK + c] = rb[6*c + k] */
+        double rt[6*PARTICLE_BLOCK];
+        for (int c = 0; c < nb; c++)
+            for (int k = 0; k < 6; k++)
+                rt[k*PARTICLE_BLOCK + c] = rb[6*c + k];
+
         /* Integrator */
-        INTEGRATOR(rb, nb, alive, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
+        INTEGRATOR(rt, nb, alive, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
+
+        /* Transpose back. Lost particles were integrated with NaN
+           coordinates: leave them unchanged */
+        for (int c = 0; c < nb; c++)
+            if (alive[c])
+                for (int k = 0; k < 6; k++)
+                    rb[6*c + k] = rt[k*PARTICLE_BLOCK + c];
 
         for (int c = 0; c < nb; c++) { /* Loop over particles */
             double *r6 = rb + 6*c;

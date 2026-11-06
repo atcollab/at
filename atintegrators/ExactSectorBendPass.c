@@ -5,12 +5,12 @@
 #include "kick_k1h_kn.h"
 #include "curved_dipole.h"
 
-#define INTEGRATOR(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
+#define INTEGRATOR(rt, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     if (num_int_steps == 0) { \
-        PARTICLE_LOOP(rb, nb, alive, DRIFT(r6, slength, irho, bdiff)); \
+        PARTICLE_LOOP(rt, nb, DRIFT(r6, slength, irho, NULL)); \
     } \
     else { \
-        integrator(rb, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff); \
+        integrator(rt, nb, alive, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff); \
     }
 
 #define CHECK_NSTEPS \
