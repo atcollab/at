@@ -24,7 +24,7 @@ static double pxyz(double dp1, double px, double py)
 
 #define DRIFT(r6,length,irho,bdiff) drift(r6,length,irho)
 
-static void drift(double *r6, double L, double irho)
+static ForceInline void drift(double *r6, double L, double irho)
 {
     /* Forest 12.39, bend-kick split, map V(L,irho) */
 

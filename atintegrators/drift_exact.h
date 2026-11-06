@@ -47,7 +47,7 @@ static void drift_propagateB(double NormL, double xpr, double ypr, double *bdiff
 /* Forest 10.23, exact drift
    L: length [m]
 */
-static void drift(double *r6, double L, double *bdiff)
+static ForceInline void drift(double *r6, double L, double *bdiff)
 {
   double p_norm = 1.0 / (1.0+r6[4]);
   double xpr = r6[1] * p_norm;
