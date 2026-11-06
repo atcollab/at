@@ -134,7 +134,7 @@ double get_val(struct elemab* elem, double* ramps, int mode,
        }else if(t >= titp[nsamples-1]){
          val = fitp[nsamples-1];
        }else{
-         idx = binarySearch(titp , t, nsamples, 0, 0);
+         idx = index_from_bisection(titp , t, nsamples, 0, 0);
          val = interpolTable(fitp, titp, t, idx);
        };
        return ampt *= val;

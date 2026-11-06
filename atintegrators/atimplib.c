@@ -1,4 +1,5 @@
 #include "atconstants.h"
+#include "atlalib.c"
 #include "atelem.c"
 #include "interpolate.c"
 #include <math.h>
@@ -9,6 +10,13 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
+void apply_all_Tarr(double *r_in, int num_particles, double *T_arr){
+    int c=0;
+    for(c=0; c<num_particles; c++){
+       double *r6 = r_in+c*6;
+       ATaddvv(r6, T_arr);
+    }
+}
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
 
@@ -208,7 +216,7 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                 if(wi>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
-                    index = binarySearch(waketableT,ds,nelem,0,0);          
+                    index = index_from_bisection(waketableT,ds,nelem,0,0);
                     if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index);
                     if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index);
                     if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableQX,waketableT,ds,index);
@@ -314,6 +322,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     /* The vbeam_complex will always be sent to the center of the next bucket */
 
     double bucket_z_center = 0.0;
+
     for(ibucket=0; ibucket<ring_harmn; ibucket++){
         is_filled = fillpattern[ibucket]; 
         bucket_z_center = ibucket*main_bucket;
@@ -323,9 +332,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                 wi = turnhistoryW[total_slice_counter];
                 selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
                 if(islice==0){
-                    // TurnhistoryZ goes from -bucket991 to bucket0 
-                    // so the bucket center in the turnhistory reference is one bucket shifted,
-                    dt = (turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc; 
+                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1] - bucket_z_center)/bc; 
                 }else{
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
@@ -337,7 +344,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                
             }
             /* back to the center of the bucket */
-            dt = -(turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc;
+            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1] - bucket_z_center)/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             bunch_counter += 1;
         }

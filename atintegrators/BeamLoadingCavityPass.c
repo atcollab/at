@@ -3,8 +3,11 @@
 #include "atlalib.c"
 #include "atimplib.c"
 #include "attrackfunc.c"
+
+#ifndef _MSC_VER  
 #include "atfeedbacklib.c"
 #include <complex.h>
+#endif
 
 /*
  * BeamLoadingCavity pass method by Simon White.  
@@ -13,14 +16,11 @@
 
 struct elem
 {
-  int nslice;
-  int nturnsw;
-  int cavitymode;
-  int fbmode;
+  int nslice; int nturnsw;
+  int cavitymode; int fbmode;
   int buffersize;
+  int openloop;
   double normfact;
-  double phasegain;
-  double voltgain;
   double *turnhistory;
   double *z_cuts;
   int delay;  double *VoltDelay; double *PhaseDelay;
@@ -30,23 +30,26 @@ struct elem
   double Voltage;
   double Energy;
   double Frequency;
-  double HarmNumber;
   double TimeLag;
   double Qfactor;
   double Rshunt;
   double Beta;
   double phis;
-
-  double *vbunch;
-  double *vbeam_phasor;
-  double *vbeam;
-  double *vcav;
-  double *vgen;
-  double *vgen_buffer;
-  double *vbeam_buffer;
-  double *vbunch_buffer;
   double ts;
-}; 
+  double *vbunch;
+  double *vbeam_phasor; double *vbeam;
+  double *vcav; double *vgen;
+  double *vgen_buffer; double *vbeam_buffer; double *vbunch_buffer;
+  int samplenum; int every; int recordsize;
+  int ff; double cutoff;
+  double *ig_phasor;
+  double *generator_phasor_record; double *cavity_phasor_record;
+  double *vc_previous;
+  double *diff_record;
+  long *samplestart;
+  double *I_record; double *FFconst; double *IIRout; double *IIRcoef;
+  double *pil_init;
+  }; 
 
 
 void write_buffer(double *data, double *buffer, int datasize, int buffersize){
@@ -65,24 +68,43 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                            int iturn,
                            struct elem *Elem) {
   
-    long cavitymode = Elem->cavitymode;
-    long fbmode = Elem->fbmode;
-    
+    // some wake definitions
     long nslice = Elem->nslice;
-    long nturnsw = Elem->nturnsw; /* can this attribute be removed? */
+    long nturnsw = Elem->nturnsw; 
     long buffersize = Elem->buffersize;
-
     double normfact = Elem->normfact;  
+    
+    // load buffer pointers
+    double *turnhistory = Elem->turnhistory;
+    double *vgen_buffer = Elem->vgen_buffer;
+    double *vbeam_buffer = Elem->vbeam_buffer;
+    double *vbunch_buffer = Elem->vbunch_buffer;
+
+    double *z_cuts = Elem->z_cuts;
+    double *vbunch = Elem->vbunch;
+    double *vbeam = Elem->vbeam;
+    double *vcav_set = Elem->vcav; /* Vcav set points amplitude, phase */
+    double *vbeam_phasor = Elem->vbeam_phasor;
+    double *vgen_arr = Elem->vgen; // [vgen, thetag, psi]
+        
+    // ring parameters
+    int ring_harmn = harmonic_number; // Ring harmonic number (number of buckets)
+
+    // cavity related parameters
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
-    int harmn = rffreq * circumference / C0 ;    // cavity harmonic number 
-       
-    int ring_harmn = harmonic_number;
+    int harmn = rffreq * circumference / C0 ;    // cavity harmonic number
+
     double tlag = Elem->TimeLag;
-    double qfactor = Elem->Qfactor;
-    double rshunt = Elem->Rshunt;
-    double beta = Elem->Beta; //not cavity beta
-    
+    double qfactor = Elem->Qfactor; //loaded
+    double rshunt = Elem->Rshunt; // loaded 
+    double beta = Elem->Beta; //relativist beta not cavity beta
+    double ts = Elem->ts; // expected beam final position
+
+    long cavitymode = Elem->cavitymode;
+    long fbmode = Elem->fbmode;
+
+
     //Tuner Variables
     double TunerGain = Elem->TunerGain;
     double TunerOffset = Elem->TunerOffset;
@@ -93,40 +115,63 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     //if fb mode is PROP_INTEGRAL then gain[0] is Prop gain and gain[1] is integral gain
     double *gain = Elem->gain;
 
+    //if fb mode is PROP then delay is in units of turns
+    //if fb mode is PROP_INTEGRAL then delay is in units of buckets    
     int delay = Elem->delay; 
+    
+    // Only used for fb mode PROP
     double *VoltDelay = Elem->VoltDelay;
     double *PhaseDelay = Elem->PhaseDelay;
 
-    double ts = Elem->ts;
 
-    
-    
-    
-    double *turnhistory = Elem->turnhistory;
-    double *vgen_buffer = Elem->vgen_buffer;
-    double *vbeam_buffer = Elem->vbeam_buffer;
-    double *vbunch_buffer = Elem->vbunch_buffer;
-    
-    double *z_cuts = Elem->z_cuts;
-    double *vbunch = Elem->vbunch;
-    double *vbeam_phasor = Elem->vbeam_phasor;
-    double *vbeam = Elem->vbeam;
-    double *vcav_set = Elem->vcav; /* Vcav set points amplitude, phase */
+            
+    double cutoff = Elem->cutoff;  // cutoff frequency 
 
-
+    int samplenum = Elem->samplenum; // from 0  to samplenum buckets...
+    int every = Elem->every;  // ...in steps of every 
+    int FF = Elem->ff; //Use the feedforward constant? 
+    int record_size = Elem->recordsize; // overlap coming from delay and every sampling
+    int open = Elem->openloop; // do you want to apply the correction?
     
-    double vbeam_set[] = {vbeam[0], vbeam[1]};
+    double *I_record = Elem->I_record; // real and imaginary of the integral part of the loop            
+    double *FFconst = Elem->FFconst; // the feedfoward constant to use
+    double *IIRout = Elem->IIRout;
+    double *IIRcoef = Elem->IIRcoef;
+    double *pil_init = Elem->pil_init;
+    
+    /* Here we have to declare pointers for the PI Loop
+    They have to be defined outside of an if statement*/
+    
+    double *ig_phasor_real = Elem->ig_phasor;
+    double *ig_phasor_imag = Elem->ig_phasor + ring_harmn;
+                      
+    double *generator_phasor_record_real = Elem->generator_phasor_record;
+    double *generator_phasor_record_imag = Elem->generator_phasor_record + ring_harmn;
+    double *cavity_phasor_record_real = Elem->cavity_phasor_record;
+    double *cavity_phasor_record_imag = Elem->cavity_phasor_record + ring_harmn;
+    double *vc_previous_real = Elem->vc_previous; 
+    double *vc_previous_imag = Elem->vc_previous + samplenum;
+    double *diff_record_real = Elem->diff_record; 
+    double *diff_record_imag = Elem->diff_record + record_size;
+    long *samplestart = Elem->samplestart;
+
+    // End of loading element attributes.
+
+            
+    double vbeam_set[] = {vbeam[0], vbeam[1]}; 
     double vcav_meas[] = {0.0, 0.0, 0.0};
-    double ave_vbeam[] = {0.0, 0.0};
+
     double tot_current = 0.0;
+
     
-    int i;
+    int i, c;
     size_t sz = nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
-    int c;
+    
+    // Two empty pointers that will be pointed to later.
     int *pslice;
     double *vbeam_kicks; /* This used to be kz, it is the kick that is applied */
-    double *vgen_arr = Elem->vgen; /* [vgen, thetag, psi, vgr] */
-    
+
+    // For now it is easier to use the variable, can be removed later
     double vgen = vgen_arr[0];
     double gen_phase = vgen_arr[1];
     double psi = vgen_arr[2];
@@ -135,17 +180,25 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     double tot_lag_phase = (tlag+ts)*rffreq*TWOPI/C0;
 
+    // parameters needed to computed cavity response
+    double filling_time = 2*qfactor / (TWOPI * freqres);
+    double T1 = circumference / (ring_harmn * beta * C0);
+    double kloss = rshunt * TWOPI * freqres / (2 * qfactor);
+
+
+    
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
-        
-        
+    
     /*Track RF cavity is always done. */
     trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
+
+    #ifndef _MSC_VER
     /*Only allocate memory if current is > 0*/
-    if(tot_current>0 && rshunt>0){
-        void *buffer = atMalloc(sz);
-        
+    if(tot_current>0 && rshunt > 0){
+        // allocate memory and set pointers
+        void *buffer = atMalloc(sz);        
         double *dptr = (double *) buffer;
         int *iptr;
         vbeam_kicks = dptr;
@@ -153,13 +206,14 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         iptr = (int *) dptr;
         pslice = iptr; 
         iptr += num_particles;
+
+
         rotate_table_history(nturnsw, nslice*nbunch, turnhistory, circumference);
         slice_bunch(r_in, num_particles, nslice, nturnsw, nbunch, bunch_spos,
                     bunch_currents, turnhistory, pslice, z_cuts);
         compute_kicks_phasor(nslice, nbunch, nturnsw, turnhistory, normfact, vbeam_kicks,
                              freqres, qfactor, rshunt, vbeam_phasor, circumference, energy,
-                             beta, ave_vbeam, vbunch, bunch_spos, ring_harmn, fillpattern, ts);                        
-
+                             beta, vbeam_set, vbunch, bunch_spos, ring_harmn, fillpattern, ts);             
 
         /*apply kicks*/
         for (c=0; c<num_particles; c++) {
@@ -170,39 +224,81 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             }
         }
         
+        // the beam tracking is now done, from now on we compute the feedbacks
+               
         // First write the values to the buffer
         if(buffersize>0){
-            write_buffer(vbeam, vbeam_buffer, 2, buffersize);
+            write_buffer(vbeam_set, vbeam_buffer, 2, buffersize);
             write_buffer(vgen_arr, vgen_buffer, 3, buffersize);
             write_buffer(vbunch, vbunch_buffer, 2*ring_harmn, buffersize);
         }   
 
 
-        vbeam_set[0] = ave_vbeam[0];
-        vbeam_set[1] = ave_vbeam[1];        
-
         compute_set_params(vbeam_set, vgen_arr, vcav_set[1], vcav_meas);
         
         if(cavitymode==1){
-            update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay);
+            // If CavityMode=ACTIVE
+            if(fbmode==1){
+                // If FBMode=PROP
+                update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay, open);
+            }
+            if(fbmode==2){
+                // If FBMode=PROP_INTEGRAL
+                if(pil_init[0]==0){
+                    init_PIL(vgen, gen_phase, psi, rshunt, vbeam_set,
+                             vcav_set[0], FF, cutoff, T1, every,
+                             ring_harmn, samplenum, record_size,
+                             ig_phasor_real, ig_phasor_imag,
+                             generator_phasor_record_real, generator_phasor_record_imag,
+                             vc_previous_real, vc_previous_imag,
+                             diff_record_real, diff_record_imag,
+                             I_record, FFconst, IIRcoef, IIRout, samplestart);
+                    pil_init[0] = 1.0;
+                }
 
+                set_cavity_record_phasor_array(vbunch,
+                                               cavity_phasor_record_real, cavity_phasor_record_imag,
+                                               generator_phasor_record_real, generator_phasor_record_imag,
+                                               ring_harmn); 
+
+                track_PIL(vc_previous_real, vc_previous_imag,
+                          cavity_phasor_record_real, cavity_phasor_record_imag,
+                          ig_phasor_real, ig_phasor_imag,
+                          samplestart, samplenum, record_size,
+                          diff_record_real, diff_record_imag,
+                          FFconst, gain, I_record,
+                          vcav_set[0], vcav_set[1],
+                          generator_phasor_record_real, generator_phasor_record_imag,
+                          filling_time, kloss, T1, ring_harmn, vgen_arr,
+                          IIRout, IIRcoef,
+                          every,
+                          psi, rshunt,
+                          open
+                          );    
+
+            }
+            
         }else if(cavitymode==3){     
+            /// If CavityMode=PASSIVE_VOLTAGE
             update_passive_frequency(vbeam_set, vcav_set, vgen_arr,
                                      TunerParams, TunerGain, TunerAveragingPeriod);
         }
 
 
-        /* Here is where the tuner is calculated and applied */
-        /* If TunerGain is zero, it is skipped */
-        if(TunerGain>0 && cavitymode!=3){
+        // Here is where the tuner is calculated and applied for PROP and PROP_INTEGRAL 
+        // If TunerGain is zero, it is skipped 
+        // If you are in PASSIVE_VOLTAGE, then the psi 
+        //  has already been updated so don't need to come here again. 
+        if(TunerGain>0 && cavitymode==1){
             compute_tuner(vcav_meas, vgen_arr,
                           TunerParams, TunerGain, TunerAveragingPeriod, TunerOffset);
         }            
 
-        vbeam[0] = ave_vbeam[0];
-        vbeam[1] = ave_vbeam[1];
+        vbeam[0] = vbeam_set[0];
+        vbeam[1] = vbeam_set[1];
         atFree(buffer);
     }
+    #endif
 }
 
 
@@ -212,34 +308,44 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     double rl = Param->RingLength;
     double energy;
-    int nturn=Param->nturn;
+    int nturn = Param->nturn;
     if (!Elem) {
         long nslice, nturns, cavitymode, fbmode, buffersize;
-        double wakefact;
-        double normfact;
-        int delay;
+        long delay, every, samplenum, ff, recordsize, openloop;
         double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
-        double *VoltDelay, *PhaseDelay;
+        double *VoltDelay, *PhaseDelay, *pil_init;
+        
+        double wakefact, Energy, Frequency, TimeLag, Length;
+        double normfact, qfactor, rshunt, beta, phis, ts, cutoff;
         double *gain;
         double *turnhistory;
         double *vgen_buffer;
         double *vbeam_buffer;
         double *vbunch_buffer;
         double *z_cuts;
-        double Energy, Frequency, TimeLag, Length;
-        double qfactor,rshunt,beta;
+
         double *vbunch;
         double *vbeam_phasor;
         double *vbeam;
         double *vgen;
         double *vcav;
-        double phis;
-        double ts;
 
+        double *ig_phasor;
+        double *generator_phasor_record;
+        double *cavity_phasor_record;
+        double *vc_previous;
+        double *diff_record;
+        long *samplestart;
+        double *I_record;
+        double *FFconst;
+        double *IIRcoef;
+        double *IIRout;
+        
         /*attributes for RF cavity*/
         Length=atGetDouble(ElemData,"Length"); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+        
         /*attributes for resonator*/
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
@@ -262,19 +368,45 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         vgen_buffer=atGetDoubleArray(ElemData,"_vgen_buffer"); check_error();
         vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
         vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
+        
         phis=atGetDouble(ElemData,"_phis"); check_error();
         ts=atGetDouble(ElemData,"_ts"); check_error();
         
-        /*optional attributes*/
-        delay=atGetOptionalLong(ElemData,"delay",1); check_error();        
-        VoltDelay=atGetOptionalDoubleArray(ElemData,"VoltDelay"); check_error();
-        PhaseDelay=atGetOptionalDoubleArray(ElemData,"PhaseDelay"); check_error();
+        openloop=atGetLong(ElemData,"OpenLoop"); check_error();
+       
+        /*optional attributes*/        
+        delay=atGetOptionalLong(ElemData,"_delay",1); check_error();
+        
+        VoltDelay=atGetOptionalDoubleArray(ElemData,"_voltdelay"); check_error();
+        PhaseDelay=atGetOptionalDoubleArray(ElemData,"_phasedelay"); check_error();
+
+        every=atGetOptionalLong(ElemData,"_every",1); check_error();
+        samplenum=atGetOptionalLong(ElemData,"_samplenum",1); check_error();        
+        cutoff=atGetOptionalDouble(ElemData,"cutoff",0); check_error();        
+        ff=atGetOptionalLong(ElemData,"FF",1); check_error();
+        recordsize=atGetOptionalLong(ElemData,"_recordsize",1); check_error();
+
+        ig_phasor=atGetOptionalDoubleArray(ElemData,"_ig_phasor"); check_error();
+        generator_phasor_record=atGetOptionalDoubleArray(ElemData,"_generator_phasor_record"); check_error();
+        cavity_phasor_record=atGetOptionalDoubleArray(ElemData,"_cavity_phasor_record"); check_error();
+
+        vc_previous=atGetOptionalDoubleArray(ElemData,"_vc_previous"); check_error();
+        diff_record=atGetOptionalDoubleArray(ElemData,"_diff_record"); check_error();        
+        samplestart=atGetOptionalLongArray(ElemData,"_samplestart"); check_error();        
+        I_record=atGetOptionalDoubleArray(ElemData,"_I_record"); check_error();
+        FFconst=atGetOptionalDoubleArray(ElemData,"_FFconst"); check_error();
+        IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error();
+        IIRout=atGetOptionalDoubleArray(ElemData,"_IIRout"); check_error();
+        pil_init=atGetOptionalDoubleArray(ElemData,"_pil_init"); check_error();
+        
+                
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
+        
         TunerOffset=atGetOptionalDouble(ElemData,"TunerOffset", 0.0); check_error();
         TunerAveragingPeriod=atGetOptionalDouble(ElemData,"TunerAveragingPeriod",1); check_error();
         TunerParams=atGetOptionalDoubleArray(ElemData,"_TunerParams"); check_error();
-
+        
         /* Check energy */
         Energy = atEnergy(Param->energy, Energy); check_error();
 
@@ -287,7 +419,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         
         Elem->Length=Length;
         Elem->Frequency=Frequency;
-        Elem->HarmNumber=round(Frequency*rl/C0);
         Elem->Energy = Energy;
         Elem->TimeLag=TimeLag;   
         Elem->nslice=nslice;
@@ -297,19 +428,22 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->Qfactor = qfactor;
         Elem->Rshunt = rshunt;
         Elem->Beta = beta;
-        Elem->z_cuts=z_cuts;
+        Elem->z_cuts = z_cuts;
         Elem->vbunch = vbunch;
         Elem->vbeam = vbeam;
         Elem->vgen = vgen;
         Elem->vcav = vcav;
+
         Elem->TunerGain = TunerGain;
         Elem->TunerOffset = TunerOffset;
         Elem->TunerAveragingPeriod = TunerAveragingPeriod;
         Elem->TunerParams = TunerParams;
+        Elem->openloop = openloop;
         Elem->gain = gain;
         Elem->delay=delay;
         Elem->VoltDelay=VoltDelay;
         Elem->PhaseDelay=PhaseDelay;  
+
         Elem->vbeam_phasor = vbeam_phasor;
         Elem->cavitymode = cavitymode;
         Elem->buffersize = buffersize;
@@ -320,6 +454,24 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->fbmode = fbmode;
         Elem->phis = phis;
         Elem->ts = ts;
+
+        Elem->every=every;
+        Elem->samplenum=samplenum;
+        Elem->cutoff=cutoff;
+        Elem->ff=ff;
+        Elem->recordsize=recordsize;
+        Elem->I_record=I_record;
+        Elem->ig_phasor=ig_phasor;
+        Elem->generator_phasor_record=generator_phasor_record;
+        Elem->cavity_phasor_record=cavity_phasor_record;
+        Elem->vc_previous=vc_previous;
+        Elem->diff_record=diff_record;
+        Elem->samplestart=samplestart;
+        Elem->FFconst=FFconst;
+        Elem->IIRcoef=IIRcoef;
+        Elem->IIRout=IIRout;
+        Elem->pil_init=pil_init;
+
     }
     energy = atEnergy(Param->energy, Elem->Energy); check_error();
 
@@ -331,12 +483,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if(Elem->cavitymode==0 || Elem->cavitymode>=4){
         atError("Unknown cavitymode provided."); check_error();
     } 
-
-
     if(Elem->fbmode>=3){
         atError("Unknown fbmode provided."); check_error();
     } 
-    
+
     #ifdef _MSC_VER
     atError("Beam loading module not implemented in Windows."); check_error();
     #endif
@@ -361,11 +511,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       const mxArray *ElemData = prhs[0];
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
-      
       long nslice, nturns, cavitymode, fbmode, buffersize;
-      long delay;
+      long delay, every, samplenum, ff, recordsize, openloop;
+
       double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
-      double *VoltDelay, *PhaseDelay;
+      double *VoltDelay, *PhaseDelay, *pil_init;
       double wakefact, Energy, Frequency, TimeLag, Length;
       double normfact, qfactor, rshunt, beta, phis, ts, cutoff;
       double *gain;
@@ -379,6 +529,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *vgen_buffer;
       double *vbeam_buffer;
       double *vbunch_buffer;
+      double *I_record;
+      double *FFconst;
+      double *IIRcoef;
+      double *IIRout;
+      
+      
+      double *ig_phasor;
+      double *generator_phasor_record;
+      double *cavity_phasor_record;
+      double *vc_previous;
+      double *diff_record;
+      long *samplestart;
+
+
+      
       /*attributes for RF cavity*/
       Length=atGetDouble(ElemData,"Length"); check_error();
       Frequency=atGetDouble(ElemData,"Frequency"); check_error();
@@ -407,24 +572,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
       phis=atGetDouble(ElemData,"_phis"); check_error();
       ts=atGetDouble(ElemData,"_ts"); check_error();
+      openloop=atGetLong(ElemData,"OpenLoop"); check_error();
       
       /*optional attributes*/
       Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
+
+      TunerGain=atGetDouble(ElemData,"TunerGain"); check_error();
       TunerAveragingPeriod=atGetOptionalLong(ElemData,"TunerAveragingPeriod",1); check_error();
       TunerOffset=atGetOptionalDouble(ElemData,"TunerOffset",0.0); check_error();
       TunerParams=atGetOptionalDoubleArray(ElemData,"_TunerParams"); check_error();
       
-      delay=atGetOptionalLong(ElemData,"delay",1); check_error();
-      VoltDelay=atGetOptionalDoubleArray(ElemData,"VoltDelay"); check_error();
-      PhaseDelay=atGetOptionalDoubleArray(ElemData,"PhaseDelay"); check_error();  
-      
+      ig_phasor=atGetOptionalDoubleArray(ElemData,"_ig_phasor"); check_error();
+      generator_phasor_record=atGetOptionalDoubleArray(ElemData,"_generator_phasor_record"); check_error();
+      cavity_phasor_record=atGetOptionalDoubleArray(ElemData,"_cavity_phasor_record"); check_error();
+
+
+      delay=atGetOptionalLong(ElemData,"_delay",1); check_error();
+      VoltDelay=atGetOptionalDoubleArray(ElemData,"_voltdelay"); check_error();
+      PhaseDelay=atGetOptionalDoubleArray(ElemData,"_phasedelay"); check_error();  
+          
+      every=atGetOptionalLong(ElemData,"_every",1); check_error();
+      samplenum=atGetOptionalLong(ElemData,"_samplenum",1); check_error();        
+      cutoff=atGetOptionalDouble(ElemData,"cutoff",0); check_error();        
+      ff=atGetOptionalLong(ElemData,"FF",1); check_error();
+      recordsize=atGetOptionalLong(ElemData,"_recordsize",1); check_error();  
+        
+      vc_previous=atGetOptionalDoubleArray(ElemData,"_vc_previous"); check_error();
+      diff_record=atGetOptionalDoubleArray(ElemData,"_diff_record"); check_error();        
+      samplestart=atGetOptionalLongArray(ElemData,"_samplestart"); check_error();        
+      I_record=atGetOptionalDoubleArray(ElemData,"_I_record"); check_error();
+      FFconst=atGetOptionalDoubleArray(ElemData,"_FFconst"); check_error();
+      IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error();
+      IIRout=atGetOptionalDoubleArray(ElemData,"_IIRout"); check_error();
+      pil_init=atGetOptionalDoubleArray(ElemData,"_pil_init"); check_error();
+
       
       Elem = (struct elem*)atMalloc(sizeof(struct elem));
       Elem->Length=Length;
       Elem->cavitymode=cavitymode;
       Elem->Frequency=Frequency;
-      Elem->HarmNumber=1;
       Elem->Energy = Energy;
       Elem->TimeLag=TimeLag;   
       Elem->nslice=nslice;
@@ -440,11 +627,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->vgen = vgen;
       Elem->vcav = vcav;
 
+      Elem->gain = gain;
+      Elem->openloop = openloop;
+      
       Elem->TunerGain = TunerGain;
       Elem->TunerOffset = TunerOffset;
       Elem->TunerAveragingPeriod = TunerAveragingPeriod;
       Elem->TunerParams = TunerParams;
-      
       
       Elem->VoltDelay=VoltDelay;
       Elem->PhaseDelay=PhaseDelay;
@@ -458,6 +647,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
       Elem->phis = phis;
       Elem->ts = ts;
+
+      Elem->every=every;
+      Elem->samplenum=samplenum;
+      Elem->cutoff=cutoff;
+      Elem->ff=ff;
+      Elem->recordsize=recordsize;
+      
+      Elem->ig_phasor=ig_phasor;
+      Elem->generator_phasor_record=generator_phasor_record;
+      Elem->cavity_phasor_record=cavity_phasor_record;
+      Elem->vc_previous=vc_previous;
+      Elem->diff_record=diff_record;
+      Elem->samplestart=samplestart;
+      Elem->I_record=I_record;
+      Elem->FFconst=FFconst;
+      Elem->pil_init=pil_init;
+      Elem->IIRcoef=IIRcoef;
+      Elem->IIRout=IIRout;
       
       Elem->fbmode = fbmode;
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
@@ -474,7 +681,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
-      plhs[0] = mxCreateCellMatrix(25,1);
+
+      plhs[0] = mxCreateCellMatrix(27,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -487,7 +695,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],9,mxCreateString("Rshunt"));
       mxSetCell(plhs[0],10,mxCreateString("_beta"));
       mxSetCell(plhs[0],11,mxCreateString("NormFact"));
-
       mxSetCell(plhs[0],12,mxCreateString("Gain"));
       mxSetCell(plhs[0],13,mxCreateString("_turnhistory"));
       mxSetCell(plhs[0],14,mxCreateString("_vbunch"));
@@ -500,18 +707,37 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],21,mxCreateString("_vbunch_buffer"));
       mxSetCell(plhs[0],22,mxCreateString("_buffersize"));
       mxSetCell(plhs[0],23,mxCreateString("_phis"));
-      mxSetCell(plhs[0],24,mxCreateString("_ts"));     
+      mxSetCell(plhs[0],24,mxCreateString("_ts"));
+      mxSetCell(plhs[0],25,mxCreateString("OpenLoop"));
+      mxSetCell(plhs[0],26,mxCreateString("TunerGain"));
+                                
       if(nlhs>1) /* optional fields */
       {
-          plhs[1] = mxCreateCellMatrix(8,1);
+          plhs[1] = mxCreateCellMatrix(24,1);
           mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
           mxSetCell(plhs[1],1,mxCreateString("ZCuts"));
           mxSetCell(plhs[1],2,mxCreateString("TunerOffset"));
           mxSetCell(plhs[1],3,mxCreateString("TunerAveragingPeriod"));
-          mxSetCell(plhs[1],4,mxCreateString("Delay"));     
-          mxSetCell(plhs[1],5,mxCreateString("TunerParams"));   
-          mxSetCell(plhs[1],6,mxCreateString("VoltDelay"));
-          mxSetCell(plhs[1],7,mxCreateString("PhaseDelay"));           
+          mxSetCell(plhs[1],4,mxCreateString("_delay"));
+          mxSetCell(plhs[1],5,mxCreateString("_every"));
+          mxSetCell(plhs[1],6,mxCreateString("_samplenum"));
+          mxSetCell(plhs[1],7,mxCreateString("cutoff"));
+          mxSetCell(plhs[1],8,mxCreateString("FF"));
+          mxSetCell(plhs[1],9,mxCreateString("_ig_phasor"));
+          mxSetCell(plhs[1],10,mxCreateString("_generator_phasor_record"));
+          mxSetCell(plhs[1],11,mxCreateString("_cavity_phasor_record"));
+          mxSetCell(plhs[1],12,mxCreateString("_vc_previous"));
+          mxSetCell(plhs[1],13,mxCreateString("_diff_record"));
+          mxSetCell(plhs[1],14,mxCreateString("_samplestart"));
+          mxSetCell(plhs[1],15,mxCreateString("_I_record"));
+          mxSetCell(plhs[1],16,mxCreateString("_FFconst"));
+          mxSetCell(plhs[1],17,mxCreateString("_IIRcoef"));
+          mxSetCell(plhs[1],18,mxCreateString("_IIRout"));
+          mxSetCell(plhs[1],19,mxCreateString("_recordsize"));
+          mxSetCell(plhs[1],20,mxCreateString("_TunerParams"));
+          mxSetCell(plhs[1],21,mxCreateString("_voltdelay"));
+          mxSetCell(plhs[1],22,mxCreateString("_phasedelay"));
+          mxSetCell(plhs[1],23,mxCreateString("_pil_init"));
       }
   }
   else

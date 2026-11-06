@@ -180,7 +180,7 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
                 register double wi = weight[ii];
                 register double dx = xpos[ii];
                 register double dy = ypos[ii];
-                int index = binarySearch(waketableT,-ds,nelem,0,0);              
+                int index = index_from_bisection(waketableT,-ds,nelem,0,0);
                 double fieldx = interpolTable(waketableDX,waketableT,-ds,index);
                 double fieldy = interpolTable(waketableDY,waketableT,-ds,index);
                 double fieldx2 = interpolTable(waketableQX,waketableT,-ds,index);
