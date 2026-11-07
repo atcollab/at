@@ -382,7 +382,7 @@ class XsLine:
             for nm in element_names:
                 try:
                     atelem = self.elements[nm].to_at()
-                    if isinstance(atelem, elt.RFCavity):
+                    if isinstance(atelem, (elt.RFCavity, elt.CrabCavity)):
                         cavities.append(atelem)
                     cell_length += getattr(atelem, "Length", 0.0)
                     yield atelem
@@ -402,7 +402,7 @@ class XsLine:
                 with contextlib.suppress(AttributeError):
                     delattr(cav, "_phaselag")
                 tl = (180.0 - lag) * cst.clight / 360.0 / cav.Frequency
-                cav.Timelag = tl
+                cav.TimeLag = tl
 
         if in_file := getattr(self, "in_file", ""):
             kwargs["in_file"] = in_file

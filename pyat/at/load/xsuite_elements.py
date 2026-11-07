@@ -695,6 +695,33 @@ class Cavity(XsElement):
         return elem
 
 
+class CrabCavity(Cavity):
+    # Class variables
+    _atClass = elt.CrabCavity
+    _at_integrator = "yoshida4"
+    _xsuite2at_attr = XsElement._xsuite2at_attr | {
+        "frequency": "Frequency",
+    }
+
+    def _params_to_at(self, **atparams) -> dict[str, Any]:
+        atparams = super()._params_to_at(**atparams)
+        atparams.pop("Voltage", None)
+        atparams.pop("Energy", None)
+        atparams["Voltages"] = [self.get("crab_voltage", 0.0), 0.0]
+        return atparams
+
+    @classmethod
+    def from_at(
+        cls,
+        atelem: elt.Element,
+        match_model: bool = True,
+        do_warn: Callable[[str], bool] = lambda x: True,
+    ) -> XsElement:
+        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
+        elem["crab_voltage"] = atelem.Voltages[0]
+        return elem
+
+
 class FirstOrderTaylorMap(XsElement):
     """Class for Xsuite elements with first-order Taylor map."""
 
@@ -827,6 +854,7 @@ _xsclass: dict[str, type[XsElement]] = {
     "LimitRect": LimitRect,
     "LimitEllipse": LimitEllipse,
     "FirstOrderTaylorMap": FirstOrderTaylorMap,
+    "CrabCavity": CrabCavity,
 }
 
 
@@ -843,4 +871,5 @@ _at2xsclass: dict[type[elt.Element], type[_XsFactory]] = {
     elt.Dipole: Dipole,
     elt.Corrector: Corrector,
     elt.M66: FirstOrderTaylorMap,
+    elt.CrabCavity: CrabCavity,
 }
