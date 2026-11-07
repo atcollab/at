@@ -697,14 +697,15 @@ class Cavity(XsElement):
 
 class FirstOrderTaylorMap(XsElement):
     """Class for Xsuite elements with first-order Taylor map."""
+
     _atClass = elt.M66
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(**atparams)
-        m0 = self.get("m0", np.zeros(6))
-        if not np.all(m0 == 0.0):
-            self._warn("First-order Taylor map has non-zero 'm0', ignored.")
-        atparams["M66"] = self.get("m1", np.eye(6))
+        if (m0 := self.get("m0", None)) is not None:
+            atparams["M6"] = m0
+        if (m1 := self.get("m1", None)) is not None:
+            atparams["M66"] = m1
         return atparams
 
     @classmethod
@@ -716,6 +717,8 @@ class FirstOrderTaylorMap(XsElement):
     ) -> XsElement:
         elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
         elem["m1"] = np.asarray(atelem.M66, order="C")
+        if (m6 := getattr(atelem, "M6", None)) is not None:
+            elem["m0"] = np.asarray(m6, order="C")
         return elem
 
 
