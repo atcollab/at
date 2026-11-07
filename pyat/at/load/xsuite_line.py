@@ -154,10 +154,11 @@ from pathlib import Path
 from typing import Any, ClassVar
 from collections.abc import Iterator
 import contextlib
+import warnings
 
 import numpy as np
 
-from ..lattice import constants as cst
+from ..lattice import AtWarning, constants as cst
 from ..lattice import Lattice, Particle, elements as elt
 from .xsuite_elements import XsElement
 
@@ -194,10 +195,15 @@ class _AtEncoder(json.JSONEncoder):
 
 
 class _FilterWarnings(dict):
+    """Summarises warnings for unknown classes."""
+
     def __init__(self, header: str):
+        """
+        Args:
+            header:     Header to print before the summary
+        """  # noqa: D415
         super().__init__()
         self.header = header
-        self._warned = {}
 
     def __call__(self, clname: str) -> bool:
         """Check if a warning should be issued for the given class name.
@@ -208,13 +214,19 @@ class _FilterWarnings(dict):
         Returns:
             bool:       True if a warning should be issued, False otherwise
         """
-        nbu = self._warned.setdefault(clname, 0)
-        self._warned[clname] += 1
+        nbu = self.setdefault(clname, 0)
+        self[clname] += 1
         return nbu == 0
 
     def __str__(self) -> str:
-        flist = "\n".join(f"{clname:>20}: {nb}" for clname, nb in self._warned.items())
+        """Return a string representation of the warnings."""
+        flist = "\n".join(f"{clname:>20}: {nb}" for clname, nb in self.items())
         return f"{self.header}\n{flist}" if flist else ""
+
+    def summarise(self) -> None:
+        """Print a summary of the warnings."""
+        if self:
+            warnings.warn(AtWarning(str(self)), stacklevel=3)
 
 
 def _separate_apertures(lattice: Lattice) -> Lattice:
@@ -454,7 +466,7 @@ class XsLine:
         line.update(kwargs)
         ln = cls(elements, **line)
 
-        print(notavailable)
+        notavailable.summarise()
         return ln
 
     @classmethod
@@ -545,7 +557,7 @@ class XsLine:
             particle_ref=refpart(ring),
             name=ring.name,
         )
-        print(notavailable)
+        notavailable.summarise()
         return ln
 
 
