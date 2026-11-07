@@ -127,6 +127,15 @@ Longitudinal motion
 Whatever the 6D status of the AT lattice, the Xsuite lattice will have synchrotron
 radiation turned off and active RF cavities.
 
+Misalignments
+^^^^^^^^^^^^^
+
+The misalignment of :py:func:`.transform_elem` is converted to the same rigid
+motion: the rotation is decomposed in Xsuite's order, and the shifts are corrected
+for Xsuite's pivot point, which is on the arc of a bend while AT's is on the chord.
+An element with both a misalignment and ``tilt_frame`` keeps only the frame tilt,
+with a warning.
+
 Ignored attributes
 ^^^^^^^^^^^^^^^^^^
 
@@ -158,7 +167,7 @@ __all__ = [
 import json
 import warnings
 from abc import abstractmethod
-from math import sqrt
+from math import sqrt, sin, cos
 from pathlib import Path
 from collections.abc import Callable
 from typing import Any, ClassVar, Protocol
@@ -168,6 +177,7 @@ import numpy as np
 
 from ..lattice import AtWarning, ReferencePoint, constants as cst
 from ..lattice import Lattice, Particle, elements as elt
+from ..lattice.transformation import _rotation
 from .madx import poly_from_mad, poly_to_mad
 
 try:
@@ -224,6 +234,55 @@ class _AtEncoder(json.JSONEncoder):
             return float(o)
         else:
             return super().default(o)
+
+
+def _xs_rotation(pitch: float, yaw: float, tilt: float) -> np.ndarray:
+    """Xsuite rotation matrix (``track_misalignments.h``): Ry, then Rx, then Rz.
+
+    The angles have AT's signs: Xsuite's ``rot_x_rad`` is ``-pitch``.
+    """
+    return _rotation([0.0, yaw, 0.0]) @ _rotation([pitch, 0.0, tilt])
+
+
+def _pivot_offset(length: float, angle: float) -> np.ndarray:
+    """Position of AT's centre (chord midpoint) relative to Xsuite's (arc midpoint).
+
+    AT rotates a bend around the midpoint of its chord, Xsuite around the point of
+    the design orbit at half the length. Both frames have their z axis along the
+    chord, they are separated by the sagitta.
+    """
+    if angle == 0.0:
+        return np.zeros(3)
+    return np.array([-length / angle * (1.0 - np.cos(0.5 * angle)), 0.0, 0.0])
+
+
+def _at2xs_misalignment(atparams: dict, reference, length, angle) -> None:
+    """Convert in place the AT misalignment to the same rigid motion in Xsuite.
+
+    AT composes the rotations as Rx(pitch) Ry(yaw) Rz(tilt) (Venturini and Hellert,
+    Eq. 3), Xsuite as Ry Rx Rz: the rotation matrix is decomposed again in
+    Xsuite's order, keeping AT's signs.
+    """
+    ra = _rotation([atparams.get(k, 0.0) for k in ("_pitch", "_yaw", "_tilt")])
+    offsets = np.array([atparams.get(k, 0.0) for k in ("_dx", "_dy", "_dz")])
+    if reference == ReferencePoint.CENTRE:
+        offsets = offsets + (np.identity(3) - ra) @ _pivot_offset(length, angle)
+    atparams.update(zip(("_dx", "_dy", "_dz"), offsets.tolist(), strict=True))
+    atparams["_pitch"] = float(-np.arcsin(ra[1, 2]))
+    atparams["_yaw"] = float(np.arctan2(ra[0, 2], ra[2, 2]))
+    atparams["_tilt"] = float(np.arctan2(ra[1, 0], ra[1, 1]))
+
+
+def _xs2at_misalignment(tr: dict, reference, length, angle) -> None:
+    """Inverse of :py:func:`_at2xs_misalignment`, applied in place to *tr*."""
+    rx = _xs_rotation(tr["pitch"], tr["yaw"], tr["tilt"])
+    offsets = np.array([tr["dx"], tr["dy"], tr["dz"]])
+    if reference == ReferencePoint.CENTRE:
+        offsets = offsets - (np.identity(3) - rx) @ _pivot_offset(length, angle)
+    tr.update(zip(("dx", "dy", "dz"), offsets.tolist(), strict=True))
+    tr["pitch"] = float(np.arctan2(-rx[1, 2], rx[2, 2]))
+    tr["yaw"] = float(np.arcsin(rx[0, 2]))
+    tr["tilt"] = float(np.arctan2(-rx[0, 1], rx[0, 0]))
 
 
 class _XsFactory(Protocol):
@@ -416,6 +475,10 @@ class Multipole(XsElement):
         "order": "MaxOrder",
     }
 
+    @property
+    def _integration_length(self):
+        return self["length"]
+
     def _set_at_transforms(self) -> dict:
         """Generate AT element displacements."""
         tr = {
@@ -452,6 +515,8 @@ class Multipole(XsElement):
                 )
                 warnings.warn(AtWarning(msg), stacklevel=2)
                 reference = ReferencePoint.CENTRE
+            _xs2at_misalignment(tr, reference, length, self.get("angle", 0.0))
+            transforms = {k: v for k, v in tr.items() if v != 0.0}
             transforms["reference"] = reference.value
         return transforms
 
@@ -473,7 +538,7 @@ class Multipole(XsElement):
             # Convert to AT
             return porder, np.fromiter(poly_from_mad(poly), dtype=float, count=lpoly)
 
-        length = self.get("length", 0.0)
+        length = self._integration_length
         xsorder: int = self.get("order", 0)
         atorder: int = getattr(self._atClass, "DefaultOrder", xsorder)
         aorder, polya = xspoly(["k0s", "k1s", "k2s", "k3s"], "ksl")
@@ -501,6 +566,14 @@ class Multipole(XsElement):
 
     def _set_xs_transforms(self, atparams: dict) -> None:
         """Generate Xsuite element displacements."""
+        # The reference point is stored as its integer value
+        refpoint = ReferencePoint(
+            atparams.pop("_referencepoint", ReferencePoint.CENTRE.value)
+        )
+        _at2xs_misalignment(
+            atparams, refpoint, atparams.get("Length", 0.0),
+            atparams.get("BendingAngle", 0.0),
+        )
         tr = {
             "shift_x": atparams.pop("_dx", 0.0),
             "shift_y": atparams.pop("_dy", 0.0),
@@ -510,7 +583,6 @@ class Multipole(XsElement):
             "rot_y_rad": atparams.pop("_yaw", 0.0),
         }
         misalign = {k: v for k, v in tr.items() if v != 0.0}
-        refpoint = atparams.pop("_reference", ReferencePoint.CENTRE)
         rots_frame = atparams.pop("_tilt_frame", 0.0)
         ismisaligned = len(misalign) > 0
 
@@ -553,7 +625,7 @@ class Multipole(XsElement):
         elif korder is not None:  # quadrupole, sextupole, octupole
             self["k" + str(korder)] = extract(polb, korder)
             self["k" + str(korder) + "s"] = extract(pola, korder)
-        if length > 0.0:
+        if (length := self._integration_length) > 0.0:
             polb *= length
             pola *= length
         if np.any(pola) or np.any(polb):
@@ -563,7 +635,7 @@ class Multipole(XsElement):
             self["num_multipole_kicks"] = 3 * numintsteps
         if (scaling := atparams.get("FieldScaling")) is not None:
             self["delta_taper"] = scaling - 1.0
-        self["_isthick"] = length != 0.0
+        self["_isthick"] = self["length"] != 0.0
 
     def _set_xs_fringe(self, atparams: dict) -> None:
         self["edge_entry_active"] = bool(atparams.get("FringeQuadEntrance", 0))
@@ -673,6 +745,20 @@ class Bend(Multipole):
         edge_model("edge_exit_model", "FringeBendExit", "FringeQuadExit")
         return atparams
 
+    @property
+    def _h(self) -> float:
+        """Curvature of the reference trajectory."""
+        return self["angle"] / self["length"]
+
+    def _set_at_poly(self) -> dict[str, Any]:
+        atparams = super()._set_at_poly()
+        # Xsuite k0 is the total dipole field, AT PolynomB[0] excludes the curvature
+        if self.get("k0_from_h", "k0" not in self):
+            atparams["PolynomB"][0] -= self.get("k0", 0.0)
+        else:
+            atparams["PolynomB"][0] -= self._h
+        return atparams
+
     def _set_xs_fringe(self, atparams: dict):
         def edge_model(bendkey, quadkey):
             at_quad_fringe = atparams.get(quadkey, 0)
@@ -711,6 +797,12 @@ class RBend(Bend):
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
 
+    @property
+    def _integration_length(self):
+        length = self["length"]
+        hangle = 0.5 * self["angle"]
+        return length * sin(hangle) / hangle
+
     def _model_to_at(self) -> dict[str, str]:
         """Get the AT passmethod."""
         straight = self.get("rbend_model", "adaptive") == "straight-body"
@@ -724,34 +816,43 @@ class RBend(Bend):
         atparams = super()._params_to_at(**atparams)
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
-        if (
-            straight
-            and not exact
-            and not (
-                np.all(atparams["PolynomA"] == 0.0)
-                and np.all(atparams["PolynomB"] == 0.0)
-            )
-        ):
-            msg = (
-                "Multipole are present in the rectangular bend: "
-                "PassMethod is forced to ExactRectangularBendPass"
-            )
-            warnings.warn(AtWarning(msg), stacklevel=3)
-            atparams["PassMethod"] = "ExactRectangularBendPass"
         hangle = abs(0.5 * self["angle"])
-        atparams["Length"] = self.get("length_straight", 0.0) / np.sinc(hangle / np.pi)
+        length = self.get("length_straight", 0.0) * hangle / sin(hangle)
+        if straight:
+            if not exact and (
+                np.any(atparams["PolynomA"] != 0.0)
+                or np.any(atparams["PolynomB"] != 0.0)
+            ):
+                msg = (
+                    "Multipole are present in the rectangular bend: "
+                    "PassMethod is forced to ExactRectangularBendPass"
+                )
+                warnings.warn(AtWarning(msg), stacklevel=3)
+                atparams["PassMethod"] = "ExactRectangularBendPass"
+            rbs = self.get("rbend_shift", 0.0)
+            ro = length / hangle / 2.0
+            atparams["X0ref"] = -rbs - (1.0 - cos(hangle)) * ro / 2.0
+        atparams["Length"] = length
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
         return atparams
 
     @classmethod
     def from_at(cls, match_model: bool = True, **atparams):
+
+        def X0ref_to_rbend_shift(hangle, length, X0ref):
+            ro = length / hangle / 2.0
+            return -X0ref - (1.0 - cos(hangle)) * ro / 2.0
+
         elem = super().from_at(match_model=match_model, **atparams)
-        elem["rbend_model"] = "straight-body"
         hangle = 0.5 * elem["angle"]
+        length = elem.pop("length")
+        X0ref = atparams.get("X0ref", 0.0)
+        elem["rbend_model"] = "straight-body"
         elem["edge_entry_angle"] -= hangle
         elem["edge_exit_angle"] -= hangle
-        elem["length_straight"] = elem.pop("length") * np.sinc(hangle / np.pi)
+        elem["length_straight"] = elem._integration_length
+        elem["rbend_shift"] = X0ref_to_rbend_shift(hangle, length, X0ref)
         return elem
 
     @property

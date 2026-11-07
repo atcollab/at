@@ -219,6 +219,11 @@ def transform_elem(
         relative:       If :py:obj:`True`, the input values are added to the
                         previous ones.
 
+    The magnet pass methods apply *T1*, *R1*, *T2*, *R2* as linear maps. If the
+    element has :pycode:`ExactMisalign=1`, they apply instead the exact, nonlinear
+    form of the same transformations (Secs. 3.1, 4.1 and Appendix A of the paper),
+    with the geometry recovered from *T1*, *R1*, *T2*, *R2*.
+
     .. Attention::
 
         When combining several transformations by using multiple calls to
