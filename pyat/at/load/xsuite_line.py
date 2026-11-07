@@ -152,7 +152,7 @@ import json
 from math import sqrt
 from pathlib import Path
 from typing import Any, ClassVar
-from collections_abc import Iterator
+from collections.abc import Iterator
 import contextlib
 
 import numpy as np
