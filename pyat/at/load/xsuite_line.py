@@ -152,8 +152,8 @@ import json
 from math import sqrt
 from pathlib import Path
 from typing import Any, ClassVar
+from collections_abc import Iterator
 import contextlib
-from collections.abc import Iterable
 
 import numpy as np
 
@@ -233,23 +233,47 @@ def _separate_apertures(lattice: Lattice) -> Lattice:
             return elt.Marker(elem.FamName + "_aperture", **at)
         return None
 
-    def element_generator(ring: Lattice) -> Iterable[elt.Element]:
+    def same_transforms(mk1: elt.Marker, mk2: elt.Marker) -> bool:
+        at1 = {k: v for k in _transform_keys if (v := getattr(mk1, k, 0.0)) != 0.0}
+        at2 = {k: v for k in _transform_keys if (v := getattr(mk2, k, 0.0)) != 0.0}
+        return at1 == at2
+
+    def same_apertures(mk1: elt.Marker, mk2: elt.Marker, aname: str) -> bool:
+        return np.all(getattr(mk1, aname) == getattr(mk2, aname))
+
+    def compare_markers(mk2: list[elt.Marker | None], aname: str) -> list[elt.Marker]:
+        markers = [m for m in mk2 if m is not None]
+        if (
+            len(markers) == 2
+            and same_apertures(markers[0], markers[1], aname)
+            and same_transforms(markers[0], markers[1])
+        ):
+            return [markers[0]]
+        else:
+            return markers
+
+    def element_generator(ring: Lattice) -> Iterator[elt.Element]:
+        """Insert aperture markers in the lattice."""
+        r_pending = None
+        e_pending = None
         for el in ring:
             r_elem = None
             e_elem = None
             if not isinstance(el, elt.Marker):
-                if (r_elem := create_aperture_marker(el, "RApertures")) is not None:
-                    yield r_elem
-                if (e_elem := create_aperture_marker(el, "EApertures")) is not None:
-                    yield e_elem
+                r_elem = create_aperture_marker(el, "RApertures")
+                e_elem = create_aperture_marker(el, "EApertures")
+            yield from compare_markers([r_pending, r_elem], "RApertures")
+            yield from compare_markers([e_pending, e_elem], "EApertures")
+            r_pending = None
+            e_pending = None
 
             yield el
 
             if el.Length > 0.0:
-                if r_elem is not None:
-                    yield r_elem
-                if e_elem is not None:
-                    yield e_elem
+                r_pending = r_elem
+                e_pending = e_elem
+        yield from compare_markers([r_pending], "RApertures")
+        yield from compare_markers([e_pending], "EApertures")
 
     return Lattice(
         element_generator(lattice),
