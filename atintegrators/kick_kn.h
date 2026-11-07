@@ -102,11 +102,13 @@ theta  = --- B
     #endif
     double factor = L * (1.0  + (SQR(xpr) + SQR(ypr)) / 2.0) / SQR(p_norm);
 
+    #ifdef DIFFUSION
     /* Propagation of the diffusion matrix */
     if (bdiff) {
         thinkickM(r6, A, B, max_order, L, 0.0, bdiff);
         thinkickB(r6, ReSum, ImSum, diff_const, B2P, factor, bdiff);
     }
+    #endif /*DIFFUSION*/
 
     /* Momentum loss */
     r6[4] -= rad_const * B2P * factor;

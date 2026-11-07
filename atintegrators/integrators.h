@@ -34,7 +34,7 @@
 
 #if defined(INTEGRATOR_4)
 
-#define DEFAULT_NUM_INT_STEPS 10
+#define KICKS_PER_STEP 3
 
 #define INTEGRATOR_STEPS(sl) \
     double ID1 = DRIFT1 * sl; \
@@ -57,7 +57,7 @@
 
 #elif defined(INTEGRATOR_6)
 
-#define DEFAULT_NUM_INT_STEPS 10
+#define KICKS_PER_STEP 7
 
 #define INTEGRATOR_STEPS(sl) \
     double ID1 = YD1 * sl; \

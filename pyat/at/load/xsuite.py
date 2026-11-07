@@ -90,12 +90,11 @@ Model and integrator
 PyAT exact passmethods are converted to the equivalent Xsuite ``model``. Other methods
 are converting according to a ``match_model`` keyword:
 
-- ``match_model`` is False: ``model``, ``integrator``,
-  ``num_multipole_kicks`` are set to their default value. This way, the default
-  behaviour in AT is turned into the default behaviour in Xsuite,
+- ``match_model`` is False: ``model`` and ``integrator`` are set to their
+  default value. This way, the default behaviour in AT is turned into the
+  default behaviour in Xsuite,
 - ``match_model`` is True (the default): a model matching at best the AT model is
-  selected, the integrator is set to ``yoshida4`` and ``num_multipole_kicks`` is set
-  equal to ``NumIntSteps``.
+  selected, the integrator is set to ``yoshida4``.
 
 This is summarised in this table:
 
@@ -134,11 +133,8 @@ The following AT attributes are ignored in writing Xsuite .json files:
 
 - ``RApertures``
 - ``EApertures``
-- ``X0ref``. This parameter defines the distance between the magnetic axis of a
-  rectangular bend and the reference trajectory. It only matters for rectangular bends
-  with focusing or higher order multipoles. Xsuite has a similar attribute
-  ``rbend_shift`` but there is no analytical conversion possible between both.
-- ``RefDZ``. This defines the correction of path lengthening for rectangular bends.
+- ``RefDZ``. This defines the correction of path lengthening for rectangular bends. It
+  has no equivalent in Xsuite.
 
 
 .. _xsuite: https://xsuite.readthedocs.io
@@ -149,16 +145,13 @@ from __future__ import annotations
 __all__ = [
     "XsElement",
     "XsLine",
-    "lattice_from_line",
-    "line_from_lattice",
     "load_xsuite",
     "save_xsuite",
 ]
 
 import json
 import warnings
-from abc import abstractmethod
-from math import sqrt
+from math import sqrt, pi
 from pathlib import Path
 from collections.abc import Callable
 from typing import Any, ClassVar, Protocol
@@ -169,24 +162,6 @@ import numpy as np
 from ..lattice import AtWarning, ReferencePoint, constants as cst
 from ..lattice import Lattice, Particle, elements as elt
 from .madx import poly_from_mad, poly_to_mad
-
-try:
-    from xtrack import Line
-except ImportError:
-
-    class Line:
-        """Dummy class replacing xtrack.Line."""
-
-        # noinspection PyUnusedLocal
-        @classmethod
-        def from_dict(cls, root: dict[str, Any]) -> Line:
-            msg = "xtrack is not installed."
-            raise ImportError(msg)
-
-        # noinspection PyMethodMayBeStatic
-        def to_dict(self) -> dict[str, Any]:
-            msg = "xtrack is not installed."
-            raise ImportError(msg)
 
 
 # Default particle: electrons at 1 GeV
@@ -230,8 +205,7 @@ class _XsFactory(Protocol):
     """Base class for Xsuite element factories."""
 
     @classmethod
-    @abstractmethod
-    def from_at(cls, **atparams) -> XsElement: ...
+    def from_at(cls, atelem: elt.Element, match_model: bool = True) -> XsElement: ...
 
 
 class XsElement(dict, _XsFactory):
@@ -253,6 +227,10 @@ class XsElement(dict, _XsFactory):
         self.setdefault("length", 0.0)
         self.name = name
         self.origin = kwargs.get("__class__", "")
+
+    def _warn(self, msg: str):
+        """Issue a warning with the element name."""
+        warnings.warn(AtWarning(f"Element {self.name}: {msg}"), stacklevel=2)
 
     def _params_to_at(self, **atparams) -> dict:
         """Translate Xsuite parameters to AT parameters."""
@@ -283,7 +261,7 @@ class XsElement(dict, _XsFactory):
         """
         return self
 
-    def to_at(self) -> list[elt.Element]:
+    def to_at(self) -> elt.Element:
         """Generate the AT element.
 
         Returns:
@@ -291,7 +269,7 @@ class XsElement(dict, _XsFactory):
         """
         elem_kwargs = self._params_to_at()
         cls = self._class_to_at(elem_kwargs)
-        return [cls.init_from_dict(**elem_kwargs)]
+        return cls.init_from_dict(**elem_kwargs)
 
     # noinspection PyUnusedLocal
     @classmethod
@@ -314,13 +292,13 @@ class XsElement(dict, _XsFactory):
         return cls(name=name, **xsparams)
 
     @classmethod
-    def from_at(cls, match_model: bool = True, **atparams) -> XsElement:
+    def from_at(cls, atelem: elt.Element, match_model: bool = True) -> XsElement:
         """Build a XsElement element from an AT element.
 
         Args:
+            atelem:         AT :py:class:`.Element`
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. Otherwise, use Xsuite defaults,
-            atparams:       dictionary representation of the AT element.
 
         Returns:
             xselement:  new :py:class:`XsElement` object
@@ -329,10 +307,10 @@ class XsElement(dict, _XsFactory):
         xsparams = {
             kxs: v
             for kxs, kat in cls._xsuite2at_attr.items()
-            if (v := atparams.get(kat)) is not None
+            if (v := getattr(atelem, kat, None)) is not None
         }
         # Handling of model and integrator
-        xs_model = cls._at2xsuite_model.get(atparams["PassMethod"], None)
+        xs_model = cls._at2xsuite_model.get(atelem.PassMethod, None)
         if match_model:
             if xs_model is None:
                 xs_model = cls._at2xsuite_model.get(None, None)
@@ -342,7 +320,7 @@ class XsElement(dict, _XsFactory):
             xsparams["model"] = xs_model
         # Set the Xsuite class
         xsparams["__class__"] = cls.__name__
-        return cls(name=atparams["FamName"], **xsparams)
+        return cls(name=atelem.FamName, **xsparams)
 
     @staticmethod
     def static_from_dict(
@@ -377,11 +355,7 @@ class XsElement(dict, _XsFactory):
             xselement:  new :py:class:`XsElement` object
         """
         xsclass = _at2xsclass.get(type(atelem), NotInXsuite)
-        return xsclass.from_at(match_model=match_model, **atelem.to_dict())
-
-    @property
-    def _l_anchor(self) -> float:
-        return self.get("length", 0.0)
+        return xsclass.from_at(atelem, match_model=match_model)
 
 
 class Marker(XsElement):
@@ -414,7 +388,12 @@ class Multipole(XsElement):
     _at_integrator = "yoshida4"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "order": "MaxOrder",
+        "num_multipole_kicks": "NumIntKicks",
     }
+
+    @property
+    def _integration_length(self):
+        return self["length"]
 
     def _set_at_transforms(self) -> dict:
         """Generate AT element displacements."""
@@ -432,13 +411,10 @@ class Multipole(XsElement):
         rot_s_frame = self.get("rot_s_rad", 0.0)
         if rot_s_frame != 0.0:
             if ismisaligned:
-                msg = (
-                    f"{self.name}:alignment errors available only for H bends, ignored"
-                )
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                self._warn("alignment errors available only for H bends, ignored")
             transforms = {"tilt_frame": rot_s_frame}
         elif ismisaligned:
-            length = self._l_anchor
+            length = self._integration_length
             rot_shift_anchor = self.get("rot_shift_anchor", 0.0)
             anchor = 0.5 if length == 0.0 else rot_shift_anchor / length
             if anchor == 0.0:
@@ -450,7 +426,7 @@ class Multipole(XsElement):
                     f"Anchor point for rotation different from 0 or {length / 2.0},\n"
                     "setting reference to AT default: ReferencePoint.CENTRE"
                 )
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                self._warn(msg)
                 reference = ReferencePoint.CENTRE
             transforms["reference"] = reference.value
         return transforms
@@ -473,7 +449,7 @@ class Multipole(XsElement):
             # Convert to AT
             return porder, np.fromiter(poly_from_mad(poly), dtype=float, count=lpoly)
 
-        length = self.get("length", 0.0)
+        length = self._integration_length
         xsorder: int = self.get("order", 0)
         atorder: int = getattr(self._atClass, "DefaultOrder", xsorder)
         aorder, polya = xspoly(["k0s", "k1s", "k2s", "k3s"], "ksl")
@@ -484,8 +460,6 @@ class Multipole(XsElement):
             "PolynomB": polyb[: maxorder + 1],
             "PolynomA": polya[: maxorder + 1],
         }
-        if (nk := self.get("num_multipole_kicks", 0)) != 0:
-            atparams["NumIntSteps"] = (nk - 1) // 3 + 1
         if (taper := self.get("delta_taper")) is not None:
             atparams["FieldScaling"] = 1.0 + taper
         return atparams
@@ -499,37 +473,34 @@ class Multipole(XsElement):
             atparams["FringeQuadExit"] = 1
         return atparams
 
-    def _set_xs_transforms(self, atparams: dict) -> None:
+    def _set_xs_transforms(self, atelem) -> None:
         """Generate Xsuite element displacements."""
         tr = {
-            "shift_x": atparams.pop("_dx", 0.0),
-            "shift_y": atparams.pop("_dy", 0.0),
-            "shift_s": atparams.pop("_dz", 0.0),
-            "rot_s_rad_no_frame": atparams.pop("_tilt", 0.0),
-            "rot_x_rad": -atparams.pop("_pitch", 0.0),
-            "rot_y_rad": atparams.pop("_yaw", 0.0),
+            "shift_x": getattr(atelem, "_dx", 0.0),
+            "shift_y": getattr(atelem, "_dy", 0.0),
+            "shift_s": getattr(atelem, "_dz", 0.0),
+            "rot_s_rad_no_frame": getattr(atelem, "_tilt", 0.0),
+            "rot_x_rad": -getattr(atelem, "_pitch", 0.0),
+            "rot_y_rad": getattr(atelem, "_yaw", 0.0),
         }
         misalign = {k: v for k, v in tr.items() if v != 0.0}
-        refpoint = atparams.pop("_reference", ReferencePoint.CENTRE)
-        rots_frame = atparams.pop("_tilt_frame", 0.0)
+        refpoint = getattr(atelem, "_reference", ReferencePoint.CENTRE)
+        rots_frame = getattr(atelem, "_tilt_frame", 0.0)
         ismisaligned = len(misalign) > 0
 
         if rots_frame != 0.0:
             if ismisaligned:
-                msg = (
-                    f"{self.name}: alignment errors available only for H bends, ignored"
-                )
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                self._warn("alignment errors available only for H bends, ignored")
             misalign = {"rot_s_rad": rots_frame}
         elif ismisaligned:
             if refpoint == ReferencePoint.ENTRANCE:
                 misalign["rot_shift_anchor"] = 0.0
             else:
-                misalign["rot_shift_anchor"] = atparams["Length"] / 2.0
+                misalign["rot_shift_anchor"] = self._integration_length / 2.0
 
         self.update(misalign)
 
-    def _set_xs_poly(self, atparams: dict, match_model: bool = True) -> None:
+    def _set_xs_poly(self, atelem, match_model: bool = True) -> None:
         """Generate the AT field expansion."""
 
         def extract(poly, ord):
@@ -541,11 +512,10 @@ class Multipole(XsElement):
                 poly[ord] = 0.0
             return v
 
-        pata = atparams.get("PolynomA", np.zeros(4))
+        pata = getattr(atelem, "PolynomA", np.zeros(4))
         pola = np.fromiter(poly_to_mad(pata), dtype=float, count=pata.size)
-        patb = atparams.get("PolynomB", np.zeros(4))
+        patb = getattr(atelem, "PolynomB", np.zeros(4))
         polb = np.fromiter(poly_to_mad(patb), dtype=float, count=patb.size)
-        length: float = atparams.get("Length")
         korder = getattr(self, "_mag_order", None)
         if korder == 0:  # dipole
             self["k1"] = extract(polb, 1)
@@ -553,21 +523,19 @@ class Multipole(XsElement):
         elif korder is not None:  # quadrupole, sextupole, octupole
             self["k" + str(korder)] = extract(polb, korder)
             self["k" + str(korder) + "s"] = extract(pola, korder)
-        if length > 0.0:
+        if (length := self._integration_length) > 0.0:
             polb *= length
             pola *= length
         if np.any(pola) or np.any(polb):
             self["knl"] = list(polb)
             self["ksl"] = list(pola)
-        if match_model and (numintsteps := atparams.get("NumIntSteps")) is not None:
-            self["num_multipole_kicks"] = 3 * numintsteps
-        if (scaling := atparams.get("FieldScaling")) is not None:
+        if (scaling := getattr(atelem, "FieldScaling", None)) is not None:
             self["delta_taper"] = scaling - 1.0
-        self["_isthick"] = length != 0.0
+        self["_isthick"] = self["length"] != 0.0
 
-    def _set_xs_fringe(self, atparams: dict) -> None:
-        self["edge_entry_active"] = bool(atparams.get("FringeQuadEntrance", 0))
-        self["edge_exit_active"] = bool(atparams.get("FringeQuadExit", 0))
+    def _set_xs_fringe(self, atelem) -> None:
+        self["edge_entry_active"] = bool(getattr(atelem, "FringeQuadEntrance", 0))
+        self["edge_exit_active"] = bool(getattr(atelem, "FringeQuadExit", 0))
 
     def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
         if atparams.get("Length", 0.0) == 0.0:
@@ -583,11 +551,11 @@ class Multipole(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = True, **atparams):
-        elem = super().from_at(match_model=match_model, **atparams)
-        elem._set_xs_poly(atparams, match_model=match_model)
-        elem._set_xs_fringe(atparams)
-        elem._set_xs_transforms(atparams)
+    def from_at(cls, atelem: elt.Element, match_model: bool = True):
+        elem = super().from_at(atelem, match_model=match_model)
+        elem._set_xs_poly(atelem, match_model=match_model)
+        elem._set_xs_fringe(atelem)
+        elem._set_xs_transforms(atelem)
         return elem
 
 
@@ -635,8 +603,8 @@ class Bend(Multipole):
     }
     _mag_order = 0
     _default_bend_fringe: ClassVar[dict[bool, int]] = {
-        True: 4,
-        False: 1,
+        True: 4,  # exact methods
+        False: 1,  # non-exact methods
     }
     _at2xsuite_edge: ClassVar[dict[int, str]] = {
         0: "suppressed",
@@ -664,8 +632,7 @@ class Bend(Multipole):
         entry_hgap = self.get("edge_entry_hgap")
         exit_hgap = self.get("edge_exit_hgap")
         if entry_hgap != exit_hgap:
-            msg = "Entry and Exit gaps for dipole are different, use entry"
-            warnings.warn(AtWarning(msg), stacklevel=2)
+            self._warn("Entry and Exit gaps for dipole are different, keep entry")
         if entry_hgap is not None:
             atparams["FullGap"] = 2.0 * entry_hgap
 
@@ -673,19 +640,19 @@ class Bend(Multipole):
         edge_model("edge_exit_model", "FringeBendExit", "FringeQuadExit")
         return atparams
 
-    def _set_xs_fringe(self, atparams: dict):
+    def _set_xs_fringe(self, atelem):
         def edge_model(bendkey, quadkey):
-            at_quad_fringe = atparams.get(quadkey, 0)
+            at_quad_fringe = getattr(atelem, quadkey, 0)
             if at_quad_fringe > 0:
                 return "full"
             else:
-                return self._at2xsuite_edge[atparams.get(bendkey, default_bend_fringe)]
+                return self._at2xsuite_edge[getattr(atelem, bendkey, def_bend_fringe)]
 
-        if (gap := atparams.get("FullGap")) is not None:
+        if (gap := getattr(atelem, "FullGap", None)) is not None:
             self["edge_entry_hgap"] = 0.5 * gap
             self["edge_exit_hgap"] = 0.5 * gap
-        exact = atparams.get("PassMethod", "").startswith("Exact")
-        default_bend_fringe = self._default_bend_fringe[exact]
+        exact = atelem.PassMethod.startswith("Exact")
+        def_bend_fringe = self._default_bend_fringe[exact]
         self["edge_entry_model"] = edge_model(
             "FringeBendEntrance", "FringeQuadEntrance"
         )
@@ -693,11 +660,13 @@ class Bend(Multipole):
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(EntranceAngle=0.0, ExitAngle=0.0, **atparams)
+        if not self.get("k0_from_h", "k0" not in self):
+            atparams["PolynomB"][0] -= self["angle"] / self["length"]
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = True, **atparams):
-        elem = super().from_at(match_model=match_model, **atparams)
+    def from_at(cls, atelem: elt.Element, match_model: bool = True):
+        elem = super().from_at(atelem, match_model=match_model)
         elem["k0_from_h"] = True
         return elem
 
@@ -706,10 +675,20 @@ class RBend(Bend):
     """Xsuite RBend element."""
 
     _at2xsuite_model = {
+        "BndStrMPoleSymplectic4Pass": "drift-kick-drift-exact",
+        "BndStrMPoleSymplectic4RadPass": "drift-kick-drift-exact",
+        "ExactRectBendRadPass": "drift-kick-drift-exact",
+        "ExactRectBendPass": "drift-kick-drift-exact",
         "ExactRectangularBendRadPass": "drift-kick-drift-exact",
         "ExactRectangularBendPass": "drift-kick-drift-exact",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
+
+    @property
+    def _integration_length(self):
+        length = self["length"]
+        hangle = 0.5 * self["angle"]
+        return length * np.sinc(hangle / pi)
 
     def _model_to_at(self) -> dict[str, str]:
         """Get the AT passmethod."""
@@ -724,39 +703,46 @@ class RBend(Bend):
         atparams = super()._params_to_at(**atparams)
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
-        if (
-            straight
-            and not exact
-            and not (
-                np.all(atparams["PolynomA"] == 0.0)
-                and np.all(atparams["PolynomB"] == 0.0)
-            )
+        hangle = 0.5 * self["angle"]
+        length = self.get("length_straight", 0.0) / np.sinc(hangle / pi)
+        if straight and not exact and (
+            np.any(atparams["PolynomA"] != 0.0)
+            or np.any(atparams["PolynomB"] != 0.0)
         ):
             msg = (
                 "Multipole are present in the rectangular bend: "
                 "PassMethod is forced to ExactRectangularBendPass"
             )
-            warnings.warn(AtWarning(msg), stacklevel=3)
+            self._warn(msg)
             atparams["PassMethod"] = "ExactRectangularBendPass"
-        hangle = abs(0.5 * self["angle"])
-        atparams["Length"] = self.get("length_straight", 0.0) / np.sinc(hangle / np.pi)
+        if self.get("rbend_angle_diff", 0.0) != 0.0:
+            self._warn('"rbend_angle_diff" is not supported in AT, ignored.')
+        atparams["Length"] = length
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
         return atparams
 
+    def to_at(self) -> elt.Element:
+        atelem = super().to_at()
+        atelem.rbendtune()
+        return atelem
+
     @classmethod
-    def from_at(cls, match_model: bool = True, **atparams):
-        elem = super().from_at(match_model=match_model, **atparams)
-        elem["rbend_model"] = "straight-body"
+    def from_at(cls, atelem: elt.Element, match_model: bool = True):
+
+        def X0ref_to_rbend_shift(hangle, length, X0ref):
+            return -X0ref - 0.125 * length * hangle * np.sinc(0.5 * hangle / pi) ** 2
+
+        elem = super().from_at(atelem, match_model=match_model)
         hangle = 0.5 * elem["angle"]
+        length = elem.get("length")
+        X0ref = getattr(atelem, "X0ref", 0.0)
+        elem["rbend_model"] = "straight-body"
         elem["edge_entry_angle"] -= hangle
         elem["edge_exit_angle"] -= hangle
-        elem["length_straight"] = elem.pop("length") * np.sinc(hangle / np.pi)
+        elem["length_straight"] = elem._integration_length
+        elem["rbend_shift"] = X0ref_to_rbend_shift(hangle, length, X0ref)
         return elem
-
-    @property
-    def _l_anchor(self) -> float:
-        return self.get("length_straight", 0.0)
 
 
 class Cavity(XsElement):
@@ -768,9 +754,9 @@ class Cavity(XsElement):
         "frequency": "Frequency",
     }
 
-    def _set_xs_lag(self, atparams: dict):
-        freq = atparams["Frequency"]
-        tl = atparams.get("TimeLag", 0.0)
+    def _set_xs_lag(self, atelem):
+        freq = atelem.Frequency
+        tl = getattr(atelem, "TimeLag", 0.0)
         pl = 180.0 - 360.0 * tl * freq / cst.clight
         self["lag"] = pl
 
@@ -786,9 +772,9 @@ class Cavity(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, match_model: bool = True, **atparams):
-        elem = super().from_at(match_model=match_model, **atparams)
-        elem._set_xs_lag(atparams)
+    def from_at(cls, atelem: elt.Element, match_model: bool = True):
+        elem = super().from_at(atelem, match_model=match_model)
+        elem._set_xs_lag(atelem)
         return elem
 
 
@@ -815,26 +801,28 @@ class NotInXsuite(_XsFactory):
     """Class for AT elements without Xsuite equivalent."""
 
     @classmethod
-    def from_at(cls, **atparams) -> XsElement:
-        name = atparams["FamName"]
-        xsclass = Marker if atparams["Length"] == 0.0 else Drift
+    def from_at(cls, atelem: elt.Element, match_model: bool = True) -> XsElement:
+        name = atelem.FamName
+        if (length := atelem.Length) == 0.0:
+            xsclass = Marker
+            atel = elt.Marker(name)
+        else:
+            xsclass = Drift
+            atel = elt.Drift(name, length)
         msg = f"Element {name!r} is replaced by a {xsclass.__name__}"
         warnings.warn(AtWarning(msg), stacklevel=2)
-        return xsclass.from_at(**atparams)
+        return xsclass.from_at(atel, match_model=match_model)
 
 
 class Dipole(_XsFactory):
     """Class for handling AT dipoles."""
 
     @classmethod
-    def from_at(cls, **atparams) -> XsElement:
-        if atparams["PassMethod"] in {
-            "ExactRectangularBendPass",
-            "ExactRectangularBendRadPass",
-        }:
-            return RBend.from_at(**atparams)
+    def from_at(cls, atelem: elt.Element, match_model: bool = True) -> XsElement:
+        if atelem.PassMethod in RBend._at2xsuite_model:
+            return RBend.from_at(atelem, match_model=match_model)
         else:
-            return Bend.from_at(**atparams)
+            return Bend.from_at(atelem, match_model=match_model)
 
 
 class Corrector(_XsFactory):
@@ -842,17 +830,13 @@ class Corrector(_XsFactory):
 
     # noinspection PyPep8Naming
     @classmethod
-    def from_at(cls, KickAngle=(0.0, 0.0), **atparams) -> XsElement:
-        pola = np.array([KickAngle[1]])
-        polb = np.array([-KickAngle[0]])
-        if (length := atparams["Length"]) != 0.0:
-            pola /= length
-            polb /= length
-        # Prevent from duplicate attributes
-        atparams.pop("PolynomA", None)
-        atparams.pop("PolynomB", None)
-        atparams.pop("MaxOrder", None)
-        return Multipole.from_at(PolynomA=pola, PolynomB=polb, MaxOrder=0, **atparams)
+    def from_at(cls, atelem: elt.Element, match_model: bool = True) -> XsElement:
+        if (length := atelem.Length) == 0.0:
+            atel = elt.ThinMultipole(atelem.FamName, np.zeros(1), np.zeros(1))
+        else:
+            atel = elt.Multipole(atelem.FamName, length, np.zeros(1), np.zeros(1))
+        atel.KickAngle = atelem.KickAngle
+        return Multipole.from_at(atel, match_model=match_model)
 
 
 _xsclass: dict[str, type[XsElement]] = {
@@ -980,11 +964,11 @@ class XsLine:
 
             for nm in element_names:
                 try:
-                    for elem in self.elements[nm].to_at():
-                        if isinstance(elem, elt.RFCavity):
-                            cavities.append(elem)
-                        cell_length += getattr(elem, "Length", 0.0)
-                        yield elem
+                    atelem = self.elements[nm].to_at()
+                    if isinstance(atelem, elt.RFCavity):
+                        cavities.append(atelem)
+                    cell_length += getattr(atelem, "Length", 0.0)
+                    yield atelem
                 except Exception as exc:  # noqa: PERF203
                     exc.args = (f"In element {nm!r}: {exc.args[0]}",)
                     raise
@@ -1186,41 +1170,3 @@ def save_xsuite(
           with line feeds and indentation. Otherwise, the output is a single line.
     """
     XsLine.from_at(lattice, match_model=match_model).to_json(filename, compact=compact)
-
-
-def lattice_from_line(line: Line, use: str | None = None, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice` object from a Xsuite :py:class:`.Line` or
-    :py:class:`.Environment`.
-
-    Args:
-        line: Xsuite line or environment
-        use (str):  Name of the line containing the desired lattice.
-          Default: ``ring``.
-
-    Keyword Args:
-        name (str):         Name of the lattice. Default: Xsuite line name.
-        particle(Particle): Circulating particle. Default: Xsuite reference
-          particle
-        energy (float):     Energy of the lattice [eV]. Default: from Xsuite
-          reference particle
-        periodicity(int):   Number of periods. Default: 1
-        *:                  All other keywords will be set as Lattice attributes
-
-    Returns:
-        lattice:    New :py:class:`.Lattice` object.
-    """
-    return XsLine.from_xsuite(line, use=use).to_at(**kwargs)
-
-
-def line_from_lattice(ring: Lattice, match_model: bool = True) -> Line:
-    """Create a Xsuite :py:class:`.Line` from an AT lattice.
-
-    Args:
-        ring:           AT lattice
-        match_model:    if :py:obj:`True`, set the Xsuite model and integrator
-          matching at best the AT PassMethod. if :py:obj:`False`, use Xsuite defaults.
-
-    Returns:
-        line:           new :py:class:`.Line` object.
-    """
-    return Line.from_dict(XsLine.from_at(ring, match_model=match_model).to_dict())

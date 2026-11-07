@@ -15,6 +15,7 @@ static double pxyz(double dp1, double px, double py)
 }
 #endif /*PXYZ*/
 
+#ifdef DIFFUSION
 static void yrot_propagate(double *r6, double c, double s, double pz, double p, double *bdiff)
 {
   double dp1 = 1.0 + r6[delta_];
@@ -48,32 +49,6 @@ static void yrot_propagate(double *r6, double c, double s, double pz, double p, 
   ATsandwichmmt(yrotmat, bdiff);
 }
 
-static void Yrot(double *r6, double phi, double *bdiff)
-{
-    /* Forest 10.26, rotation in free space */
-
-        double dp1 = 1.0 + r6[delta_];
-        double x = r6[x_];
-        double px = r6[px_];
-        double py = r6[py_];
-        double c = cos(phi);
-        double s = sin(phi);
-        double pz = pxyz(dp1, px, py);
-        double p = c*pz - s*px;
-        double new_px = s*pz + c*px;
-        double new_x = x*pz/p;
-        double dy = x*py*s/p;
-        double dct = dp1*x*s/p;
-
-        if (bdiff) {
-            yrot_propagate(r6, c, s, pz, p, bdiff);
-        }
-        r6[x_] = new_x;
-        r6[px_] = new_px;
-        r6[y_] += dy;
-        r6[ct_] += dct;
-    }
-
 static void bend_wedge_propagate(const double *r6, double irho, double fx, double fy, double fringecorr, double *bdiff)
 {
     double p_norm = 1.0 / (1.0+r6[4]);
@@ -94,6 +69,34 @@ static void bend_wedge_propagate(const double *r6, double irho, double fx, doubl
     for (int m = 0; m < 6; m++)
       bdiff[m + 6*3] -= bdiff[m + 6*4] * r6[2] * (irho*irho + fy*fy) * fringecorr * p_norm * p_norm / irho;
 }
+#endif /*DIFFUSION*/
+
+static void Yrot(double *r6, double phi, double *bdiff)
+{
+    /* Forest 10.26, rotation in free space */
+
+        double dp1 = 1.0 + r6[delta_];
+        double x = r6[x_];
+        double px = r6[px_];
+        double py = r6[py_];
+        double c = cos(phi);
+        double s = sin(phi);
+        double pz = pxyz(dp1, px, py);
+        double p = c*pz - s*px;
+        double new_px = s*pz + c*px;
+        double new_x = x*pz/p;
+        double dy = x*py*s/p;
+        double dct = dp1*x*s/p;
+
+        #ifdef DIFFUSION
+        if (bdiff) yrot_propagate(r6, c, s, pz, p, bdiff);
+        #endif /*DIFFUSION*/
+
+        r6[x_] = new_x;
+        r6[px_] = new_px;
+        r6[y_] += dy;
+        r6[ct_] += dct;
+    }
 
 static void bend_linear_fringe(double* r6, double irho, double edge_angle,
         double gK, int method, double sign, double *bdiff)
@@ -127,8 +130,10 @@ static void bend_linear_fringe(double* r6, double irho, double edge_angle,
     else    /* fall back to legacy version */
         fy = irho * tan(edge_angle - fringecorr*p_norm);
 
+    #ifdef DIFFUSION
     /*  Propagate B */
     if (bdiff) bend_wedge_propagate(r6, irho, fx, fy, fringecorr, bdiff);
+    #endif /*DIFFUSION*/
 
   /*  Propagate particle */
     r6[px_] += r6[x_] * fx;
@@ -156,6 +161,7 @@ static void bend_wedge(double *r6, double rhoinv, double theta, double *bdiff)
         double dy = py*theta/rhoinv + py/rhoinv*dasin;
         double dct = dp1/rhoinv*(theta + dasin);
 
+        #ifdef DIFFUSION
         if (bdiff) {
             /* Propagation of the diffusion matrix temporarily computed as in bend_linear_fringe
                by using -theta */
@@ -163,6 +169,7 @@ static void bend_wedge(double *r6, double rhoinv, double theta, double *bdiff)
             double fy = fx;
             bend_wedge_propagate(r6, rhoinv, fx, fy, 0.0, bdiff);
         }
+        #endif /*DIFFUSION*/
 
         r6[x_] = new_x;
         r6[px_] = new_px;
@@ -247,7 +254,7 @@ void bend_fringe(double *r6, double irho, double gK)
     const double new_y = 2.0 * y / (1.0 + sqrt(1.0 - 2.0 * dPhi0_dpy * y));
     const double delta_x = dPhi0_dpx * SQR(new_y) / 2;
     const double delta_py = -Phi0 * new_y - factor / dp1 * SQR(new_y) * new_y;
-    const double delta_l = -dPhi0_ddelta * SQR(new_y) / 2.0;
+    const double delta_l = -dPhi0_ddelta * SQR(new_y) / 2.0 + factor / SQR(dp1) * SQR(SQR(new_y)) / 4.0;
 
     r6[x_]  += delta_x;
     r6[y_]  = new_y;
