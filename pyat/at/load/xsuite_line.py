@@ -458,10 +458,14 @@ class XsLine:
         if root.get("__class__", defclass) == "Line":
             line = root
         else:
+            lines = root["lines"]
+            lkeys = list(lines.keys())
             if use is None:
-                lkeys = list(root["lines"].keys())
                 use = lkeys[0] if len(lkeys) == 1 else "ring"
-            line = root["lines"][use]
+            if use not in lkeys:
+                msg = (f"Selected '{use}' line does not exist, choose from: {lkeys}")
+                raise KeyError(msg)
+            line = lines[use]
             line.setdefault("name", use)
         line.update(kwargs)
         ln = cls(elements, **line)

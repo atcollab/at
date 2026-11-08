@@ -35,6 +35,14 @@ from .element_object import Element
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
+def _array6(value):
+    return _array(value, shape=(6,))
+
+
+def _array2(value):
+    return _array(value, shape=(2,))
+
+
 class LongElement(Element):
     """Base class for long elements."""
 
@@ -449,10 +457,21 @@ class RFCavity(LongtMotion, LongElement):
 
 
 class M66(Radiative, Element):
-    """Linear (6, 6) transfer matrix."""
+    r"""Linear (6, 6) transfer matrix.
+
+    This implements Taylor maps of order 0 and 1:
+
+    :math:`\mathbf{X}_{out} = \mathbf{M66} \cdot \mathbf{X}_{in} + \mathbf{M6}`
+
+    """
 
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "M66"]
-    _conversions = dict(Element._conversions, M66=_array66)
+    _conversions = Element._conversions | {
+        "M66": _array66,
+        "M66rad": _array66,
+        "M6": _array6,
+        "M6rad": _array6,
+    }
     _file_classname = "Matrix66"
 
     def __init__(
@@ -461,14 +480,14 @@ class M66(Radiative, Element):
         """
         Args:
             family_name:    Name of the element
-            m66:            Transfer matrix. Default: Identity matrix
-            m66rad:         Transfer matrix including radiation. Default:m66
-            m6:             6x1 vector added to the particle coordinates
+            m66:            Transfer matrix. Default: 6x6 identity matrix
+            m66rad:         Transfer matrix including radiation. Default: *m66*
+            m6:             6x1 vector added to the particle coordinates. Default: 0
             m6rad:          6x1 vector added to the particle coordinates,
-              including radiation
+              including radiation. Default: *m6*.
 
         Default PassMethod: ``Matrix66Pass``
-        """  # noqa: D415
+        """
         if m66 is None:
             m66 = np.asfortranarray(np.identity(6))
         kwargs.setdefault("PassMethod", "Matrix66Pass")
@@ -485,21 +504,22 @@ class M66(Radiative, Element):
 class DeltaQ(Radiative, Element):
     """Lumped element describing amplitude detuning and chromaticity."""
 
-    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES]
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
 
     _conversions = dict(
         Element._conversions,
         Chrom_MaxOrder=int,
         Alphac_MaxOrder=int,
-        Beta=_array,
-        Alpha=_array,
-        Dispersion=_array,
-        BetaRad=_array,
-        AlphaRad=_array,
-        DispersionRad=_array,
+        Beta=_array2,
+        Alpha=_array2,
+        Dispersion=_array2,
+        BetaRad=_array2,
+        AlphaRad=_array2,
+        DispersionRad=_array2,
         ChromX=_array,
         ChromY=_array,
         Detuning=_array,
+        Alphac=_array,
     )
 
     _file_classname = "DeltaQ"
@@ -653,9 +673,7 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
     """Simple radiation damping and energy loss."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
-    _conversions = dict(
-        Element._conversions, U0=float, damp_mat_diag=lambda v: _array(v, shape=(6,))
-    )
+    _conversions = dict(Element._conversions, U0=float, damp_mat_diag=_array6)
 
     default_pass = {False: "IdentityPass", True: "SimpleRadiationRadPass"}
 
