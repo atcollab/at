@@ -149,7 +149,7 @@ __all__ = [
 ]
 
 import json
-from math import sqrt
+from math import sqrt, pi
 from pathlib import Path
 from typing import Any, ClassVar
 from collections.abc import Iterator
@@ -398,10 +398,10 @@ class XsLine:
                     cav.Frequency = rev * cav.HarmNumber
                 elif cav.HarmNumber == 0:
                     cav.HarmNumber = round(cav.Frequency / rev)
-                lag = getattr(cav, "_phaselag", 0.0)
+                phase = getattr(cav, "_phaselag", 0.0)
                 with contextlib.suppress(AttributeError):
                     delattr(cav, "_phaselag")
-                tl = (180.0 - lag) * cst.clight / 360.0 / cav.Frequency
+                tl = (0.5 - phase / 2.0 / pi) * cst.clight / cav.Frequency
                 cav.TimeLag = tl
 
         if in_file := getattr(self, "in_file", ""):
@@ -463,7 +463,7 @@ class XsLine:
             if use is None:
                 use = lkeys[0] if len(lkeys) == 1 else "ring"
             if use not in lkeys:
-                msg = (f"Selected '{use}' line does not exist, choose from: {lkeys}")
+                msg = f"Selected '{use}' line does not exist, choose from: {lkeys}"
                 raise KeyError(msg)
             line = lines[use]
             line.setdefault("name", use)

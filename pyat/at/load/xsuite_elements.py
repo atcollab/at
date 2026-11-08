@@ -309,7 +309,7 @@ class Multipole(XsElement):
         None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
-    _at_integrator = "yoshida4"
+    _at_integrator = "yoshida-6"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "order": "MaxOrder",
         "num_multipole_kicks": "NumIntKicks",
@@ -660,7 +660,7 @@ class RBend(Bend):
 class Cavity(XsElement):
     # Class variables
     _atClass = elt.RFCavity
-    _at_integrator = "yoshida4"
+    _at_integrator = "yoshida-6"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "voltage": "Voltage",
         "frequency": "Frequency",
@@ -669,8 +669,8 @@ class Cavity(XsElement):
     def _set_xs_lag(self, atelem):
         freq = atelem.Frequency
         tl = getattr(atelem, "TimeLag", 0.0)
-        pl = 180.0 - 360.0 * tl * freq / cst.clight
-        self["lag"] = pl
+        phase = 2 * pi * (0.5 - tl * freq / cst.clight)
+        self["phase"] = phase
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(
@@ -679,7 +679,7 @@ class Cavity(XsElement):
         length = atparams.get("Length", 0.0)
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
         atparams["HarmNumber"] = self.get("harmonic", 0)
-        if (phaselag := self.get("lag")) is not None:
+        if (phaselag := self.get("phase")) is not None:
             atparams["_phaselag"] = phaselag
         return atparams
 
@@ -698,7 +698,7 @@ class Cavity(XsElement):
 class CrabCavity(Cavity):
     # Class variables
     _atClass = elt.CrabCavity
-    _at_integrator = "yoshida4"
+    _at_integrator = "yoshida-6"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "frequency": "Frequency",
     }
