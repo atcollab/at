@@ -283,6 +283,12 @@ class ThinMultipole(Element):
                 warnings.warn(AtWarning(msg), stacklevel=2)
         super().__setattr__(attrname, value)
 
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> Element:
+        # Remove the KickAngle attribute possibly present in old files
+        elem_dict.pop("KickAngle", None)
+        return super().new_from_dict(**elem_dict)
+
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
@@ -380,11 +386,17 @@ class ThinMultipole(Element):
 
         Provided for backwards compatibility, use *HKick*, *VKick* instead.
         """
-        return np.arctan([-self.Kn0L, self.Ks0L])
+        ka = np.arctan([-self.Kn0L, self.Ks0L]).view(_LinkedArray)
+
+        def setr(*_):
+            self.KickAngle = ka
+
+        ka.setitem = setr
+        return ka
 
     @KickAngle.setter
     def KickAngle(self, value) -> None:
-        kicks = np.tan(value)
+        kicks = np.tan(_array(value, (2,)))
         self.Kn0L = -kicks[0]
         self.Ks0L = kicks[1]
 
