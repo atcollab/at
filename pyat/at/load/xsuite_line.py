@@ -241,8 +241,9 @@ def _separate_apertures(lattice: Lattice) -> Lattice:
     def create_aperture_marker(elem: elt.Element, attr: str) -> elt.Marker | None:
         if (ap := getattr(elem, attr, None)) is not None:
             at = {k: v for k in _transform_keys if (v := getattr(elem, k, 0.0)) != 0.0}
-            at[attr] = ap
-            return elt.Marker(elem.FamName + "_aperture", **at)
+            marker = elt.Marker(elem.FamName + "_aperture", **{attr: ap})
+            marker.transform(**at)
+            return marker
         return None
 
     def same_transforms(mk1: elt.Marker, mk2: elt.Marker) -> bool:
@@ -261,8 +262,16 @@ def _separate_apertures(lattice: Lattice) -> Lattice:
             and same_transforms(markers[0], markers[1])
         ):
             return [markers[0]]
-        else:
-            return markers
+        return markers
+
+    def split_marker(elem):
+        r_aperture = getattr(elem, "RApertures", None)
+        e_aperture = getattr(elem, "EApertures", None)
+        if not (r_aperture is None or e_aperture is None):
+            marker = create_aperture_marker(elem,"EApertures")
+            del elem.EApertures
+            return marker
+        return None
 
     def element_generator(ring: Lattice) -> Iterator[elt.Element]:
         """Insert aperture markers in the lattice."""
@@ -271,11 +280,13 @@ def _separate_apertures(lattice: Lattice) -> Lattice:
         for el in ring:
             r_elem = None
             e_elem = None
-            if not isinstance(el, elt.Marker):
+            if isinstance(el, elt.Marker):
+                e_elem = split_marker(el)
+            else:
                 r_elem = create_aperture_marker(el, "RApertures")
                 e_elem = create_aperture_marker(el, "EApertures")
-            yield from compare_markers([r_pending, r_elem], "RApertures")
-            yield from compare_markers([e_pending, e_elem], "EApertures")
+            yield from compare_markers([r_elem, r_pending], "RApertures")
+            yield from compare_markers([e_elem, e_pending], "EApertures")
             r_pending = None
             e_pending = None
 
