@@ -705,6 +705,7 @@ class CrabCavity(XsElement):
         length = atparams.get("Length", 0.0)
         atparams["Voltages"] = [self.get("crab_voltage", 0.0), 0.0]
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
+        atparams["HarmNumber"] = self.get("harmonic", 0)
         if (phaselag := self.get("phase")) is not None:
             atparams["_phaselag"] = phaselag
         return atparams
@@ -804,14 +805,19 @@ class Dipole:
 class Corrector:
     """Class for handling AT correctors."""
 
+    _tr_keys: set[str] = {"dx", "dy", "dz", "tilt", "yaw", "pitch", "tilt_frame"}
+
     # noinspection PyPep8Naming
     @classmethod
     def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement:
+        at = {k: v for k in cls._tr_keys if (v := getattr(atelem, k, 0.0)) != 0.0}
+        at["reference"] = atelem.ReferencePoint
         if (length := atelem.Length) == 0.0:
             atel = elt.ThinMultipole(atelem.FamName, np.zeros(1), np.zeros(1))
         else:
             atel = elt.Multipole(atelem.FamName, length, np.zeros(1), np.zeros(1))
         atel.KickAngle = atelem.KickAngle
+        atel.transform(**at)
         return Multipole.from_at(atel, **kwargs)
 
 
