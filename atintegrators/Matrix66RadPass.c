@@ -37,7 +37,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *M66=atGetOptionalDoubleArray(ElemData,"M66Rad");
         if (M66 == NULL) M66=atGetDoubleArray(ElemData,"M66");
         /*optional fields*/
-        double *M6 =atGetOptionalDoubleArray(ElemData,"M6rad"); check_error();
+        double *M6 =atGetOptionalDoubleArray(ElemData,"M6Rad"); check_error();
         if (M6 == NULL) M6=atGetOptionalDoubleArray(ElemData,"M6");
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -69,7 +69,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *M66=atGetDoubleArray(ElemData,"M66Rad"); check_error();
         if (M66 == NULL) M66=atGetDoubleArray(ElemData,"M66");
         /*optional fields*/
-        double *M6=atGetOptionalDoubleArray(ElemData,"M6rad"); check_error();
+        double *M6=atGetOptionalDoubleArray(ElemData,"M6Rad"); check_error();
         if (M6 == NULL) M6=atGetOptionalDoubleArray(ElemData,"M6");
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -84,15 +84,17 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(1,1);
-        mxSetCell(plhs[0],0,mxCreateString("M66Rad"));
+        mxSetCell(plhs[0],0,mxCreateString("M66"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(5,1);
-            mxSetCell(plhs[1], 0,mxCreateString("M6rad"));
-            mxSetCell(plhs[1], 1,mxCreateString("T1Rad"));
-            mxSetCell(plhs[1], 2,mxCreateString("T2Rad"));
-            mxSetCell(plhs[1], 3,mxCreateString("R1"));
-            mxSetCell(plhs[1], 4,mxCreateString("R2"));
+            plhs[1] = mxCreateCellMatrix(7,1);
+            mxSetCell(plhs[0], 0,mxCreateString("M66Rad"));
+            mxSetCell(plhs[0], 1,mxCreateString("M6"));
+            mxSetCell(plhs[1], 2,mxCreateString("M6Rad"));
+            mxSetCell(plhs[1], 3,mxCreateString("T1Rad"));
+            mxSetCell(plhs[1], 4,mxCreateString("T2Rad"));
+            mxSetCell(plhs[1], 5,mxCreateString("R1"));
+            mxSetCell(plhs[1], 6,mxCreateString("R2"));
         }
     }
     else {

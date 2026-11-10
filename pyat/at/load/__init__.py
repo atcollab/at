@@ -19,4 +19,5 @@ try:
 except (ImportError, RuntimeError):
     pass
 else:
+    del xtrack
     from .xtcompat import *

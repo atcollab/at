@@ -30,12 +30,7 @@ class _XsFactory(Protocol):
     """Base class for Xsuite element factories."""
 
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
-    ) -> XsElement: ...
+    def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement: ...
 
 
 class XsElement(dict, _XsFactory):
@@ -47,6 +42,7 @@ class XsElement(dict, _XsFactory):
     _at2xsuite_model: ClassVar[dict[str | None, str]] = {}
     _xsuite2at_model: ClassVar[dict[str, str | None]] = {}
     _at_integrator: ClassVar[str | None] = None
+    _allow_rot_shift: ClassVar[bool] = False
 
     # Instance attributes
     name: str  #: Element name
@@ -60,7 +56,8 @@ class XsElement(dict, _XsFactory):
 
     def _warn(self, msg: str):
         """Issue a warning with the element name."""
-        warnings.warn(AtWarning(f"Element {self.name}: {msg}"), stacklevel=3)
+        cname = type(self).__name__
+        warnings.warn(AtWarning(f"Element {cname}({self.name}): {msg}"), stacklevel=3)
 
     @property
     def _integration_length(self):
@@ -77,21 +74,60 @@ class XsElement(dict, _XsFactory):
             "rot_y_rad": getattr(atelem, "_yaw", 0.0),
         }
         misalign = {k: v for k, v in tr.items() if v != 0.0}
+        if misalign and not self._allow_rot_shift:
+            msg = "Misalignment and rotations are not avalaible in Xsuite, ignored"
+            self._warn(msg)
+            return
         refpoint = getattr(atelem, "_reference", ReferencePoint.CENTRE)
         rots_frame = getattr(atelem, "_tilt_frame", 0.0)
-        ismisaligned = len(misalign) > 0
 
         if rots_frame != 0.0:
-            if ismisaligned:
+            if misalign:
                 self._warn("alignment errors available only for H bends, ignored")
             misalign = {"rot_s_rad": rots_frame}
-        elif ismisaligned:
+        elif misalign:
             if refpoint == ReferencePoint.ENTRANCE:
                 misalign["rot_shift_anchor"] = 0.0
             else:
                 misalign["rot_shift_anchor"] = self._integration_length / 2.0
 
         self.update(misalign)
+
+    def _set_at_transforms(self) -> dict:
+        """Generate AT element displacements."""
+        tr = {
+            "dx": self.get("shift_x", 0.0),
+            "dy": self.get("shift_y", 0.0),
+            "dz": self.get("shift_s", 0.0),
+            "pitch": -self.get("rot_x_rad", 0.0),
+            "yaw": self.get("rot_y_rad", 0.0),
+            "tilt": self.get("rot_s_rad_no_frame", 0.0),
+        }
+        transforms = {k: v for k, v in tr.items() if v != 0.0}
+        ismisaligned = len(transforms) > 0
+
+        rot_s_frame = self.get("rot_s_rad", 0.0)
+        if rot_s_frame != 0.0:
+            if ismisaligned:
+                self._warn("alignment errors available only for H bends, ignored")
+            transforms = {"tilt_frame": rot_s_frame}
+        elif ismisaligned:
+            length = self._integration_length
+            rot_shift_anchor = self.get("rot_shift_anchor", 0.0)
+            anchor = 0.5 if length == 0.0 else rot_shift_anchor / length
+            if anchor == 0.0:
+                reference = ReferencePoint.ENTRANCE
+            elif abs(anchor - 0.5) < 1.0e-6:
+                reference = ReferencePoint.CENTRE
+            else:
+                msg = (
+                    f"Anchor point for rotation different from 0 or {length / 2.0},\n"
+                    "setting reference to AT default: ReferencePoint.CENTRE"
+                )
+                self._warn(msg)
+                reference = ReferencePoint.CENTRE
+            transforms["reference"] = reference.value
+        return transforms
 
     def _params_to_at(self, **atparams) -> dict:
         """Translate Xsuite parameters to AT parameters."""
@@ -103,6 +139,7 @@ class XsElement(dict, _XsFactory):
         if self.origin:
             atparams["origin"] = self.origin
         atparams.update(self._model_to_at())
+        atparams.update(self._set_at_transforms())
         return atparams
 
     def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
@@ -156,8 +193,9 @@ class XsElement(dict, _XsFactory):
     def from_at(
         cls,
         atelem: elt.Element,
+        *,
         match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
+        **kwargs,
     ) -> XsElement:
         """Build a XsElement element from an AT element.
 
@@ -166,6 +204,7 @@ class XsElement(dict, _XsFactory):
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. Otherwise, use Xsuite defaults,
             do_warn:        Function checking if a warning should be issued.
+            beta0:          beta of the reference particle
         Returns:
             xselement:  new :py:class:`XsElement` object
         """
@@ -186,7 +225,9 @@ class XsElement(dict, _XsFactory):
             xsparams["model"] = xs_model
         # Set the Xsuite class
         xsparams["__class__"] = cls.__name__
-        return cls(name=atelem.FamName, **xsparams)
+        elem = cls(name=atelem.FamName, **xsparams)
+        elem._set_xs_transforms(atelem)
+        return elem
 
     @staticmethod
     def static_from_dict(
@@ -210,6 +251,8 @@ class XsElement(dict, _XsFactory):
     @staticmethod
     def static_from_at(
         atelem: elt.Element,
+        *,
+        beta0=1.0,
         match_model: bool = True,
         do_warn: Callable[[str], bool] = lambda x: True,
     ) -> XsElement:
@@ -217,6 +260,7 @@ class XsElement(dict, _XsFactory):
 
         Args:
             atelem:         AT :py:class:`.Element`
+            beta0:          beta of the reference particle
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. If :py:obj:`False`, the Xsuite default
               model and integrator are be used.
@@ -226,7 +270,9 @@ class XsElement(dict, _XsFactory):
             xselement:  new :py:class:`XsElement` object
         """
         xsclass = _at2xsclass.get(type(atelem), NotInXsuite)
-        return xsclass.from_at(atelem, match_model=match_model, do_warn=do_warn)
+        return xsclass.from_at(
+            atelem, beta0=beta0, match_model=match_model, do_warn=do_warn
+        )
 
 
 class Marker(XsElement):
@@ -239,6 +285,9 @@ class Marker(XsElement):
 class LimitRect(Marker):
     """Xsuite LimitRect element."""
 
+    # Class variables
+    _allow_rot_shift = True
+
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(**atparams)
         atparams["RApertures"] = [
@@ -250,14 +299,8 @@ class LimitRect(Marker):
         return atparams
 
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
-    ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
-        elem._set_xs_transforms(atelem)
+    def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement:
+        elem = super().from_at(atelem, **kwargs)
         ap = atelem.RApertures
         elem["min_x"] = ap[0]
         elem["max_x"] = ap[1]
@@ -269,20 +312,17 @@ class LimitRect(Marker):
 class LimitEllipse(Marker):
     """Xsuite LimitEllipse element."""
 
+    # Class variables
+    _allow_rot_shift = True
+
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(**atparams)
         atparams["EApertures"] = [self.get("a", np.inf), self.get("b", np.inf)]
         return atparams
 
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
-    ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
-        elem._set_xs_transforms(atelem)
+    def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement:
+        elem = super().from_at(atelem, **kwargs)
         ap = atelem.EApertures
         elem["a"] = ap[0]
         elem["b"] = ap[1]
@@ -314,42 +354,7 @@ class Multipole(XsElement):
         "order": "MaxOrder",
         "num_multipole_kicks": "NumIntKicks",
     }
-
-    def _set_at_transforms(self) -> dict:
-        """Generate AT element displacements."""
-        tr = {
-            "dx": self.get("shift_x", 0.0),
-            "dy": self.get("shift_y", 0.0),
-            "dz": self.get("shift_s", 0.0),
-            "pitch": -self.get("rot_x_rad", 0.0),
-            "yaw": self.get("rot_y_rad", 0.0),
-            "tilt": self.get("rot_s_rad_no_frame", 0.0),
-        }
-        transforms = {k: v for k, v in tr.items() if v != 0.0}
-        ismisaligned = len(transforms) > 0
-
-        rot_s_frame = self.get("rot_s_rad", 0.0)
-        if rot_s_frame != 0.0:
-            if ismisaligned:
-                self._warn("alignment errors available only for H bends, ignored")
-            transforms = {"tilt_frame": rot_s_frame}
-        elif ismisaligned:
-            length = self._integration_length
-            rot_shift_anchor = self.get("rot_shift_anchor", 0.0)
-            anchor = 0.5 if length == 0.0 else rot_shift_anchor / length
-            if anchor == 0.0:
-                reference = ReferencePoint.ENTRANCE
-            elif abs(anchor - 0.5) < 1.0e-6:
-                reference = ReferencePoint.CENTRE
-            else:
-                msg = (
-                    f"Anchor point for rotation different from 0 or {length / 2.0},\n"
-                    "setting reference to AT default: ReferencePoint.CENTRE"
-                )
-                self._warn(msg)
-                reference = ReferencePoint.CENTRE
-            transforms["reference"] = reference.value
-        return transforms
+    _allow_rot_shift = True
 
     def _set_at_poly(self) -> dict[str, Any]:
         """Generate the AT field expansion."""
@@ -440,20 +445,15 @@ class Multipole(XsElement):
         atparams = super()._params_to_at(**atparams)
         atparams.update(self._set_at_poly())
         atparams.update(self._set_at_fringe())
-        atparams.update(self._set_at_transforms())
         return atparams
 
     @classmethod
     def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
+        cls, atelem: elt.Element, *, match_model: bool = True, **kwargs
     ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
+        elem = super().from_at(atelem, match_model=match_model, **kwargs)
         elem._set_xs_poly(atelem, match_model=match_model)
         elem._set_xs_fringe(atelem)
-        elem._set_xs_transforms(atelem)
         return elem
 
 
@@ -564,12 +564,9 @@ class Bend(Multipole):
 
     @classmethod
     def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
+        cls, atelem: elt.Element, *, match_model: bool = True, **kwargs
     ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
+        elem = super().from_at(atelem, match_model=match_model, **kwargs)
         elem["k0_from_h"] = True
         return elem
 
@@ -636,16 +633,13 @@ class RBend(Bend):
 
     @classmethod
     def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
+        cls, atelem: elt.Element, *, match_model: bool = True, **kwargs
     ) -> XsElement:
 
         def X0ref_to_rbend_shift(hangle, length, X0ref):
             return -X0ref - 0.125 * length * hangle * np.sinc(0.5 * hangle / pi) ** 2
 
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
+        elem = super().from_at(atelem, match_model=match_model, **kwargs)
         hangle = 0.5 * elem["angle"]
         length = elem.get("length")
         X0ref = getattr(atelem, "X0ref", 0.0)
@@ -665,11 +659,12 @@ class Cavity(XsElement):
         "voltage": "Voltage",
         "frequency": "Frequency",
     }
+    _allow_rot_shift: ClassVar[bool] = True
 
-    def _set_xs_lag(self, atelem):
+    def _set_xs_lag(self, atelem, beta0):
         freq = atelem.Frequency
         tl = getattr(atelem, "TimeLag", 0.0)
-        phase = 2 * pi * (0.5 - tl * freq / cst.clight)
+        phase = 2 * pi * (0.5 - tl * freq / beta0 / cst.clight)
         self["phase"] = phase
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
@@ -680,45 +675,48 @@ class Cavity(XsElement):
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
         atparams["HarmNumber"] = self.get("harmonic", 0)
         if (phaselag := self.get("phase")) is not None:
-            atparams["_phaselag"] = phaselag
+            atparams["_phaselag"] = pi - phaselag
         return atparams
 
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
-    ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
-        elem._set_xs_lag(atelem)
+    def from_at(cls, atelem: elt.Element, *, beta0: float = 1.0, **kwargs) -> XsElement:
+        elem = super().from_at(atelem, beta0=beta0, **kwargs)
+        elem._set_xs_lag(atelem, beta0)
         return elem
 
 
-class CrabCavity(Cavity):
+class CrabCavity(XsElement):
     # Class variables
     _atClass = elt.CrabCavity
     _at_integrator = "yoshida-6"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "frequency": "Frequency",
     }
+    _allow_rot_shift: ClassVar[bool] = True
+
+    def _set_xs_lag(self, atelem, beta0):
+        freq = atelem.Frequency
+        tl = getattr(atelem, "TimeLag", 0.0)
+        phase = 2 * pi * tl * freq / beta0 / cst.clight
+        self["phase"] = phase
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(**atparams)
-        atparams.pop("Voltage", None)
-        atparams.pop("Energy", None)
+        atparams = super()._params_to_at(Frequency=np.nan, **atparams)
+        length = atparams.get("Length", 0.0)
         atparams["Voltages"] = [self.get("crab_voltage", 0.0), 0.0]
+        atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
+        if (phaselag := self.get("phase")) is not None:
+            atparams["_phaselag"] = phaselag
         return atparams
 
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
-    ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
+    def from_at(cls, atelem: elt.Element, *, beta0: float = 1.0, **kwargs) -> XsElement:
+        elem = super().from_at(atelem, beta0=beta0, **kwargs)
+        elem._set_xs_lag(atelem, beta0)
         elem["crab_voltage"] = atelem.Voltages[0]
+        if atelem.Voltages[1] != 0.0:
+            msg = "Vertical voltage not available in Xsuite, ignored"
+            elem._warn(msg)
         return elem
 
 
@@ -737,12 +735,9 @@ class FirstOrderTaylorMap(XsElement):
 
     @classmethod
     def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
+        cls, atelem: elt.Element, *, match_model: bool = True, **kwargs
     ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, do_warn=do_warn)
+        elem = super().from_at(atelem, match_model=match_model, **kwargs)
         elem["m1"] = np.asarray(atelem.M66, order="C")
         if (m6 := getattr(atelem, "M6", None)) is not None:
             elem["m0"] = np.asarray(m6, order="C")
@@ -775,8 +770,9 @@ class NotInXsuite:
     def from_at(
         cls,
         atelem: elt.Element,
-        match_model: bool = True,
+        *,
         do_warn: Callable[[str], bool] = lambda x: True,
+        **kwargs,
     ) -> XsElement:
         atclass = atelem.__class__.__name__
         xsclass = Marker if atelem.Length == 0.0 else Drift
@@ -785,7 +781,7 @@ class NotInXsuite:
             repl = xsclass.__name__
             msg = f"Element {name!r}: unknown class {atclass} replaced by {repl}"
             warnings.warn(AtWarning(msg), stacklevel=5)
-        return xsclass.from_at(atelem, match_model=match_model, do_warn=do_warn)
+        return xsclass.from_at(atelem, do_warn=do_warn, **kwargs)
 
 
 class Dipole:
@@ -795,13 +791,14 @@ class Dipole:
     def from_at(
         cls,
         atelem: elt.Element,
-        match_model: bool = True,
+        *,
         do_warn: Callable[[str], bool] = lambda x: True,
+        **kwargs,
     ) -> XsElement:
         if atelem.PassMethod in RBend._at2xsuite_model:
-            return RBend.from_at(atelem, match_model=match_model, do_warn=do_warn)
+            return RBend.from_at(atelem, do_warn=do_warn, **kwargs)
         else:
-            return Bend.from_at(atelem, match_model=match_model, do_warn=do_warn)
+            return Bend.from_at(atelem, do_warn=do_warn, **kwargs)
 
 
 class Corrector:
@@ -809,36 +806,24 @@ class Corrector:
 
     # noinspection PyPep8Naming
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
-    ) -> XsElement:
+    def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement:
         if (length := atelem.Length) == 0.0:
             atel = elt.ThinMultipole(atelem.FamName, np.zeros(1), np.zeros(1))
         else:
             atel = elt.Multipole(atelem.FamName, length, np.zeros(1), np.zeros(1))
         atel.KickAngle = atelem.KickAngle
-        return Multipole.from_at(atel, match_model=match_model, do_warn=do_warn)
+        return Multipole.from_at(atel, **kwargs)
 
 
 class CheckAperture:
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        match_model: bool = True,
-        do_warn: Callable[[str], bool] = lambda x: True,
-    ) -> XsElement:
+    def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement:
         if hasattr(atelem, "RApertures"):
-            return LimitRect.from_at(atelem, match_model=match_model, do_warn=do_warn)
+            return LimitRect.from_at(atelem, **kwargs)
         elif hasattr(atelem, "EApertures"):
-            return LimitEllipse.from_at(
-                atelem, match_model=match_model, do_warn=do_warn
-            )
+            return LimitEllipse.from_at(atelem, **kwargs)
         else:
-            return Marker.from_at(atelem, match_model=match_model, do_warn=do_warn)
+            return Marker.from_at(atelem, **kwargs)
 
 
 _xsclass: dict[str, type[XsElement]] = {

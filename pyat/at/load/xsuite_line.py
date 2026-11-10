@@ -401,7 +401,7 @@ class XsLine:
                 phase = getattr(cav, "_phaselag", 0.0)
                 with contextlib.suppress(AttributeError):
                     delattr(cav, "_phaselag")
-                tl = (0.5 - phase / 2.0 / pi) * cst.clight / cav.Frequency
+                tl = phase / 2.0 / pi * beta0 * cst.clight / cav.Frequency
                 cav.TimeLag = tl
 
         if in_file := getattr(self, "in_file", ""):
@@ -547,18 +547,20 @@ class XsLine:
                         names[ii] = ".".join((names[ii], str(i + 1)))
             return names
 
+        reference_particle = refpart(lattice)
+        beta0 = reference_particle["beta0"][0]
         ring = _separate_apertures(lattice)
         element_names = unique_names([el.FamName for el in ring])
         notavailable = _FilterWarnings("Unknown classes:")
         ln = cls(
             {
                 nm: XsElement.static_from_at(
-                    el, match_model=match_model, do_warn=notavailable
+                    el, beta0=beta0, match_model=match_model, do_warn=notavailable
                 )
                 for nm, el in zip(element_names, ring, strict=True)
             },
             element_names=element_names,
-            particle_ref=refpart(ring),
+            particle_ref=reference_particle,
             name=ring.name,
         )
         notavailable.summarise()

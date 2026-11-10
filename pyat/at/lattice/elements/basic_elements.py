@@ -468,9 +468,9 @@ class M66(Radiative, Element):
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "M66"]
     _conversions = Element._conversions | {
         "M66": _array66,
-        "M66rad": _array66,
+        "M66Rad": _array66,
         "M6": _array6,
-        "M6rad": _array6,
+        "M6Rad": _array6,
     }
     _file_classname = "Matrix66"
 
