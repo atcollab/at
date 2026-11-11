@@ -721,30 +721,6 @@ class CrabCavity(XsElement):
         return elem
 
 
-class FirstOrderTaylorMap(XsElement):
-    """Class for Xsuite elements with first-order Taylor map."""
-
-    _atClass = elt.M66
-
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(**atparams)
-        if (m0 := self.get("m0", None)) is not None:
-            atparams["M6"] = m0
-        if (m1 := self.get("m1", None)) is not None:
-            atparams["M66"] = m1
-        return atparams
-
-    @classmethod
-    def from_at(
-        cls, atelem: elt.Element, *, match_model: bool = True, **kwargs
-    ) -> XsElement:
-        elem = super().from_at(atelem, match_model=match_model, **kwargs)
-        elem["m1"] = np.asarray(atelem.M66, order="C")
-        if (m6 := getattr(atelem, "M6", None)) is not None:
-            elem["m0"] = np.asarray(m6, order="C")
-        return elem
-
-
 class NotInAT:
     """Class for Xsuite elements without AT equivalent."""
 
@@ -844,7 +820,6 @@ _xsclass: dict[str, type[XsElement]] = {
     "RBend": RBend,
     "LimitRect": LimitRect,
     "LimitEllipse": LimitEllipse,
-    "FirstOrderTaylorMap": FirstOrderTaylorMap,
     "CrabCavity": CrabCavity,
 }
 
@@ -861,6 +836,5 @@ _at2xsclass: dict[type[elt.Element], type[_XsFactory]] = {
     elt.ThinMultipole: Multipole,
     elt.Dipole: Dipole,
     elt.Corrector: Corrector,
-    elt.M66: FirstOrderTaylorMap,
     elt.CrabCavity: CrabCavity,
 }
