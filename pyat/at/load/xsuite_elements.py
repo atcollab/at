@@ -129,12 +129,13 @@ class XsElement(dict, _XsFactory):
             transforms["reference"] = reference.value
         return transforms
 
-    def _params_to_at(self, **atparams) -> dict:
+    def _params_to_at(self, **kwargs) -> dict:
         """Translate Xsuite parameters to AT parameters."""
-        for k, v in self.items():
-            atk = self._xsuite2at_attr.get(k, None)
-            if atk is not None:
-                atparams[atk] = v
+        atparams = {
+            atk: v
+            for k, v in self.items()
+            if (atk := self._xsuite2at_attr.get(k, None)) is not None
+        }
         atparams["FamName"] = self.name
         if self.origin:
             atparams["origin"] = self.origin
@@ -159,13 +160,16 @@ class XsElement(dict, _XsFactory):
         """
         return self
 
-    def to_at(self) -> elt.Element:
+    def to_at(self, beta0: float = 1.0) -> elt.Element:
         """Generate the AT element.
+
+        Args:
+            beta0:          beta of the reference particle
 
         Returns:
             elem:   new :py:class:`.Element` object
         """
-        elem_kwargs = self._params_to_at()
+        elem_kwargs = self._params_to_at(beta0=beta0)
         cls = self._class_to_at(elem_kwargs)
         return cls.init_from_dict(**elem_kwargs)
 
@@ -288,8 +292,8 @@ class LimitRect(Marker):
     # Class variables
     _allow_rot_shift = True
 
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(**atparams)
+    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._params_to_at(**kwargs)
         atparams["RApertures"] = [
             self.get("min_x", -np.inf),
             self.get("max_x", np.inf),
@@ -315,8 +319,8 @@ class LimitEllipse(Marker):
     # Class variables
     _allow_rot_shift = True
 
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(**atparams)
+    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._params_to_at(**kwargs)
         atparams["EApertures"] = [self.get("a", np.inf), self.get("b", np.inf)]
         return atparams
 
@@ -441,8 +445,8 @@ class Multipole(XsElement):
         else:
             return super()._class_to_at(atparams)
 
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(**atparams)
+    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._params_to_at(**kwargs)
         atparams.update(self._set_at_poly())
         atparams.update(self._set_at_fringe())
         return atparams
@@ -556,8 +560,9 @@ class Bend(Multipole):
         )
         self["edge_exit_model"] = edge_model("FringeBendExit", "FringeQuadExit")
 
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(EntranceAngle=0.0, ExitAngle=0.0, **atparams)
+    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+        atparams = {"EntranceAngle": 0.0, "ExitAngle": 0.0}
+        atparams.update(super()._params_to_at(**kwargs))
         if not self.get("k0_from_h", "k0" not in self):
             atparams["PolynomB"][0] -= self["angle"] / self["length"]
         return atparams
@@ -599,8 +604,8 @@ class RBend(Bend):
             passmethod = Bend._xsuite2at_model.get(self.get("model"), None)
         return {} if passmethod is None else {"PassMethod": passmethod}
 
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(**atparams)
+    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._params_to_at(**kwargs)
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
         hangle = 0.5 * self["angle"]
@@ -626,8 +631,8 @@ class RBend(Bend):
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
         return atparams
 
-    def to_at(self) -> elt.Element:
-        atelem = super().to_at()
+    def to_at(self, **kwargs) -> elt.Element:
+        atelem = super().to_at(**kwargs)
         atelem.rbendtune()
         return atelem
 
@@ -667,10 +672,9 @@ class Cavity(XsElement):
         phase = 2 * pi * (0.5 - tl * freq / beta0 / cst.clight)
         self["phase"] = phase
 
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(
-            Voltage=0.0, Frequency=np.nan, Energy=0.0, **atparams
-        )
+    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+        atparams = {"Voltage": 0.0, "Frequency": np.nan, "Energy": 0.0}
+        atparams.update(super()._params_to_at(**kwargs))
         length = atparams.get("Length", 0.0)
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
         atparams["HarmNumber"] = self.get("harmonic", 0)
@@ -700,8 +704,9 @@ class CrabCavity(XsElement):
         phase = 2 * pi * tl * freq / beta0 / cst.clight
         self["phase"] = phase
 
-    def _params_to_at(self, **atparams) -> dict[str, Any]:
-        atparams = super()._params_to_at(Frequency=np.nan, **atparams)
+    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+        atparams = {"Frequency": 0.0}
+        atparams.update(super()._params_to_at(**kwargs))
         length = atparams.get("Length", 0.0)
         atparams["Voltages"] = [self.get("crab_voltage", 0.0), 0.0]
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
@@ -718,6 +723,50 @@ class CrabCavity(XsElement):
         if atelem.Voltages[1] != 0.0:
             msg = "Vertical voltage not available in Xsuite, ignored"
             elem._warn(msg)
+        return elem
+
+
+class FirstOrderTaylorMap(XsElement):
+    """Class for Xsuite elements with first-order Taylor map."""
+
+    _atClass = elt.M66
+
+    def _params_to_at(self, beta0: float = 1.0, **kwargs) -> dict[str, Any]:
+        atparams = super()._params_to_at(beta0=beta0, **kwargs)
+        if (m1 := self.get("m1", None)) is not None:
+            m66 = np.asfortranarray(m1)
+            tmp = m66[:, 5].copy()
+            m66[:, 5] = -m66[:, 4]
+            m66[:, 4] = tmp * beta0
+            tmp = m66[5, :].copy()
+            m66[5, :] = -m66[4, :]
+            m66[4, :] = tmp / beta0
+            atparams["M66"] = m66
+        if (m0 := self.get("m0", None)) is not None:
+            m6 = np.asfortranarray(m0)
+            tmp = m6[5]
+            m6[5] = -m6[4]
+            m6[4] = tmp / beta0
+            atparams["M6"] = m6
+        return atparams
+
+    @classmethod
+    def from_at(cls, atelem: elt.Element, *, beta0: float = 1.0, **kwargs) -> XsElement:
+        elem = super().from_at(atelem, beta0=beta0, **kwargs)
+        m1 = atelem.M66.copy(order="C")
+        tmp = m1[:, 5].copy()
+        m1[:, 5] = m1[:, 4] / beta0
+        m1[:, 4] = -tmp
+        tmp = m1[5, :].copy()
+        m1[5, :] = m1[4, :] * beta0
+        m1[4, :] = -tmp
+        elem["m1"] = m1
+        if (m6 := getattr(atelem, "M6", None)) is not None:
+            m0 = m6.copy(order="C")
+            tmp = m0[5]
+            m0[5] = m0[4] * beta0
+            m0[4] = -tmp
+            elem["m0"] = m0
         return elem
 
 
@@ -765,17 +814,11 @@ class Dipole:
     """Class for handling AT dipoles."""
 
     @classmethod
-    def from_at(
-        cls,
-        atelem: elt.Element,
-        *,
-        do_warn: Callable[[str], bool] = lambda x: True,
-        **kwargs,
-    ) -> XsElement:
+    def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement:
         if atelem.PassMethod in RBend._at2xsuite_model:
-            return RBend.from_at(atelem, do_warn=do_warn, **kwargs)
+            return RBend.from_at(atelem, **kwargs)
         else:
-            return Bend.from_at(atelem, do_warn=do_warn, **kwargs)
+            return Bend.from_at(atelem, **kwargs)
 
 
 class Corrector:
@@ -820,6 +863,7 @@ _xsclass: dict[str, type[XsElement]] = {
     "RBend": RBend,
     "LimitRect": LimitRect,
     "LimitEllipse": LimitEllipse,
+    "FirstOrderTaylorMap": FirstOrderTaylorMap,
     "CrabCavity": CrabCavity,
 }
 
@@ -836,5 +880,6 @@ _at2xsclass: dict[type[elt.Element], type[_XsFactory]] = {
     elt.ThinMultipole: Multipole,
     elt.Dipole: Dipole,
     elt.Corrector: Corrector,
+    elt.M66: FirstOrderTaylorMap,
     elt.CrabCavity: CrabCavity,
 }

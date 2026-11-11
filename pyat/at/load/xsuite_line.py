@@ -373,9 +373,7 @@ class XsLine:
             element_names = self.element_names
             particle = self.particle_ref
             mass0 = float(particle["mass0"])
-            gamma0 = float(particle["gamma0"][0])
-            beta0 = float(particle["beta0"][0])
-            energy = gamma0 * mass0
+            energy = float(particle["gamma0"][0]) * mass0
 
             beam_params = {
                 "particle": Particle("", rest_energy=mass0, charge=particle["q0"]),
@@ -387,12 +385,18 @@ class XsLine:
             for k, v in beam_params.items():
                 params.setdefault(k, v)
 
+            particle = params["particle"]
+            if not isinstance(particle, Particle):
+                particle = Particle(particle)
+            gamma0 = params["energy"] / particle.rest_energy
+            beta0 = sqrt(1.0 - 1.0 / gamma0 / gamma0)
+
             cavities = []
             cell_length = 0.0
 
             for nm in element_names:
                 try:
-                    atelem = self.elements[nm].to_at()
+                    atelem = self.elements[nm].to_at(beta0=beta0)
                     if isinstance(atelem, (elt.RFCavity, elt.CrabCavity)):
                         cavities.append(atelem)
                     cell_length += getattr(atelem, "Length", 0.0)
