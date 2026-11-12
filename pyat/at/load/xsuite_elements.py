@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-__all__ = [
-    "XsElement",
-]
+__all__ = ["XsElement"]
 
 import warnings
 from math import pi
@@ -364,25 +362,12 @@ class Multipole(XsElement):
         None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
-    _mag_integrator = {True: None, False: "StrMPoleSymplectic6Pass"}
+    _at_integrator = "yoshida-6"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "order": "MaxOrder",
         "num_multipole_kicks": "NumIntKicks",
     }
     _allow_rot_shift = True
-
-    def _set_xs_integrator(self, atelem) -> None:
-        """Set the integrator for the Xsuite element."""
-        self["integrator"] = "yoshida-4" if "4" in atelem.PassMethod else "yoshida-6"
-
-    def _set_at_passmethod(self) -> dict[str, str]:
-        """Get the AT passmethod."""
-        passmethod = self._xsuite2at_model.get(self.get("model"), None)
-        # if passmethod is None:
-        #     passmethod = self._mag_integrator[
-        #         self.get("integrator", "yoshida-6") == "yoshida-4"
-        #     ]
-        return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _set_at_poly(self) -> dict[str, Any]:
         """Generate the AT field expansion."""
@@ -520,7 +505,6 @@ class Bend(Multipole):
         None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
-    _mag_integrator = {True: None, False: "BndMPoleSymplectic6Pass"}
     _xsuite2at_attr = Multipole._xsuite2at_attr | {
         "angle": "BendingAngle",
         "edge_entry_fint": "FringeInt1",
@@ -627,10 +611,6 @@ class RBend(Bend):
             passmethod = self._xsuite2at_model.get(self.get("model"), None)
         else:
             passmethod = Bend._xsuite2at_model.get(self.get("model"), None)
-            # if passmethod is None:
-            #     passmethod = self._mag_integrator[
-            #         self.get("integrator", "yoshida-6") == "yoshida-4"
-            #     ]
         return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _set_at_params(self, **kwargs) -> dict[str, Any]:
@@ -756,7 +736,13 @@ class CrabCavity(XsElement):
 
 
 class FirstOrderTaylorMap(XsElement):
-    """Class for Xsuite elements with first-order Taylor map."""
+    r"""Class for Xsuite elements with first-order Taylor map.
+
+    The coordinate systems used in transfer matrices are different between AT and
+    Xsuite: :math:`(x, p_x, y, p_y, \delta, \beta c t)` in AT and
+    :math:`(x, p_x, y, p_y, \tau, p_{\tau})` in Xsuite. This class makes the conversion,
+    assuming :math:`p_{\tau} = \beta_0 \delta` and :math:`\tau = -\beta c t / \beta_0`.
+    """
 
     _atClass = elt.M66
 
