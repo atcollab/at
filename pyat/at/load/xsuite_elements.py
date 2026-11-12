@@ -63,6 +63,19 @@ class XsElement(dict, _XsFactory):
     def _integration_length(self):
         return self["length"]
 
+    def _set_xs_model(self, atelem) -> None:
+        """Set the model for the Xsuite element."""
+        xs_model = self._at2xsuite_model.get(atelem.PassMethod, None)
+        if xs_model is None:
+            xs_model = self._at2xsuite_model.get(None, None)
+        if xs_model is not None:
+            self["model"] = xs_model
+
+    def _set_xs_integrator(self, atelem) -> None:
+        """Set the integrator for the Xsuite element."""
+        if (integrator := self.get("_at_integrator", None)) is not None:
+            self["integrator"] = integrator
+
     def _set_xs_transforms(self, atelem) -> None:
         """Generate Xsuite element displacements."""
         tr = {
@@ -92,6 +105,11 @@ class XsElement(dict, _XsFactory):
                 misalign["rot_shift_anchor"] = self._integration_length / 2.0
 
         self.update(misalign)
+
+    def _set_at_passmethod(self) -> dict[str, str]:
+        """Get the AT passmethod."""
+        passmethod = self._xsuite2at_model.get(self.get("model"), None)
+        return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _set_at_transforms(self) -> dict:
         """Generate AT element displacements."""
@@ -129,8 +147,12 @@ class XsElement(dict, _XsFactory):
             transforms["reference"] = reference.value
         return transforms
 
-    def _params_to_at(self, **kwargs) -> dict:
-        """Translate Xsuite parameters to AT parameters."""
+    def _set_at_params(self, **kwargs) -> dict:
+        """Translate Xsuite parameters to AT parameters.
+
+        Args:
+            beta0:          beta of the reference particle
+        """
         atparams = {
             atk: v
             for k, v in self.items()
@@ -139,18 +161,13 @@ class XsElement(dict, _XsFactory):
         atparams["FamName"] = self.name
         if self.origin:
             atparams["origin"] = self.origin
-        atparams.update(self._model_to_at())
+        atparams.update(self._set_at_passmethod())
         atparams.update(self._set_at_transforms())
         return atparams
 
     def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
         """Get the AT element class."""
         return self._atClass
-
-    def _model_to_at(self) -> dict[str, str]:
-        """Get the AT passmethod."""
-        passmethod = self._xsuite2at_model.get(self.get("model"), None)
-        return {} if passmethod is None else {"PassMethod": passmethod}
 
     def to_dict(self) -> dict[str, Any]:
         """Build a dictionary representation of the XsElement.
@@ -169,7 +186,7 @@ class XsElement(dict, _XsFactory):
         Returns:
             elem:   new :py:class:`.Element` object
         """
-        elem_kwargs = self._params_to_at(beta0=beta0)
+        elem_kwargs = self._set_at_params(beta0=beta0)
         cls = self._class_to_at(elem_kwargs)
         return cls.init_from_dict(**elem_kwargs)
 
@@ -218,18 +235,12 @@ class XsElement(dict, _XsFactory):
             for kxs, kat in cls._xsuite2at_attr.items()
             if (v := getattr(atelem, kat, None)) is not None
         }
-        # Handling of model and integrator
-        xs_model = cls._at2xsuite_model.get(atelem.PassMethod, None)
-        if match_model:
-            if xs_model is None:
-                xs_model = cls._at2xsuite_model.get(None, None)
-            if (integrator := cls._at_integrator) is not None:
-                xsparams["integrator"] = integrator
-        if xs_model is not None:
-            xsparams["model"] = xs_model
         # Set the Xsuite class
         xsparams["__class__"] = cls.__name__
         elem = cls(name=atelem.FamName, **xsparams)
+        if match_model:
+            elem._set_xs_model(atelem)
+            elem._set_xs_integrator(atelem)
         elem._set_xs_transforms(atelem)
         return elem
 
@@ -292,8 +303,8 @@ class LimitRect(Marker):
     # Class variables
     _allow_rot_shift = True
 
-    def _params_to_at(self, **kwargs) -> dict[str, Any]:
-        atparams = super()._params_to_at(**kwargs)
+    def _set_at_params(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._set_at_params(**kwargs)
         atparams["RApertures"] = [
             self.get("min_x", -np.inf),
             self.get("max_x", np.inf),
@@ -319,8 +330,8 @@ class LimitEllipse(Marker):
     # Class variables
     _allow_rot_shift = True
 
-    def _params_to_at(self, **kwargs) -> dict[str, Any]:
-        atparams = super()._params_to_at(**kwargs)
+    def _set_at_params(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._set_at_params(**kwargs)
         atparams["EApertures"] = [self.get("a", np.inf), self.get("b", np.inf)]
         return atparams
 
@@ -353,12 +364,25 @@ class Multipole(XsElement):
         None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
-    _at_integrator = "yoshida-6"
+    _mag_integrator = {True: None, False: "StrMPoleSymplectic6Pass"}
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "order": "MaxOrder",
         "num_multipole_kicks": "NumIntKicks",
     }
     _allow_rot_shift = True
+
+    def _set_xs_integrator(self, atelem) -> None:
+        """Set the integrator for the Xsuite element."""
+        self["integrator"] = "yoshida-4" if "4" in atelem.PassMethod else "yoshida-6"
+
+    def _set_at_passmethod(self) -> dict[str, str]:
+        """Get the AT passmethod."""
+        passmethod = self._xsuite2at_model.get(self.get("model"), None)
+        # if passmethod is None:
+        #     passmethod = self._mag_integrator[
+        #         self.get("integrator", "yoshida-6") == "yoshida-4"
+        #     ]
+        return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _set_at_poly(self) -> dict[str, Any]:
         """Generate the AT field expansion."""
@@ -445,8 +469,8 @@ class Multipole(XsElement):
         else:
             return super()._class_to_at(atparams)
 
-    def _params_to_at(self, **kwargs) -> dict[str, Any]:
-        atparams = super()._params_to_at(**kwargs)
+    def _set_at_params(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._set_at_params(**kwargs)
         atparams.update(self._set_at_poly())
         atparams.update(self._set_at_fringe())
         return atparams
@@ -496,6 +520,7 @@ class Bend(Multipole):
         None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
+    _mag_integrator = {True: None, False: "BndMPoleSymplectic6Pass"}
     _xsuite2at_attr = Multipole._xsuite2at_attr | {
         "angle": "BendingAngle",
         "edge_entry_fint": "FringeInt1",
@@ -560,9 +585,9 @@ class Bend(Multipole):
         )
         self["edge_exit_model"] = edge_model("FringeBendExit", "FringeQuadExit")
 
-    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+    def _set_at_params(self, **kwargs) -> dict[str, Any]:
         atparams = {"EntranceAngle": 0.0, "ExitAngle": 0.0}
-        atparams.update(super()._params_to_at(**kwargs))
+        atparams.update(super()._set_at_params(**kwargs))
         if not self.get("k0_from_h", "k0" not in self):
             atparams["PolynomB"][0] -= self["angle"] / self["length"]
         return atparams
@@ -595,17 +620,21 @@ class RBend(Bend):
         hangle = 0.5 * self["angle"]
         return length * np.sinc(hangle / pi)
 
-    def _model_to_at(self) -> dict[str, str]:
+    def _set_at_passmethod(self) -> dict[str, str]:
         """Get the AT passmethod."""
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         if straight:
             passmethod = self._xsuite2at_model.get(self.get("model"), None)
         else:
             passmethod = Bend._xsuite2at_model.get(self.get("model"), None)
+            # if passmethod is None:
+            #     passmethod = self._mag_integrator[
+            #         self.get("integrator", "yoshida-6") == "yoshida-4"
+            #     ]
         return {} if passmethod is None else {"PassMethod": passmethod}
 
-    def _params_to_at(self, **kwargs) -> dict[str, Any]:
-        atparams = super()._params_to_at(**kwargs)
+    def _set_at_params(self, **kwargs) -> dict[str, Any]:
+        atparams = super()._set_at_params(**kwargs)
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
         hangle = 0.5 * self["angle"]
@@ -672,9 +701,9 @@ class Cavity(XsElement):
         phase = 2 * pi * (0.5 - tl * freq / beta0 / cst.clight)
         self["phase"] = phase
 
-    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+    def _set_at_params(self, **kwargs) -> dict[str, Any]:
         atparams = {"Voltage": 0.0, "Frequency": np.nan, "Energy": 0.0}
-        atparams.update(super()._params_to_at(**kwargs))
+        atparams.update(super()._set_at_params(**kwargs))
         length = atparams.get("Length", 0.0)
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
         atparams["HarmNumber"] = self.get("harmonic", 0)
@@ -704,9 +733,9 @@ class CrabCavity(XsElement):
         phase = 2 * pi * tl * freq / beta0 / cst.clight
         self["phase"] = phase
 
-    def _params_to_at(self, **kwargs) -> dict[str, Any]:
+    def _set_at_params(self, **kwargs) -> dict[str, Any]:
         atparams = {"Frequency": 0.0}
-        atparams.update(super()._params_to_at(**kwargs))
+        atparams.update(super()._set_at_params(**kwargs))
         length = atparams.get("Length", 0.0)
         atparams["Voltages"] = [self.get("crab_voltage", 0.0), 0.0]
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
@@ -731,21 +760,24 @@ class FirstOrderTaylorMap(XsElement):
 
     _atClass = elt.M66
 
-    def _params_to_at(self, beta0: float = 1.0, **kwargs) -> dict[str, Any]:
-        atparams = super()._params_to_at(beta0=beta0, **kwargs)
+    def _set_at_params(self, beta0: float = 1.0, **kwargs) -> dict[str, Any]:
+        atparams = super()._set_at_params(beta0=beta0, **kwargs)
         if (m1 := self.get("m1", None)) is not None:
             m66 = np.asfortranarray(m1)
+            # Swap columns 4 and 5
             tmp = m66[:, 5].copy()
-            m66[:, 5] = -m66[:, 4]
+            m66[:, 5] = -m66[:, 4] / beta0
             m66[:, 4] = tmp * beta0
+            # Swap lines 4 and 5
             tmp = m66[5, :].copy()
-            m66[5, :] = -m66[4, :]
+            m66[5, :] = -m66[4, :] * beta0
             m66[4, :] = tmp / beta0
             atparams["M66"] = m66
         if (m0 := self.get("m0", None)) is not None:
             m6 = np.asfortranarray(m0)
+            # Swap items 4 and 5
             tmp = m6[5]
-            m6[5] = -m6[4]
+            m6[5] = -m6[4] * beta0
             m6[4] = tmp / beta0
             atparams["M6"] = m6
         return atparams
@@ -754,18 +786,21 @@ class FirstOrderTaylorMap(XsElement):
     def from_at(cls, atelem: elt.Element, *, beta0: float = 1.0, **kwargs) -> XsElement:
         elem = super().from_at(atelem, beta0=beta0, **kwargs)
         m1 = atelem.M66.copy(order="C")
+        # Swap columns 4 and 5
         tmp = m1[:, 5].copy()
         m1[:, 5] = m1[:, 4] / beta0
-        m1[:, 4] = -tmp
+        m1[:, 4] = -tmp * beta0
+        # Swap lines 4 and 5
         tmp = m1[5, :].copy()
         m1[5, :] = m1[4, :] * beta0
-        m1[4, :] = -tmp
+        m1[4, :] = -tmp / beta0
         elem["m1"] = m1
         if (m6 := getattr(atelem, "M6", None)) is not None:
+            # Swap items 4 and 5
             m0 = m6.copy(order="C")
             tmp = m0[5]
             m0[5] = m0[4] * beta0
-            m0[4] = -tmp
+            m0[4] = -tmp / beta0
             elem["m0"] = m0
         return elem
 
