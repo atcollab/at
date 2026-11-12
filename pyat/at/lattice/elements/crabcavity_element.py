@@ -1,4 +1,4 @@
-"""Crab cavity :py:class:`.Element`"""
+"""Crab cavity :py:class:`.Element`."""
 
 from __future__ import annotations
 
@@ -8,9 +8,10 @@ from .basic_elements import LongElement
 
 
 class CrabCavity(LongtMotion, LongElement):
-    """Crab cavity element"""
+    """Crab cavity element."""
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + [
+    _BUILD_ATTRIBUTES = [
+        *LongElement._BUILD_ATTRIBUTES,
         "Voltages",
         "Frequency",
         "HarmNumber",
@@ -50,7 +51,7 @@ class CrabCavity(LongtMotion, LongElement):
             SigVV=0:        Voltage noise [V]
 
         Default PassMethod: ``CrabCavityPass``
-        """
+        """  #noqa: D415
         kwargs.setdefault("TimeLag", 0.0)
         kwargs.setdefault("PassMethod", self.default_pass[True])
         super().__init__(

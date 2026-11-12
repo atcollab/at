@@ -15,7 +15,7 @@ import numpy as np
 from .allfiles import register_format
 from .utils import keep_elements, keep_attributes, element_from_dict, element_to_dict
 from ..lattice import Element, Lattice, Particle
-from .xsuite import XsLine
+from .xsuite_line import XsLine
 from .._version import __version_tuple__
 
 

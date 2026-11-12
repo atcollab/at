@@ -319,11 +319,11 @@ class Element:
             elem_dict:  Dictionary of :py:class:`.Element` attributes
 
         Returns:
-            elem(Element):       :py:class:`.Element`
+            element(Element):       :py:class:`.Element`
         """
-        # Create the element
+        # Create the elem
         elem = cls.__new__(cls)
-        # Set the element attributes
+        # Set the elem attributes
         for k, vdef in (("FamName", ""), ("Length", 0.0), ("PassMethod", "DriftPass")):
             elem.__dict__[k] = elem._conversions.get(k, _nop)(elem_dict.pop(k, vdef))
         for k, v in elem_dict.items():

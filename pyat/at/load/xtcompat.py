@@ -10,7 +10,8 @@ __all__ = [
 ]
 
 import xtrack as xt
-from . import xsuite as xs
+from . import xsuite_elements as xs
+from .xsuite_line import XsLine
 from ..lattice import Lattice, Element
 
 
@@ -24,6 +25,7 @@ _xtclass: dict[type[xs.XsElement], type[xt.BeamElement]] = {
     xs.Multipole: xt.Multipole,
     xs.Bend: xt.Bend,
     xs.RBend: xt.RBend,
+    xs.FirstOrderTaylorMap: xt.FirstOrderTaylorMap,
 }
 
 
@@ -36,7 +38,7 @@ def element_from_xtrack(xtelem: xt.BeamElement) -> Element:
     return xs.XsElement.static_from_dict(xtelem.to_dict()).to_at()
 
 
-def element_to_xtrack(atelem: Element, match_model: bool = True) -> xt.BeamElement:
+def element_to_xtrack(atelem: Element, **kwargs) -> xt.BeamElement:
     """Create an AT :py:class:`.Element` from an :py:class:`.xtrack.BeamElement`.
 
         Args:
@@ -47,7 +49,7 @@ def element_to_xtrack(atelem: Element, match_model: bool = True) -> xt.BeamEleme
         Returns:
             xtelem:  new :py:class:`.xtrack.BeamElement` object
     """
-    xselem = xs.XsElement.static_from_at(atelem, match_model=match_model)
+    xselem = xs.XsElement.static_from_at(atelem, **kwargs)
     xtclass = _xtclass[type(xselem)]
     return xtclass.from_dict(xselem.to_dict())
 
@@ -73,7 +75,7 @@ def lattice_from_line(line: xt.Line, use: str | None = None, **kwargs) -> Lattic
     Returns:
         lattice:    New :py:class:`.Lattice` object.
     """
-    return xs.XsLine.from_xsuite(line, use=use).to_at(**kwargs)
+    return XsLine.from_xsuite(line, use=use).to_at(**kwargs)
 
 
 def line_from_lattice(ring: Lattice, match_model: bool = True) -> xt.Line:
@@ -87,7 +89,7 @@ def line_from_lattice(ring: Lattice, match_model: bool = True) -> xt.Line:
     Returns:
         line:           new :py:class:`.Line` object.
     """
-    return xt.Line.from_dict(xs.XsLine.from_at(ring, match_model=match_model).to_dict())
+    return xt.Line.from_dict(XsLine.from_at(ring, match_model=match_model).to_dict())
 
 
 Element.to_xtrack = element_to_xtrack

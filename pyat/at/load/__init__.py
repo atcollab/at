@@ -10,7 +10,8 @@ from .file_input import *
 from .file_output import *
 from .madx import *
 from .mad8 import *
-from .xsuite import *
+from .xsuite_elements import *
+from .xsuite_line import *
 from .json import *
 try:
     # noinspection PyPackageRequirements
@@ -18,4 +19,5 @@ try:
 except (ImportError, RuntimeError):
     pass
 else:
+    del xtrack
     from .xtcompat import *
