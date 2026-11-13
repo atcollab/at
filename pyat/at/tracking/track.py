@@ -136,7 +136,8 @@ def _lattice_pass(
         except AttributeError:
             ldata = allocate_lattice(lattice)
         else:
-            if not keep_lattice:
+            if ldata is None or (not keep_lattice):
+                print("Allocate")
                 ldata = lattice._capsule = allocate_lattice(lattice)
         return _atpass(ldata, r_in, nturns, refpts=refs, energy=energy, particle=particle, **kwargs)
 

@@ -454,7 +454,7 @@ static PyObject *at_allocate(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
                              "energy", "particle", "keep_counter",
-                             "reuse","omp_num_threads","losses",
+                             "omp_num_threads","losses",
                              "bunch_spos", "bunch_currents", "start_elem", "end_elem",
                              "harmonic_number", "fillpattern", NULL};
     PyObject *rout;
