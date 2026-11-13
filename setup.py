@@ -227,13 +227,14 @@ ibsrates = Extension(
     extra_compile_args=cflags,
 )
 
-gpusource = gpu_pass_methods + [
-    join("atgpu", "AbstractGPU.cpp"),
-    join("atgpu", "AbstractInterface.cpp"),
-    join("atgpu", "PyInterface.cpp"),
-    join("atgpu", "Lattice.cpp"),
-    join("atgpu", "PassMethodFactory.cpp"),
-    join("atgpu", "SymplecticIntegrator.cpp"),
+gpusource = [
+    *gpu_pass_methods,
+    gpu_src / "AbstractGPU.cpp",
+    gpu_src / "AbstractInterface.cpp",
+    gpu_src / "PyInterface.cpp",
+    gpu_src / "Lattice.cpp",
+    gpu_src / "PassMethodFactory.cpp",
+    gpu_src / "SymplecticIntegrator.cpp",
 ]
 
 cudaext = Extension(
