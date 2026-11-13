@@ -263,3 +263,4 @@ setup(
     + ([openclext] if opencl else []),
 )
 
+print("** Leaving setup.py")
