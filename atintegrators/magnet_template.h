@@ -2,6 +2,7 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "integrators.h"
+#include "exact_misalign.h"
 
 #ifndef CHECK_NSTEPS
 #define CHECK_NSTEPS \
@@ -39,6 +40,9 @@ struct elem
     double *R2;
     double *T1;
     double *T2;
+    double *E1;
+    double *E2;
+    double geometry[24];
     double *RApertures;
     double *EApertures;
 #ifdef STRAIGHT_DIPOLE
@@ -62,6 +66,7 @@ static void magnet(double *r, double le, double bending_angle,
     double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */
     double *T1, double *T2,
     double *R1, double *R2,
+    double *E1, double *E2,
     double *RApertures, double *EApertures,
     double scaling,
 #if defined(STRAIGHT_DIPOLE)
@@ -85,6 +90,10 @@ static void magnet(double *r, double le, double bending_angle,
 {
     double irho = bending_angle / le;
 
+    #if defined(RADIATION) || defined(QUANTUM)
+    /* Inside the element, momenta are relative to scaling*P0 */
+    if (scaling != 1.0) gamma0 = sqrt(1.0 + scaling*scaling*(gamma0*gamma0 - 1.0));
+    #endif
     #ifdef RADIATION
     double rad_const = RAD_CONST*pow(gamma0, 3);
     double diff_const = DIF_CONST*pow(gamma0, 5);
@@ -116,8 +125,11 @@ static void magnet(double *r, double le, double bending_angle,
             if (scaling != 1.0) ATChangePRef(r6, scaling);
 
             /*  misalignment at entrance  */
-            if (T1) ATaddvv(r6,T1);
-            if (R1) ATmultmv(r6,R1);
+            if (E1) exact_misalign(r6, E1);
+            else {
+                if (T1) ATaddvv(r6,T1);
+                if (R1) ATmultmv(r6,R1);
+            }
 
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
@@ -140,12 +152,35 @@ static void magnet(double *r, double le, double bending_angle,
             if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
             /* Misalignment at exit */
-            if (R2) ATmultmv(r6,R2);
-            if (T2) ATaddvv(r6,T2);
+            #ifdef DIFFUSION
+            double J2[36];
+            if (E2 && bdiff) exact_misalign_jacobian(r6, E2, J2);
+            #endif
+            if (E2) exact_misalign(r6, E2);
+            else {
+                if (R2) ATmultmv(r6,R2);
+                if (T2) ATaddvv(r6,T2);
+            }
 
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
-        }
+
+            #ifdef DIFFUSION
+            /* The diffusion matrix goes through the exit transformations */
+            if (bdiff) {
+                if (E2) ATsandwichmmt(J2, bdiff);
+                else if (R2) ATsandwichmmt(R2, bdiff);
+                if (scaling != 1.0) {   /* Jacobian of ATChangePRef(r6, 1/scaling) */
+                    const int pidx[3] = {px_, py_, delta_};
+                    for (int k = 0; k < 3; k++)
+                        for (int m = 0; m < 6; m++) {
+                            bdiff[pidx[k] + 6*m] *= scaling;
+                            bdiff[m + 6*pidx[k]] *= scaling;
+                        }
+                }
+            }
+            #endif
+            }
     }
 }
 
@@ -175,6 +210,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        int ExactMisalign=atGetOptionalLong(ElemData,"ExactMisalign",0); check_error();
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         CHECK_NSTEPS
@@ -197,6 +233,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->R2=R2;
         Elem->T1=T1;
         Elem->T2=T2;
+        Elem->E1=NULL;
+        Elem->E2=NULL;
+        if (ExactMisalign && !exact_misalign_init(R1, T1, R2, T2, Elem->geometry, &Elem->E1, &Elem->E2)) {
+            atError("ExactMisalign: R1 or R2 is not a misalignment matrix"); check_error();
+        }
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
     }
@@ -217,6 +258,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                 Elem->FringeQuadEntrance, Elem->FringeQuadExit,
                 Elem->fringeIntM0, Elem->fringeIntP0,
                 Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+                Elem->E1, Elem->E2,
                 Elem->RApertures, Elem->EApertures,
                 Elem->Scaling,
 #if defined(STRAIGHT_DIPOLE)
@@ -269,10 +311,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        int ExactMisalign=atGetOptionalLong(ElemData,"ExactMisalign",0); check_error();
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         CHECK_NSTEPS
         MAGNET_MEX_ITEMS
+        double geometry[24];
+        double *E1=NULL, *E2=NULL;
+        if (ExactMisalign && !exact_misalign_init(R1, T1, R2, T2, geometry, &E1, &E2)) {
+            atError("ExactMisalign: R1 or R2 is not a misalignment matrix"); check_error();
+        }
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -292,7 +340,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             gK_entrance, gK_exit,
             FringeQuadEntrance, FringeQuadExit,
             fringeIntM0, fringeIntP0,
-            T1, T2, R1, R2, RApertures, EApertures,
+            T1, T2, R1, R2, E1, E2, RApertures, EApertures,
             Scaling,
         #if defined(STRAIGHT_DIPOLE)
             X0ref,
@@ -323,7 +371,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[0], i0++, mxCreateString(required[i]));
         if (nlhs>1) {    /* list of optional fields */
             int i1 = 0;
-            plhs[1] = mxCreateCellMatrix(12+N_OPTIONAL, 1);
+            plhs[1] = mxCreateCellMatrix(13+N_OPTIONAL, 1);
             for (int i=0; i<N_OPTIONAL; i++)
                 mxSetCell(plhs[1], i1++, mxCreateString(optional[i]));
             mxSetCell(plhs[1], i1++, mxCreateString("NumIntSteps"));
@@ -335,6 +383,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1], i1++, mxCreateString("T2"));
             mxSetCell(plhs[1], i1++, mxCreateString("R1"));
             mxSetCell(plhs[1], i1++, mxCreateString("R2"));
+            mxSetCell(plhs[1], i1++, mxCreateString("ExactMisalign"));
             mxSetCell(plhs[1], i1++, mxCreateString("RApertures"));
             mxSetCell(plhs[1], i1++, mxCreateString("EApertures"));
             mxSetCell(plhs[1], i1++, mxCreateString("FieldScaling"));

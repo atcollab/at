@@ -11,7 +11,7 @@
 #define MAGNET_ENTRY \
     /* Entry face */ \
     if (FringeBendEntrance == 4) { \
-        Yrot(r6, entrance_angle, bdiff); \
+        Yrot(r6, entrance_angle, NULL); /* don't propagate the diffusion matrix */ \
         bend_fringe(r6, irho, gK_entrance); \
         multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
         if (entrance_angle != 0.0) { \
@@ -35,7 +35,7 @@
         } \
         multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
         bend_fringe(r6, -irho, gK_exit); \
-        Yrot(r6, exit_angle, bdiff); \
+        Yrot(r6, exit_angle, NULL); /* don't propagate the diffusion matrix */ \
     } \
     else { \
         multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
