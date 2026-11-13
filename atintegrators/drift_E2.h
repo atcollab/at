@@ -1,3 +1,4 @@
+#include "atlalib.c"
 #ifdef DIFFUSION
 #error "drift_E2 does not compute the diffusion matrix"
 #endif
@@ -5,7 +6,7 @@
 #define DRIFT(r6, length, irho, bdiff) drift(r6, length, irho)
 
 /* the pseudo-drift element described by Hamiltonian H1 = (1+hx) (px^2+py^2)/2(1+delta),     */
-static void drift(double* r6, double L, double h)
+static ForceInline void drift(double* r6, double L, double h)
 {
     double p_norm = 1.0 / (1.0+r6[4]);
     double px = r6[1];
