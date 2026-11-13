@@ -29,6 +29,7 @@ import math
 
 from typing import Any, SupportsIndex
 from collections.abc import Callable, Iterable, Generator
+from types import CapsuleType
 import warnings
 import contextlib
 
@@ -133,6 +134,7 @@ class Lattice(list):
     _particle: Particle
     _beam_current: float
     _cell_harmnumber: float
+    _capsule: CapsuleType | None = None
 
     # noinspection PyUnusedLocal
     def __init__(
@@ -235,6 +237,7 @@ class Lattice(list):
         periodicity = kwargs.setdefault("periodicity", 1)
         kwargs.setdefault("particle", kwargs.pop("_particle", Particle()))
         kwargs.setdefault("beam_current", kwargs.pop("_beam_current", 0.0))
+        kwargs.setdefault("_capsule", None)
         # Remove temporary keywords
         frequency: float = kwargs.pop("_frequency", 0.0)
         cell_length: float = kwargs.pop("_length", 0.0)

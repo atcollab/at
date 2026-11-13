@@ -19,11 +19,11 @@ from enum import Enum
 
 import numpy
 
-from .atpass import atpass as _atpass, elempass as _elempass, reset_rng
+from .atpass import atpass as _atpass, elempass as _elempass, reset_rng, allocate_lattice
 from .utils import fortran_align, has_collective, format_results
 from .utils import initialize_lpass, disable_varelem, variable_refs
 from ..lattice import AtError, AtWarning, DConstant, random
-from ..lattice import Lattice, Element, Refpts, End
+from ..lattice import Lattice, Element, Particle, Refpts, End
 from ..lattice import get_uint32_index
 from ..cconfig import iscuda
 from ..cconfig import isopencl
@@ -104,14 +104,14 @@ def _lattice_pass(
     refpts: Refpts = End,
     no_varelem: bool = True,
     seed: int | None = None,
+    keep_lattice: bool = False,
     use_gpu: bool = False,
     **kwargs,
 ):
-    kwargs["reuse"] = kwargs.pop("keep_lattice", False)
     if no_varelem:
         lattice = disable_varelem(lattice)
     elif sum(variable_refs(lattice)) > 0:
-        kwargs["reuse"] = False
+        keep_lattice = False
     refs = get_uint32_index(lattice, refpts)
     if seed is not None:
         reset_rng(seed=seed)
@@ -127,9 +127,18 @@ def _lattice_pass(
                 fp = kwargs.pop("fillpattern")
                 if fp is not None and len(fp) > 0:
                     print("_gpupass(): fillpattern not supported in GPU")
-            return _gpupass(lattice, r_in, nturns, refpts=refs, **kwargs)
+            return _gpupass(lattice, r_in, nturns, refpts=refs, reuse=keep_lattice, **kwargs)
     else:
-        return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+        energy = kwargs.pop("energy", getattr(lattice, "energy", 0.0))
+        particle = kwargs.pop("particle", getattr(lattice, "particle", Particle("relativistic")))
+        try:
+            ldata = lattice._capsule
+        except AttributeError:
+            ldata = allocate_lattice(lattice)
+        else:
+            if not keep_lattice:
+                ldata = lattice._capsule = allocate_lattice(lattice)
+        # return _atpass(ldata, r_in, nturns, refpts=refs, energy=energy, particle=particle, **kwargs)
 
 
 @fortran_align
