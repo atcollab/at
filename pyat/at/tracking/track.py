@@ -138,7 +138,7 @@ def _lattice_pass(
         else:
             if not keep_lattice:
                 ldata = lattice._capsule = allocate_lattice(lattice)
-        # return _atpass(ldata, r_in, nturns, refpts=refs, energy=energy, particle=particle, **kwargs)
+        return _atpass(ldata, r_in, nturns, refpts=refs, energy=energy, particle=particle, **kwargs)
 
 
 @fortran_align

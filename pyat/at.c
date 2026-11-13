@@ -335,8 +335,7 @@ static void *free_lattice(lat_state *latdata)
     atPrintf("Freeing lattice\n");
     for (npy_uint32 elem_index=latdata->num_elements; elem_index > 0; elem_index--) {
         free(*elem_data++);
-        Py_XDECREF(*elem);   /* Release the stored elements, may be NULL if */
-        elem++;              /* a previous call was interrupted by an error */
+        Py_XDECREF(*elem++);   /* Release the stored elements */
     }
     free(latdata->elemdata_list);
     free(latdata->elemlength_list);
@@ -358,51 +357,43 @@ static void *allocate_lattice(PyObject *lattice)
     double length = 0.0;
     struct elem **elem_data;
 
-    atPrintf("Allocating capsule\nnum_elements: %d\n", num_elements);
     lat_state *latdata = (lat_state *)calloc(1, sizeof(lat_state));
 
      latdata->num_elements = num_elements;
 
     /* Pointer to Element structures used by the tracking function */
-    atPrintf("Allocating elem_data\n");
     elem_data = (struct elem **)calloc(num_elements, sizeof(struct elem *));
     latdata->elemdata_list = elem_data;
 
     /* Pointer to Element lengths */
-    atPrintf("Allocating elem_length\n");
     elem_length = (double *)calloc(num_elements, sizeof(double));
     latdata->elemlength_list = elem_length;
 
     /* Element list, make sure all pointers are initially NULL */
-    atPrintf("Allocating elements pointers\n");
     elem = (PyObject **)calloc(num_elements, sizeof(PyObject *));
     latdata->element_list = elem;
 
     /* List of C integrators */
-    atPrintf("Allocating C integrators\n");
     integrator = (track_function *)calloc(num_elements, sizeof(track_function));
     latdata->integrator_list = integrator;
 
     /* List of python integrators, make sure all pointers are initially NULL */
-    atPrintf("Allocating python integrators\n");
     pyintegrator = (PyObject **)calloc(num_elements, sizeof(PyObject *));
     latdata->pyintegrator_list = pyintegrator;
 
     /* List of python integrators kwargs, make sure all pointers are initially NULL */
-    atPrintf("Allocating integrator data\n");
     latdata->kwargs_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
 
     for (npy_uint32 elem_index = 0; elem_index < num_elements; elem_index++) {
+        double lg;
         struct LibraryListElement *LibraryListPtr;
         PyObject *pylength;
         PyObject *el = PyList_GET_ITEM(lattice, elem_index);
         PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
-        double lg;
         if (!PyPassMethod) return free_lattice(latdata);    /* No PassMethod: AttributeError */
         LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
         Py_DECREF(PyPassMethod);
-        if (!LibraryListPtr)
-         return free_lattice(latdata);  /* No trackFunction for the given PassMethod: RuntimeError */
+        if (!LibraryListPtr) return free_lattice(latdata);  /* No trackFunction for the given PassMethod: RuntimeError */
         integr = LibraryListPtr->FunctionHandle;
         pylength = PyObject_GetAttrString(el, "Length");
         if (pylength) {
@@ -415,16 +406,11 @@ static void *allocate_lattice(PyObject *lattice)
         }
 
         if (integr) {
-            struct elem *truc = (*integrator)(el, NULL, NULL, 0, NULL);
-            if (truc) {
-                atPrintf("Ok\n");
-//                *elem_data = truc;
-                }
-            else {
-                atPrintf("Erreur\n");
+            *elem_data = (*integr)(el, NULL, NULL, 0, NULL);
+            if (!*elem_data) {
                 return free_lattice(latdata);
-                }
-        }
+            }
+         }
 
         length += lg;
         *integrator++ = integr;
@@ -435,7 +421,6 @@ static void *allocate_lattice(PyObject *lattice)
         Py_INCREF(el);                   /* Keep a reference to each element in case of reuse */
     }
 
-    return latdata;
     latdata->lattice_length = length;
 
     return latdata;
@@ -451,14 +436,8 @@ static PyObject *at_allocate(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *lattice;
     if (!PyArg_ParseTuple(args, "O!", &PyList_Type, &lattice)) return NULL;
-
     lat_state *latdata = allocate_lattice(lattice);
-    if (latdata == NULL) {
-        atPrintf("NULL returned");
-        return NULL;
-        return free_lattice(latdata);
-    }
-
+    if (latdata == NULL) return NULL;
     return PyCapsule_New(latdata, "at.lattice", free_capsule);
 }
 /*
