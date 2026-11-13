@@ -75,7 +75,7 @@ def set_ring_orbit(ring, dp, obspt, orbit):
 
 
 def grid_configuration(
-    planes, npoints, amplitudes, grid_mode, bounds=None, shift_zero=1.0e-6
+    planes, npoints, amplitudes, grid_mode, bounds=None, shift_zero=0
 ):
     """
     Return a grid configuration based on user input parameters.
@@ -420,7 +420,7 @@ def grid_boundary_search(
     grid_mode=GridMode.RADIAL,
     use_mp=False,
     verbose=True,
-    shift_zero=1.0e-9,
+    shift_zero=0,
     **kwargs,
 ):
     """
@@ -515,7 +515,7 @@ def recursive_boundary_search(
     use_mp=False,
     divider=2,
     verbose=True,
-    shift_zero=1.0e-9,
+    shift_zero=0,
     **kwargs,
 ):
     """
@@ -624,7 +624,7 @@ def boundary_search(
     grid_mode: GridMode | None = GridMode.RADIAL,
     use_mp: bool | None = False,
     verbose: bool | None = True,
-    shift_zero: float | None = 1.0e-9,
+    shift_zero: float | None = 0,
     **kwargs,
 ):
     """
