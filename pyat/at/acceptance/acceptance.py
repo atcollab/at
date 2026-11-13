@@ -41,7 +41,7 @@ def get_acceptance(
     gpu_pool: list[int] | None = None,
     verbose: bool = False,
     divider: int = 2,
-    shift_zero: float = 1.0e-6,
+    shift_zero: float = 0,
     start_method: str | None = None,
     **kwargs,
 ):
@@ -224,7 +224,7 @@ def get_1d_acceptance(
     gpu_pool: list[int] | None = None,
     verbose: bool | None = False,
     divider: int | None = 2,
-    shift_zero: float | None = 1.0e-6,
+    shift_zero: float | None = 0,
     start_method: str | None = None,
     **kwargs,
 ):
