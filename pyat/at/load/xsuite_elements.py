@@ -107,6 +107,8 @@ class XsElement(dict, _XsFactory):
     def _set_at_passmethod(self) -> dict[str, str]:
         """Get the AT passmethod."""
         passmethod = self._xsuite2at_model.get(self.get("model"), None)
+        if passmethod is not None:
+            passmethod = self._xsuite2at_model.get(None, None)
         return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _set_at_transforms(self) -> dict:
@@ -359,7 +361,8 @@ class Multipole(XsElement):
     _at2xsuite_model = {
         "ExactMultipoleRadPass": "drift-kick-drift-exact",
         "ExactMultipolePass": "drift-kick-drift-exact",
-        None: "drift-kick-drift-expanded",
+        None: "drift-kick-drift-expanded",  # Default Xsuite model
+        "StrMPoleSymplectic6Pass": None,  # Default AT passmethod
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
     _at_integrator = "yoshida-6"
@@ -502,7 +505,8 @@ class Bend(Multipole):
     _at2xsuite_model = {
         "ExactSectorBendRadPass": "bend-kick-bend",
         "ExactSectorBendPass": "bend-kick-bend",
-        None: "drift-kick-drift-expanded",
+        None: "drift-kick-drift-expanded",  # Default Xsuite model
+        "BndMPoleSymplectic6Pass": None,  # Default AT passmethod
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
     _xsuite2at_attr = Multipole._xsuite2at_attr | {
@@ -589,12 +593,8 @@ class RBend(Bend):
     """Xsuite RBend element."""
 
     _at2xsuite_model = {
-        "BndStrMPoleSymplectic4Pass": "drift-kick-drift-exact",
-        "BndStrMPoleSymplectic4RadPass": "drift-kick-drift-exact",
-        "ExactRectBendRadPass": "drift-kick-drift-exact",
-        "ExactRectBendPass": "drift-kick-drift-exact",
-        "ExactRectangularBendRadPass": "drift-kick-drift-exact",
-        "ExactRectangularBendPass": "drift-kick-drift-exact",
+        None: "drift-kick-drift-exact",  # Default Xsuite model
+        "ExactRectangularBendPass": None,  # Default AT passmethod,
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
 

@@ -435,7 +435,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     PolynomA: np.ndarray  #: Skew strengths
     PolynomB: np.ndarray  #: Normal strengths
     MaxOrder: int  #: Highest multipole order
-    NumIntSteps: int  #: Number of integration slices
+    NumIntSteps: int = 0  #: Number of integration slices
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -448,15 +448,14 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
               index of non-zero polynomial coefficients
-            NumIntSteps:    Number of integration steps (default: 10)
+            NumIntSteps:    Number of integration steps (default: 0, automatic)
             FieldScaling:   Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        ns = kwargs.pop("NumIntSteps", 10)  # temporary until NumIntSteps is optional
-        super().__init__(family_name, length, poly_a, poly_b, NumIntSteps=ns, **kwargs)
+        super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
         if super().is_compatible(other) and self.MaxOrder == other.MaxOrder:
@@ -596,11 +595,14 @@ class Dipole(Radiative, Multipole):
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
-            FringeBendEntrance: 1: legacy version Brown First Order (default)
+            FringeBendEntrance: 1: legacy version Brown First Order (default for
+              non-exact integrators)
 
               2: SOLEIL close to second order of Brown
 
               3: THOMX
+
+              4: Forests's exact wedge (default for exact integrators)
             FringeBendExit:     See *FringeBendEntrance*
             FringeQuadEntrance: 0: no fringe field effect (default)
 
