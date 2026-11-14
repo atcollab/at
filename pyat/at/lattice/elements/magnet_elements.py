@@ -424,6 +424,11 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     # Class attributes
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "PolynomA", "PolynomB"]
+    _conversions = dict(
+        ThinMultipole._conversions,
+        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=2),
+        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=2),
+    )
     _stacklevel = 6  # Stacklevel for warnings
 
     # Instance attributes
@@ -443,14 +448,13 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
               index of non-zero polynomial coefficients
-            NumIntSteps:    Number of integration steps (default: 10)
+            NumIntSteps:    Number of integration steps (default: 0, automatic)
             FieldScaling:   Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        kwargs.setdefault("NumIntSteps", 10)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
@@ -463,6 +467,26 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             return True
         else:
             return False
+
+    @property
+    def NumIntKicks(self) -> int:
+        r"""Number of multipole kicks.
+
+        The number of multipole kicks is equal to *NumIntSteps * *kicks_per_step*\ ,
+        where *kicks_per_step* is 3 for 4th order integrators and 7 for 6th order
+        integrators.
+
+        If *NumIntKicks* is set to zero, the default number of kicks is applied.
+
+        """
+        num_int_steps = getattr(self, "NumIntSteps", 0)
+        kicks_per_step = 3 if "4" in self.PassMethod else 7
+        return kicks_per_step * num_int_steps
+
+    @NumIntKicks.setter
+    def NumIntKicks(self, value):
+        kicks_per_step = 3 if "4" in self.PassMethod else 7
+        self.NumIntSteps =  (value - 1) // kicks_per_step + 1
 
     def _setter(self, attrname: str) -> Callable[[int, Any], None]:
         def setr(key, value):
@@ -513,8 +537,6 @@ class Dipole(Radiative, Multipole):
         ExitAngle=float,
         FringeInt1=float,
         FringeInt2=float,
-        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
-        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
         FringeBendEntrance=lambda v: _int(v, vmin=0, vmax=4),
         FringeBendExit=lambda v: _int(v, vmin=0, vmax=4),
     )
@@ -573,17 +595,20 @@ class Dipole(Radiative, Multipole):
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
-            FringeBendEntrance: 1: legacy version Brown First Order (default)
+            FringeBendEntrance: 1: legacy version Brown First Order (default for
+              non-exact integrators)
 
               2: SOLEIL close to second order of Brown
 
               3: THOMX
+
+              4: Forests's exact wedge (default for exact integrators)
             FringeBendExit:     See *FringeBendEntrance*
             FringeQuadEntrance: 0: no fringe field effect (default)
 
-              1: Lee-Whiting's thin lens limit formula
+              1: Lee-Whiting's thin lens limit formula for all multipole orders
 
-              2: elegant-like
+              2: elegant-like linear quadrupole fringe
             FringeQuadExit:     See *FringeQuadEntrance*
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
@@ -657,11 +682,6 @@ class Quadrupole(Radiative, Multipole):
     """Quadrupole element."""
 
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "K"]
-    _conversions = dict(
-        Multipole._conversions,
-        FringeQuadEntrance=lambda v: _int(v, vmin=0, vmax=3),
-        FringeQuadExit=lambda v: _int(v, vmin=0, vmax=3),
-    )
     _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = [*Multipole._entrance_fields, "FringeQuadEntrance"]

@@ -1,4 +1,4 @@
-#include "atlalib.c"
+#include "atelem.c"
 /***********************************************************************
 Expansion of the magnetic field in AT:
 
@@ -112,6 +112,6 @@ theta  = --- B  + ----------
     #endif /* RADIATION */
 
     /* Multipole kick */
-    r6[1] -= L * ReSum;
-    r6[3] += L * ImSum;
+    r6[1] -= L * (ReSum + irho*(B[0]*x + B1*(x*x-0.5*y*y)));
+    r6[3] += L * (ImSum + irho*B1*x*y);
 }

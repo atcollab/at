@@ -1,4 +1,4 @@
-#include "atlalib.c"
+#include "atelem.c"
 #ifdef DIFFUSION
 #error "drift_E2 does not compute the diffusion matrix"
 #endif
