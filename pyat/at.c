@@ -284,7 +284,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
     return LibraryListPtr;
 }
 
-static void default_parameters(struct parameters *param, at_state *module_data)
+static void default_parameters(struct parameters *param, at_state *module_data, double *bdiff)
 {
     param->nturn = 0;
     param->num_turns = 0;
@@ -300,7 +300,7 @@ static void default_parameters(struct parameters *param, at_state *module_data)
     param->bunch_currents = (double[1]){0.0};
     param->common_rng=&(module_data->common_state);
     param->thread_rng=&(module_data->thread_state);
-    param->bdiff = NULL;
+    param->bdiff = bdiff;
     param->fillpattern = (double[1]){1.0};
     param->harmonic_number = 1;
 }
@@ -506,7 +506,7 @@ static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
 
     at_state *module_data = (at_state *)PyModule_GetState(self);
 
-    default_parameters(&param, module_data);
+    default_parameters(&param, module_data, NULL);
     if (!PyArg_ParseTuple(args, "O!", &PyList_Type, &lattice)) return NULL;
     lattice_parameters(&param, lattice, NULL, NULL, 0.0);
 
@@ -579,7 +579,7 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
     at_state *module_data = (at_state *)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
 
-    default_parameters(&param, module_data);
+    default_parameters(&param, module_data, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!O!i|O!$idO!pIpO!O!iiiO!", kwlist,
         &PyCapsule_Type, &capsule, &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
@@ -795,7 +795,7 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
     at_state *module_data = (at_state*)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
 
-    default_parameters(&param, module_data);
+    default_parameters(&param, module_data, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$dO!", kwlist,
         module_data->element_type, &element,  &PyArray_Type, &rin,
         &energy, module_data->particle_type, &particle)) {
@@ -857,16 +857,10 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *pbdiff = PyArray_ZEROS(2, dims, NPY_DOUBLE ,1);
     double *bdiff = (double *)PyArray_DATA((PyArrayObject *)pbdiff);
 
-    param.nturn = 0;
-    param.energy=0.0;
-    param.rest_energy=0.0;
-    param.charge=-1.0;
-    param.bdiff=bdiff;
-
     at_state *module_data = (at_state*)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
 
-    default_parameters(&param, module_data);
+    default_parameters(&param, module_data, bdiff);
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$dO!", kwlist,
         module_data->element_type, &element,  &PyArray_Type, &rin,
         &energy, module_data->particle_type, &particle)) {
