@@ -1,13 +1,13 @@
-from .atpass import atpass as _atpass, elempass as _elempass
+from .atpass import elem_pass as _elempass
 from .utils import fortran_align
-from .track import internal_lpass, internal_epass, internal_plpass
+from .track import internal_lpass, internal_epass, internal_plpass, _atpass
 from .utils import initialize_lpass
-from ..lattice import Lattice, Element, Particle, Refpts, End
-from typing import Iterable, Optional
+from ..lattice import Lattice, Element, Refpts, End
+from collections.abc import Iterable
 from warnings import warn
 
 
-__all__ = ['element_pass', 'lattice_pass', 'patpass', 'atpass', 'elempass']
+__all__ = ["atpass", "element_pass", "elempass", "lattice_pass", "patpass"]
 
 
 # noinspection PyIncorrectDocstring
@@ -44,8 +44,10 @@ def atpass(*args, **kwargs):
           numpy array of particle coordinates
 
     :meta private:
-    """
-    warn(UserWarning("The public interface for tracking is 'lattice_pass'"))
+    """  # noqa: D415
+    warn(
+        UserWarning("The public interface for tracking is 'lattice_pass'"), stacklevel=2
+    )
     return _atpass(*args, **kwargs)
 
 
@@ -66,13 +68,16 @@ def elempass(*args, **kwargs):
         charge:             particle charge [elementary charge]
 
     :meta private:
-    """
-    warn(UserWarning("The public interface for tracking is 'element_pass'"))
+    """  # noqa: D415
+    warn(
+        UserWarning("The public interface for tracking is 'element_pass'"), stacklevel=2
+    )
     return _elempass(*args, **kwargs)
 
 
-def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = End, **kwargs):
+def lattice_pass(
+    lattice: Iterable[Element], r_in, nturns: int = 1, refpts: Refpts = End, **kwargs
+):
     """
     :py:func:`lattice_pass` tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
@@ -156,8 +161,9 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
     lattice = initialize_lpass(lattice, nturns, kwargs)
-    return internal_lpass(lattice, r_in, nturns=nturns, refpts=refpts,
-                          no_varelem=False, **kwargs)
+    return internal_lpass(
+        lattice, r_in, nturns=nturns, refpts=refpts, no_varelem=False, **kwargs
+    )
 
 
 @fortran_align
@@ -187,9 +193,15 @@ def element_pass(element: Element, r_in, **kwargs):
     return internal_epass(element, r_in, **kwargs)
 
 
-def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
-            refpts: Refpts = End, pool_size: int = None,
-            start_method: str = None, **kwargs):
+def patpass(
+    lattice: Iterable[Element],
+    r_in,
+    nturns: int = 1,
+    refpts: Refpts = End,
+    pool_size: int | None = None,
+    start_method: str | None = None,
+    **kwargs,
+):
     """
     Simple parallel implementation of :py:func:`.lattice_pass`.
     If more than one particle is supplied, use multiprocessing. For a
@@ -274,11 +286,10 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
          to the desired value.
 
     """
-    kwargs['pool_size'] = pool_size
-    kwargs['start_method'] = start_method
+    kwargs["pool_size"] = pool_size
+    kwargs["start_method"] = start_method
     lattice = initialize_lpass(lattice, nturns, kwargs)
-    return internal_plpass(lattice, r_in, nturns=nturns,
-                           refpts=refpts, **kwargs)
+    return internal_plpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
 Lattice.lattice_pass = lattice_pass

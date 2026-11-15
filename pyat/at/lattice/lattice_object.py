@@ -295,6 +295,11 @@ class Lattice(list):
             for i in reversed(rg):
                 super().__delitem__(i)
 
+    def __getstate__(self):
+        dct = super().__getstate__().copy()
+        dct.pop("_capsule", None)
+        return dct
+
     def __repr__(self):
         ks = ", ".join(f"{k}={v!r}" for k, v in self.attrs.items())
         return f"Lattice({super().__repr__()}, {ks})"

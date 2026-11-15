@@ -1,7 +1,7 @@
 /*
  * This file contains the Python interface to AT, compatible with
  * Python 3 only. It provides a module 'atpass' containing 4 python functions:
- * atpass, elempass, isopenmp, ismpi
+ * line_store, line_pass, elem_pass, diffusion_matrix, isopenmp, ismpi
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -69,20 +69,23 @@ typedef struct _lat_state {
     PyObject **pyintegrator_list;
     PyObject **kwargs_list;
     double lattice_length;
-    int last_turn;
+    int next_turn;
 } lat_state;
 
 /* Module state */
 typedef struct _at_state {
+    double electron_mass;
+    double clight;
     /* state buffers for RNGs */
     pcg32_random_t common_state;
     pcg32_random_t thread_state;
+    PyObject *particle_type;
+    PyObject *element_type;
+    int last_turn;
 } at_state;
 
 /* Global state */
 static char integrator_path[300];
-static PyObject *particle_type;
-static PyObject *element_type;
 static struct LibraryListElement {
     const char *MethodName;
     LIBRARYHANDLETYPE LibraryHandle;
@@ -281,32 +284,93 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
     return LibraryListPtr;
 }
 
-static void set_particle(PyObject *particle, struct parameters *param)
+static void default_parameters(struct parameters *param, at_state *module_data)
 {
+    param->nturn = 0;
+    param->num_turns = 0;
+    param->RingLength = 0.0;
+    param->T0 =0.0;
+    param->s_coord = 0.0;
+    param->energy = 1.0e9;
+    param->rest_energy = module_data->electron_mass;
+    param->charge = -1.0;
+    param->beam_current=0.0;
+    param->nbunch=1;
+    param->bunch_spos = (double[1]){0.0};
+    param->bunch_currents = (double[1]){0.0};
+    param->common_rng=&(module_data->common_state);
+    param->thread_rng=&(module_data->thread_state);
+    param->bdiff = NULL;
+    param->fillpattern = (double[1]){1.0};
+    param->harmonic_number = 1;
+}
+
+static void lattice_parameters(
+    struct parameters *param,
+    PyObject *lattice,
+    lat_state *lattice_data,
+    PyObject *particle,
+    double arg_energy
+)
+{
+    PyObject *pyenergy = NULL;
+
+    if (particle != NULL)
+        Py_INCREF(particle);
+    else if (lattice != NULL)
+        particle =  PyObject_GetAttrString(lattice, "particle");
+
     if (particle != NULL) {
         PyObject *prest_energy = PyObject_GetAttrString(particle, "rest_energy");
-        PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
         if (prest_energy != NULL) {
             param->rest_energy = PyFloat_AsDouble(prest_energy);
             Py_DECREF(prest_energy);
         }
+        PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
         if (pcharge != NULL) {
             param->charge = PyFloat_AsDouble(pcharge);
             Py_DECREF(pcharge);
         }
-        PyErr_Clear();
+        PyObject *ppenergy = PyObject_GetAttrString(particle, "charge");
+        if (ppenergy != NULL) {
+            param->energy = PyFloat_AsDouble(ppenergy);
+            Py_DECREF(ppenergy);
+        }
+        Py_DECREF(particle);
     }
+
+    if (lattice != NULL) {
+       pyenergy = PyObject_GetAttrString(lattice, "energy");
+       if (pyenergy != NULL) {
+            param->energy = PyFloat_AsDouble(pyenergy);
+            Py_DECREF(pyenergy);
+       }
+    }
+
+    if (arg_energy > 0.0)
+        param->energy = arg_energy;
+
+    if (lattice_data != NULL)
+        param->RingLength = lattice_data->lattice_length;
+
+    if (param->rest_energy == 0.0) {
+        param->T0 = param->RingLength/C0;
+    } else {
+        /*  Only relativistic tracking is implemented: keep everything consistent
+        double gamma0 = param.energy/param.rest_energy;
+        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
+        double beta0 = betagamma0/gamma0;
+        param->T0 = param->RingLength/(beta0*C0);
+        */
+        param->T0 = param->RingLength/C0;
+    }
+    PyErr_Clear();
 }
 
-static void *get_lattice_data(PyObject *lattice)
+static void set_current_fillpattern(struct parameters *param, int harmonic_number,
+    PyArrayObject *bspos, PyArrayObject *bcurrents, PyArrayObject *fillpattern)
 {
-    PyObject *capsule = PyObject_GetAttrString(lattice, "Cdata");
-    if (capsule == NULL) return NULL;
-    return PyCapsule_GetPointer(capsule, "at.lattice");
-}
-
-static void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
-                             PyArrayObject *fillpattern, struct parameters *param){ 
+    param->harmonic_number = harmonic_number;
     if (bcurrents && bspos && fillpattern) {
         PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_RAVEL_AXIS,
                                             PyArray_DESCR(bcurrents)->type_num,
@@ -318,36 +382,36 @@ static void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurren
         param->bunch_currents = PyArray_DATA(bcurrents);
         param->fillpattern = PyArray_DATA(fillpattern); 
     }
-    else {
-        param->beam_current=0.0;
-        param->nbunch=1;
-        param->bunch_spos = (double[1]){0.0};
-        param->bunch_currents = (double[1]){0.0};
-        param->fillpattern = (double[1]){1.0};
-    }
 }
 
-static void *free_lattice(lat_state *latdata)
+static void *get_lattice_data(PyObject *lattice)
 {
-    struct elem **elem_data = latdata->elemdata_list;
-    PyObject **elem = latdata->element_list;
+    PyObject *capsule = PyObject_GetAttrString(lattice, "Cdata");
+    if (capsule == NULL) return NULL;
+    return PyCapsule_GetPointer(capsule, "at.lattice");
+}
+
+static void *free_lattice(lat_state *lattice_data)
+{
+    struct elem **elem_data = lattice_data->elemdata_list;
+    PyObject **elem = lattice_data->element_list;
 
     atPrintf("Freeing lattice\n");
-    for (npy_uint32 elem_index=latdata->num_elements; elem_index > 0; elem_index--) {
+    for (npy_uint32 elem_index=lattice_data->num_elements; elem_index > 0; elem_index--) {
         free(*elem_data++);
         Py_XDECREF(*elem++);   /* Release the stored elements */
     }
-    free(latdata->elemdata_list);
-    free(latdata->elemlength_list);
-    free(latdata->element_list);
-    free(latdata->integrator_list);
-    free(latdata->pyintegrator_list);
-    free(latdata->kwargs_list);
-    free(latdata);
+    free(lattice_data->elemdata_list);
+    free(lattice_data->elemlength_list);
+    free(lattice_data->element_list);
+    free(lattice_data->integrator_list);
+    free(lattice_data->pyintegrator_list);
+    free(lattice_data->kwargs_list);
+    free(lattice_data);
     return NULL;
 }
 
-static void *allocate_lattice(PyObject *lattice)
+static void *allocate_lattice(struct parameters *param, PyObject *lattice)
 {
     PyObject **elem;
     double *elem_length;
@@ -357,32 +421,32 @@ static void *allocate_lattice(PyObject *lattice)
     double length = 0.0;
     struct elem **elem_data;
 
-    lat_state *latdata = (lat_state *)calloc(1, sizeof(lat_state));
+    lat_state *lattice_data = (lat_state *)calloc(1, sizeof(lat_state));
 
-     latdata->num_elements = num_elements;
+     lattice_data->num_elements = num_elements;
 
     /* Pointer to Element structures used by the tracking function */
     elem_data = (struct elem **)calloc(num_elements, sizeof(struct elem *));
-    latdata->elemdata_list = elem_data;
+    lattice_data->elemdata_list = elem_data;
 
     /* Pointer to Element lengths */
     elem_length = (double *)calloc(num_elements, sizeof(double));
-    latdata->elemlength_list = elem_length;
+    lattice_data->elemlength_list = elem_length;
 
     /* Element list, make sure all pointers are initially NULL */
     elem = (PyObject **)calloc(num_elements, sizeof(PyObject *));
-    latdata->element_list = elem;
+    lattice_data->element_list = elem;
 
     /* List of C integrators */
     integrator = (track_function *)calloc(num_elements, sizeof(track_function));
-    latdata->integrator_list = integrator;
+    lattice_data->integrator_list = integrator;
 
     /* List of python integrators, make sure all pointers are initially NULL */
     pyintegrator = (PyObject **)calloc(num_elements, sizeof(PyObject *));
-    latdata->pyintegrator_list = pyintegrator;
+    lattice_data->pyintegrator_list = pyintegrator;
 
     /* List of python integrators kwargs, make sure all pointers are initially NULL */
-    latdata->kwargs_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
+    lattice_data->kwargs_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
 
     for (npy_uint32 elem_index = 0; elem_index < num_elements; elem_index++) {
         double lg;
@@ -390,10 +454,10 @@ static void *allocate_lattice(PyObject *lattice)
         PyObject *pylength;
         PyObject *el = PyList_GET_ITEM(lattice, elem_index);
         PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
-        if (!PyPassMethod) return free_lattice(latdata);    /* No PassMethod: AttributeError */
+        if (!PyPassMethod) return free_lattice(lattice_data);    /* No PassMethod: AttributeError */
         LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
         Py_DECREF(PyPassMethod);
-        if (!LibraryListPtr) return free_lattice(latdata);  /* No trackFunction for the given PassMethod: RuntimeError */
+        if (!LibraryListPtr) return free_lattice(lattice_data);  /* No trackFunction for the given PassMethod: RuntimeError */
         integr = LibraryListPtr->FunctionHandle;
         pylength = PyObject_GetAttrString(el, "Length");
         if (pylength) {
@@ -406,9 +470,9 @@ static void *allocate_lattice(PyObject *lattice)
         }
 
         if (integr) {
-            *elem_data = (*integr)(el, NULL, NULL, 0, NULL);
+            *elem_data = (*integr)(el, NULL, NULL, 0, param);
             if (!*elem_data) {
-                return free_lattice(latdata);
+                return free_lattice(lattice_data);
             }
          }
 
@@ -421,24 +485,34 @@ static void *allocate_lattice(PyObject *lattice)
         Py_INCREF(el);                   /* Keep a reference to each element in case of reuse */
     }
 
-    latdata->lattice_length = length;
+    lattice_data->lattice_length = length;
+    lattice_data->next_turn = 0;
 
-    return latdata;
+    return lattice_data;
 }
 
 static void free_capsule(PyObject *capsule)
 {
-    lat_state *latdata = (lat_state *)PyCapsule_GetPointer(capsule, "at.lattice");
-    free_lattice (latdata);
+    lat_state *lattice_data = (lat_state *)PyCapsule_GetPointer(capsule, "at.lattice");
+    free_lattice (lattice_data);
 }
 
-static PyObject *at_allocate(PyObject *self, PyObject *args, PyObject *kwargs)
+static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
 {
+    struct parameters param;
+
+    /* Positional arguments */
     PyObject *lattice;
+
+    at_state *module_data = (at_state *)PyModule_GetState(self);
+
+    default_parameters(&param, module_data);
     if (!PyArg_ParseTuple(args, "O!", &PyList_Type, &lattice)) return NULL;
-    lat_state *latdata = allocate_lattice(lattice);
-    if (latdata == NULL) return NULL;
-    return PyCapsule_New(latdata, "at.lattice", free_capsule);
+    lattice_parameters(&param, lattice, NULL, NULL, 0.0);
+
+    lat_state *lattice_data = allocate_lattice(&param, lattice);
+    if (lattice_data == NULL) return NULL;
+    return PyCapsule_New(lattice_data, "at.lattice", free_capsule);
 }
 /*
  * Parse the arguments to atpass, set things up, and execute.
@@ -451,8 +525,8 @@ static PyObject *at_allocate(PyObject *self, PyObject *args, PyObject *kwargs)
  *  - start_elem: start tracking at element #start_elem
  *  - end_elem: end tracking at element #end_elem (exclusive)
  */
-static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"line","rin","nturns","refpts","turn",
+static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
+    static char *kwlist[] = {"lattice_data","lattice","rin","nturns","refpts","turn",
                              "energy", "particle", "keep_counter",
                              "omp_num_threads","losses",
                              "bunch_spos", "bunch_currents", "start_elem", "end_elem",
@@ -484,6 +558,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     /* Positional arguments */
     PyObject *capsule = NULL;
+    PyObject *lattice;
     PyArrayObject *rin;
     int num_turns;
     /* Keyword arguments */
@@ -501,16 +576,27 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     int harmonic_number = 1;
     PyArrayObject *fillpattern=NULL;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$idO!pIpO!O!iiiO!", kwlist,
-        &PyCapsule_Type, &capsule, &PyArray_Type, &rin, &num_turns,
+    at_state *module_data = (at_state *)PyModule_GetState(self);
+    if (module_data == NULL) return NULL;
+
+    default_parameters(&param, module_data);
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!O!i|O!$idO!pIpO!O!iiiO!", kwlist,
+        &PyCapsule_Type, &capsule, &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
-        &energy, particle_type, &particle,
+        &energy, module_data->particle_type, &particle,
         &keep_counter, &omp_num_threads, &losses,
         &PyArray_Type, &bspos, &PyArray_Type, &bcurrents,
         &start_elem, &end_elem, &harmonic_number,
         &PyArray_Type, &fillpattern)) {
         return NULL;
     }
+
+    lat_state *lattice_data  = (lat_state *)PyCapsule_GetPointer(capsule, "at.lattice");
+    if (lattice_data == NULL) return NULL;
+    lattice_parameters(&param, lattice, lattice_data, particle, energy);
+    set_current_fillpattern(&param, harmonic_number, bspos, bcurrents, fillpattern);
+    param.nturn = (keep_counter) ? lattice_data->next_turn : counter;
+
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
     }
@@ -522,41 +608,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
     num_particles = (PyArray_SIZE(rin)/6);
 
-    at_state *state = (at_state *)PyModule_GetState(self);
-    if (state == NULL) return NULL;
-    lat_state *latdata  = (lat_state *)PyCapsule_GetPointer(capsule, "at.lattice");
-    if (latdata == NULL) return NULL;
-
-    param.common_rng=&(state->common_state);
-    param.thread_rng=&(state->thread_state);
-    param.energy=energy;
-    param.rest_energy=0.0;
-    param.charge=-1.0;
-    param.num_turns=num_turns;
-    param.bdiff = NULL; 
-    param.harmonic_number = harmonic_number;   
-    if (keep_counter)
-        param.nturn = latdata->last_turn;
-    else
-        param.nturn = counter;
-
-    /* Particle energy */
-    set_particle(particle, &param);
-    param.RingLength = latdata->lattice_length;
-    if (param.rest_energy == 0.0) {
-        param.T0 = param.RingLength/C0;
-    } else {
-        /*  Only relativistic tracking is implemented: keep everything consistent
-        double gamma0 = param.energy/param.rest_energy;
-        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
-        double beta0 = betagamma0/gamma0;
-        param.T0 = param.RingLength/(beta0*C0);
-        */
-        param.T0 = param.RingLength/C0;
-    }
-
-    set_current_fillpattern(bspos, bcurrents, fillpattern, &param);
-
     #ifdef _OPENMP
     if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
         unsigned int nthreads = omp_get_num_procs();
@@ -567,7 +618,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
     #endif /*_OPENMP*/
 
-    num_elements = latdata->num_elements;
+    num_elements = lattice_data->num_elements;
 
     /* Check for partial turn tracking */
     if (end_elem==0) end_elem = num_elements;
@@ -638,12 +689,12 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     for (turn = 0; turn < num_turns; turn++) {
 
-        PyObject **element = latdata->element_list;
-        double *elem_length = latdata->elemlength_list;
-        track_function *integrator = latdata->integrator_list;
-        PyObject **pyintegrator = latdata->pyintegrator_list;
-        PyObject **kwargs = latdata->kwargs_list;
-        struct elem **elemdata = latdata->elemdata_list;
+        PyObject **element = lattice_data->element_list;
+        double *elem_length = lattice_data->elemlength_list;
+        track_function *integrator = lattice_data->integrator_list;
+        PyObject **pyintegrator = lattice_data->pyintegrator_list;
+        PyObject **kwargs = lattice_data->kwargs_list;
+        struct elem **elemdata = lattice_data->elemdata_list;
         double s_coord = 0.0;
 
         if (start_elem != 0) {
@@ -695,7 +746,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         param.nturn++;
         start_elem = 0;
     }
-    latdata->last_turn = param.nturn;  /* Store turn number in a static variable */
+    lattice_data->next_turn = param.nturn;
 
     #ifdef _OPENMP
     if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
@@ -722,7 +773,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 }
 
-static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
+static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"element", "rin",
                              "energy", "particle", NULL};
@@ -740,11 +791,20 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Keyword arguments */
     double energy = 0.0;
     PyObject *particle = NULL;
+
+    at_state *module_data = (at_state*)PyModule_GetState(self);
+    if (module_data == NULL) return NULL;
+
+    default_parameters(&param, module_data);
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$dO!", kwlist,
-        element_type, &element,  &PyArray_Type, &rin,
-        &energy, particle_type, &particle)) {
+        module_data->element_type, &element,  &PyArray_Type, &rin,
+        &energy, module_data->particle_type, &particle)) {
         return NULL;
     }
+
+    lattice_parameters(&param, NULL, NULL, particle, energy);
+    set_current_fillpattern(&param, 1, NULL, NULL, NULL);
+
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
     }
@@ -755,27 +815,8 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
 
-    at_state *state = (at_state*)PyModule_GetState(self);
-    if (state == NULL) return NULL;
-
-    param.common_rng=&(state->common_state);
-    param.thread_rng=&(state->thread_state);
-    param.energy=energy;
-    param.rest_energy=0.0;
-    param.charge=-1.0;
-    param.num_turns = 1;
-    param.bdiff=NULL;
-    param.harmonic_number = 1;
-    param.nturn = 0;
-
-    set_current_fillpattern(NULL, NULL, NULL, &param);
-    set_particle(particle, &param);
-
     num_particles = (PyArray_SIZE(rin)/6);
     drin = PyArray_DATA(rin);
-
-    param.RingLength = 0.0;
-    param.T0 = 0.0;
 
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;
@@ -821,11 +862,19 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     param.rest_energy=0.0;
     param.charge=-1.0;
     param.bdiff=bdiff;
+
+    at_state *module_data = (at_state*)PyModule_GetState(self);
+    if (module_data == NULL) return NULL;
+
+    default_parameters(&param, module_data);
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$dO!", kwlist,
-        element_type, &element,  &PyArray_Type, &rin,
-        &energy, particle_type, &particle)) {
+        module_data->element_type, &element,  &PyArray_Type, &rin,
+        &energy, module_data->particle_type, &particle)) {
         return NULL;
     }
+    lattice_parameters(&param, NULL, NULL, particle, energy);
+
+
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
     }
@@ -839,9 +888,6 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     if (num_particles != 1) {
         return PyErr_Format(PyExc_ValueError, "Number of particles should be 1");
     }
-
-    param.energy = energy;
-    set_particle(particle, &param);
 
     drin = (const double *)PyArray_DATA(rin);
     for (int i=0; i<6; i++) orb[i] = drin[i];
@@ -886,33 +932,33 @@ static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
     uint64_t rank = 0;
 #endif /* MPI */
 
-    at_state *state = (at_state*)PyModule_GetState(self);
-    if (state == NULL) return NULL;
+    at_state *module_data = (at_state*)PyModule_GetState(self);
+    if (module_data == NULL) return NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|$KK", kwlist,
         &rank, &seed)) {
         return NULL;
     }
-    pcg32_srandom_r(&(state->common_state), seed, AT_RNG_INC);
-    pcg32_srandom_r(&(state->thread_state), seed, rank);
+    pcg32_srandom_r(&(module_data->common_state), seed, AT_RNG_INC);
+    pcg32_srandom_r(&(module_data->thread_state), seed, rank);
     Py_RETURN_NONE;
 }
 
 static PyObject *common_rng(PyObject *self)
 {
-    at_state *state = (at_state*)PyModule_GetState(self);
-    if (state == NULL) return NULL;
+    at_state *module_data = (at_state*)PyModule_GetState(self);
+    if (module_data == NULL) return NULL;
 
-    double drand = atrandd_r(&(state->common_state));
+    double drand = atrandd_r(&(module_data->common_state));
     return Py_BuildValue("d", drand);
 }
 
 static PyObject *thread_rng(PyObject *self)
 {
-    at_state *state = (at_state*)PyModule_GetState(self);
-    if (state == NULL) return NULL;
+    at_state *module_data = (at_state*)PyModule_GetState(self);
+    if (module_data == NULL) return NULL;
 
-    double drand = atrandd_r(&(state->thread_state));
+    double drand = atrandd_r(&(module_data->thread_state));
     return Py_BuildValue("d", drand);
 }
 
@@ -927,24 +973,54 @@ static int atpass_exec(PyObject *self)
     uint64_t rank = 0;
 #endif /* MPI */
 
-    at_state *state = (at_state *)PyModule_GetState(self);
-    if (state == NULL) return -1;
-    pcg32_srandom_r(&(state->common_state), AT_RNG_STATE, AT_RNG_INC);
-    pcg32_srandom_r(&(state->thread_state), AT_RNG_STATE, rank);
+    at_state *module_data = (at_state *)PyModule_GetState(self);
+    if (module_data == NULL) return -1;
+    pcg32_srandom_r(&(module_data->common_state), AT_RNG_STATE, AT_RNG_INC);
+    pcg32_srandom_r(&(module_data->thread_state), AT_RNG_STATE, rank);
+
+    /* get Particle type */
+    PyObject *particle_type = get_pyobj("at.lattice", "Particle");
+    if (particle_type == NULL) return -1;
+    module_data->particle_type = particle_type;
+
+    /* get Element type */
+    PyObject *element_type = get_pyobj("at.lattice", "Element");
+    if (element_type == NULL) return -1;
+    module_data->element_type = element_type;
+
+    /* get electron mass */
+    PyObject *electron_mass = get_pyobj("at.constants", "e_mass");
+    if (electron_mass == NULL) return -1;
+    module_data->electron_mass = PyFloat_AsDouble(electron_mass);
+    Py_DECREF(electron_mass);
+
+    /* get speed of light */
+    PyObject *pyclight = get_pyobj("at.constants", "e_mass");
+    if (pyclight == NULL) return -1;
+    module_data->clight = PyFloat_AsDouble(pyclight);
+    Py_DECREF(pyclight);
 
     atPrintf("Done exec_atpass\n");
     return 0;
 }
 
+static void atpass_free(void *self)
+{
+    at_state *module_data = (at_state *)PyModule_GetState(self);
+    Py_XDECREF(module_data->particle_type);
+    Py_XDECREF(module_data->element_type);
+}
+
 /* Method table */
 
 static PyMethodDef AtMethods[] = {
-    {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("atpass(line: Sequence[Element], r_in, n_turns: int, refpts: Uint32_refs = [], "
+    {"line_pass",  (PyCFunction)line_pass, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("line_pass(line: Sequence[Element], r_in, n_turns: int, refpts: Uint32_refs = [], "
               "reuse: Optional[bool] = False, omp_num_threads: Optional[int] = 0)\n\n"
               "Track input particles r_in along line for nturns turns.\n"
               "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
               "Parameters:\n"
+              "    linedata:lattice data\n"
               "    line:    list of elements\n"
               "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
               "      On return, rin contains the final coordinates of the particles\n"
@@ -954,7 +1030,6 @@ static PyMethodDef AtMethods[] = {
               "       len(line) means end of the last element\n"
               "    energy:  nominal energy [eV]\n"
               "    particle (Optional[Particle]):  circulating particle\n"
-              "    reuse:   if True, use previously cached description of the lattice.\n"
               "    omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
               "    losses:  if True, process losses\n"
               "    start_elem: Start tracking at the specified element. The\n"
@@ -969,8 +1044,8 @@ static PyMethodDef AtMethods[] = {
               "         of particle coordinates\n\n"
               ":meta private:"
               )},
-    {"elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("elempass(element, r_in)\n\n"
+    {"elem_pass",  (PyCFunction)elem_pass, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("elem_pass(element, r_in)\n\n"
               "Track input particles r_in through a single element.\n\n"
               "Parameters:\n"
               "    element (Element):   AT element\n"
@@ -1001,8 +1076,8 @@ static PyMethodDef AtMethods[] = {
               "    rank (int):    thread identifier (for MPI and python multiprocessing)\n"
               "    seed (int):    single seed for both generators. Default: initial seed\n"
             )},
-    {"allocate_lattice",  (PyCFunction)at_allocate, METH_VARARGS,
-    PyDoc_STR("allocate_lattice(lattice)\n\n"
+    {"line_store",  (PyCFunction)line_store, METH_VARARGS,
+    PyDoc_STR("line_store(lattice)\n\n"
               "Allocate memory for a lattice.\n\n"
               "Parameters:\n"
               "    lattice (Lattice):   AT lattice\n\n"
@@ -1035,7 +1110,7 @@ static struct PyModuleDef moduledef = {
     atpass_slots,     /* m_slots */
     NULL,             /* m_traverse */
     NULL,             /* m_clear */
-    NULL,             /* m_free */
+    atpass_free,      /* m_free */
 };
 
 PyMODINIT_FUNC PyInit_atpass(void)
@@ -1064,14 +1139,6 @@ PyMODINIT_FUNC PyInit_atpass(void)
     else {
         return NULL;
     }
-
-    /* get Particle type */
-    particle_type = get_pyobj("at.lattice", "Particle");
-    if (particle_type == NULL) return NULL;
-
-    /* get Element type */
-    element_type = get_pyobj("at.lattice", "Element");
-    if (element_type == NULL) return NULL;
 
     atPrintf("Done init_atpass\n");
 
