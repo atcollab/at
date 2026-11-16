@@ -21,8 +21,8 @@ def line_pass(
     reuse: bool = False,
     omp_num_thread: int = 0,
     losses: bool = False,
-    start_elem: int | None = None,
-    end_elem: int | None = None,
+    start_elem: int = 0,
+    end_elem: int = 0,
 ): ...
 
 def elem_pass(

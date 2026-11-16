@@ -1035,9 +1035,9 @@ static PyMethodDef AtMethods[] = {
             )},
     {"line_pass",  (PyCFunction)line_pass, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("line_pass(line: Sequence[Element], r_in, n_turns: int, refpts=[], "
-              "turn=0, *, keep_counter=False, losses=False, start_elem=0, end_elem=0, omp_num_threads = 0)\n\n"
-              "Track input particles r_in along line for *nturns* turns.\n"
-              "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
+              "turn=0, *, keep_counter=False, losses=False, start_elem=0, end_elem=nb_elems, omp_num_threads = 0)\n\n"
+              "Track input particles *r_in* along *line* for *nturns* turns.\n"
+              "Record 6D phase space at elements corresponding to *refpts* for each turn.\n\n"
               "Parameters:\n"
               "    linedata:lattice data as returned by *line_store*\n"
               "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
@@ -1051,8 +1051,8 @@ static PyMethodDef AtMethods[] = {
               "    omp_num_threads (int): number of OpenMP threads (default 0: automatic)\n"
               "    losses (bool):  if True, process losses\n"
               "    start_elem (int): Start tracking at the specified element. The\n"
-              "       behavior is different from :py:func:`..lattice.rotate`, refpts are\n"
-              "       still indexed from the begininig of the ring and s_coord starts at\n"
+              "       behavior is different from :py:meth:`~.Lattice.rotate`, *refpts* are\n"
+              "       still indexed from the beginning of the ring and *s_coord* starts at\n"
               "       the beginning of the ring. Default 0.\n"
               "    end_elem (int): End tracking at the specified element (exclusive).\n"
               "       When end_elem is different from the number of lattice elements,\n"
@@ -1070,7 +1070,6 @@ static PyMethodDef AtMethods[] = {
               "      On return, rin contains the final coordinates of the particles\n"
               "    energy (float):      nominal energy [eV]\n"
               "    particle (Optional[Particle]):  circulating particle\n\n"
-              ":meta private:"
             )},
     {"diffusion_matrix",  (PyCFunction)at_diffmatrix, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("diffusion_matrix(element, r_in)\n\n"
@@ -1082,7 +1081,6 @@ static PyMethodDef AtMethods[] = {
               "      On return, rin contains the final coordinates of the particles\n"
               "    energy (float):      nominal energy [eV]\n"
               "    particle (Optional[Particle]):  circulating particle\n\n"
-              ":meta private:"
             )},
     {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("reset_rng(*, rank=0, seed=None)\n\n"
