@@ -109,11 +109,11 @@ def fortran_align(func):
 
 def format_results(results, r_in, losses):
     """Function to format the ouput of parallelized tracking."""
-    lin, lout = zip(*results)
+    lin, lout = zip(*results, strict=True)
     # Update r_in with values at the end of tracking
     np.concatenate(lin, out=r_in, axis=1)
     if losses:
-        lout, ldic = zip(*lout)
+        lout, ldic = zip(*lout, strict=True)
         keys = ldic[0].keys()
         dicout = {k: np.hstack([li[k] for li in ldic]) for k in keys}
         return np.concatenate(lout, axis=1), dicout

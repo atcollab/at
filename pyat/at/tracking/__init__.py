@@ -1,5 +1,5 @@
 """
-Tracking functions
+Tracking functions.
 """
 from .catpass import diffusion_matrix, reset_rng, common_rng, thread_rng
 from .track import *
