@@ -19,7 +19,7 @@ from enum import Enum
 
 import numpy
 
-from .atpass import line_store, line_pass, elem_pass as _elempass, reset_rng
+from .catpass import line_store, line_pass, elem_pass as _elempass, reset_rng
 from .utils import fortran_align, has_collective, format_results
 from .utils import initialize_lpass, disable_varelem, variable_refs
 from ..lattice import AtError, AtWarning, DConstant, random
@@ -54,16 +54,23 @@ _imax = numpy.iinfo(int).max
 _globring: list[Element] | None = None
 
 
-def _atpass(lattice, r_in, nturns: int=1, reuse: bool = False, **kwargs):
+def _atpass(lattice, r_in, nturns: int = 1, reuse: bool = False, **kwargs):
+
+    store_args = {
+        k: v
+        for k in ("energy", "particle", "bunch_spos")
+        if (v := kwargs.pop(k, None)) is not None
+    }
+
     try:
         ldata = lattice._capsule
     except AttributeError:
-        ldata = line_store(lattice)
+        ldata = line_store(lattice, **store_args)
     else:
         if ldata is None or (not reuse):
             print("Allocate")
-            ldata = lattice._capsule = line_store(lattice)
-    return line_pass(ldata, lattice, r_in, nturns, **kwargs)
+            ldata = lattice._capsule = line_store(lattice, **store_args)
+    return line_pass(ldata, r_in, nturns, **kwargs)
 
 
 def _atpass_fork(seed, rank, rin, **kwargs):
@@ -262,6 +269,10 @@ def lattice_track(
         end_elem (int):         End tracking at the specified element (exclusive).
           When end_elem is different from the number of lattice elements,
           :pycode:`nturns=1` is required. Default number of elements.
+        unfold_beam (bool): Internal beam folding activate, this
+          assumes the input particles are in bucket 0, works only
+          if all bucket see the same RF Voltage.
+          Default: :py:obj:`True`
 
     The following keyword arguments overload the lattice values
 
@@ -271,10 +282,6 @@ def lattice_track(
           Default: :code:`lattice.particle` if existing,
           otherwise :code:`Particle('relativistic')`
         energy (Optiona[float]): lattice energy. Default 0.
-        unfold_beam (bool): Internal beam folding activate, this
-          assumes the input particles are in bucket 0, works only
-          if all bucket see the same RF Voltage.
-          Default: :py:obj:`True`
 
     If *energy* is not available, relativistic tracking if forced,
     *rest_energy* is ignored.

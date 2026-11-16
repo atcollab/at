@@ -15,7 +15,7 @@ def atpass(lattice, r_in, nturns: int=1, reuse: bool = False, **kwargs):
         if ldata is None or (not reuse):
             print("Allocate")
             ldata = lattice._capsule = line_store(lattice)
-    return line_pass(ldata, lattice, r_in, nturns, **kwargs)
+    return line_pass(ldata, r_in, nturns, **kwargs)
 
 def test_incorrect_types_raises_value_error(rin):
     with pytest.raises(TypeError):

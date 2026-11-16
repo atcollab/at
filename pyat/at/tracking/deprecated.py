@@ -1,4 +1,4 @@
-from .atpass import elem_pass as _elempass
+from .catpass import elem_pass as _elempass
 from .utils import fortran_align
 from .track import internal_lpass, internal_epass, internal_plpass, _atpass
 from .utils import initialize_lpass

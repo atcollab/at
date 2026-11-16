@@ -1,31 +1,31 @@
-"""Stub file for the 'atpass' extension."""
-
-from __future__ import annotations
-
 import numpy as np
 
 from at.lattice import Element, Particle
 
 _defref = np.array([], dtype=np.uint32)
 
-def atpass(
+def line_store(
+    line: list[Element],
+    energy: float | None = None,
+    particle: Particle | None = None,
+    bunch_spos=None,
+): ...
+
+def line_pass(
     line: list[Element],
     r_in: np.ndarray,
     nturns: int,
-    refpts: np.ndarray = _defref,
+    refpts: np.ndarray = ...,
     turn: int | None = None,
-    energy: float | None = None,
-    particle: Particle | None = None,
     keep_counter: bool = False,
     reuse: bool = False,
     omp_num_thread: int = 0,
     losses: bool = False,
-    bunch_spos=None,
-    bunch_current=None,
     start_elem: int | None = None,
     end_elem: int | None = None,
 ): ...
-def elempass(
+
+def elem_pass(
     element: Element,
     r_in: np.ndarray,
     energy: float | None = None,

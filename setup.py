@@ -204,7 +204,7 @@ def integrator_ext(pass_method, flags):
 
 
 at = Extension(
-    "at.tracking.atpass",
+    "at.tracking.catpass",
     sources=[at_src / "at.c"],
     define_macros=macros + omp_macros + mpi_macros,
     include_dirs=[np.get_include(), str(integrator_src_orig)],
