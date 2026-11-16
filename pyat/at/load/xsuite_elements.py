@@ -130,7 +130,7 @@ class XsElement(dict, _XsFactory):
 
     def _set_xs_integrator(self, atelem) -> None:
         """Set the integrator for the Xsuite element."""
-        if (integrator := self.get("_at_integrator", None)) is not None:
+        if (integrator := self._at_integrator) is not None:
             self["integrator"] = integrator
 
     def _set_xs_transforms(self, atelem) -> None:
@@ -445,6 +445,17 @@ class Multipole(XsElement):
         "num_multipole_kicks": "NumIntKicks",
     }
     _allow_rot_shift = True
+
+    def _set_xs_integrator(self, atelem) -> None:
+        """Set the Yoshida integrator of the same order as the AT PassMethod.
+
+        Same rule as :py:attr:`.Multipole.NumIntKicks`: 4th order (3 kicks per
+        step) if the PassMethod name contains "4", 6th order (7 kicks) otherwise.
+        Xsuite's default ``adaptive`` integrator does not keep
+        ``num_multipole_kicks``.
+        """
+        passmethod = getattr(atelem, "PassMethod", "")
+        self["integrator"] = "yoshida-4" if "4" in passmethod else "yoshida-6"
 
     def _set_at_poly(self) -> dict[str, Any]:
         """Generate the AT field expansion."""
