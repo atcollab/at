@@ -2,8 +2,7 @@ import numpy
 import pytest
 
 from at import elements, uint32_refpts, AtWarning, Lattice
-from at.tracking.atpass import line_store, line_pass  # Direct access to the C function
-
+from at.tracking.catpass import line_store, line_pass  # Direct access to the C function
 
 
 def atpass(lattice, r_in, nturns: int=1, reuse: bool = False, **kwargs):
