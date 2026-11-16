@@ -261,7 +261,7 @@ class IBSElement(Collective, Element):
                         _rates=lambda v: _array(v, (-1, 3)))
 
     def __init__(self, family_name: str, ring: Lattice, *,
-                 update_turns: int = 100, nslice: int = 51,
+                 update_turns: int = 1, nslice: int = 51,
                  step: float = 0.1, refpt: int = 0,
                  **kwargs):
         """
@@ -269,7 +269,11 @@ class IBSElement(Collective, Element):
             family_name:    Element name
             ring:           Lattice in which the element will be inserted
             update_turns:   Number of turns between updates of the growth
-              rates
+              rates. Between updates, the kicks are rescaled with the
+              current beam parameters at constant rates: the interval must
+              be much shorter than the IBS growth time, otherwise the
+              emittances grow exponentially. Default: 1, the update costs
+              little compared with the tracking
             nslice:         Number of bins of the longitudinal line density.
               Use 1 for uniform kicks
             step:           Maximum distance between optics sampling points
