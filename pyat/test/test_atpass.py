@@ -2,19 +2,7 @@ import numpy
 import pytest
 
 from at import elements, uint32_refpts, AtWarning, Lattice
-from at.tracking.catpass import line_store, line_pass  # Direct access to the C function
-
-
-def atpass(lattice, r_in, nturns: int=1, reuse: bool = False, **kwargs):
-    try:
-        ldata = lattice._cdata
-    except AttributeError:
-        ldata = line_store(lattice)
-    else:
-        if ldata is None or (not reuse):
-            print("Allocate")
-            ldata = lattice._cdata = line_store(lattice)
-    return line_pass(ldata, r_in, nturns, **kwargs)
+from at.tracking.track import _atpass as atpass
 
 def test_incorrect_types_raises_value_error(rin):
     with pytest.raises(TypeError):
