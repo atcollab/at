@@ -37,10 +37,17 @@ static ForceInline void drift(double *r6, double L, double irho)
         r6[ct_] += NormL * dp1;   /* Absolute path length */
     }
     else {
-        double px = r6[px_] - irho*L;
-        double d2 = pxyz(dp1, 0.0, r6[py_]);
-        double dasin = (asin(r6[px_]/d2) - asin(px/d2))/irho;
-        double dx = (pxyz(dp1, px, r6[py_]) - pz)/irho;
+        /* Rearranged to avoid cancellations between O(1) terms divided by irho:
+           pz1 - pz = -dpx (px0 + px) / (pz + pz1), and
+           asin(px0/d) - asin(px/d) = atan2(px0 pz1 - px pz, pz pz1 + px0 px) */
+        double px0 = r6[px_];
+        double dpx = -irho*L;                           /* px - px0 */
+        double px = px0 + dpx;
+        double pz1 = pxyz(dp1, px, r6[py_]);
+        double spz = pz + pz1;
+        double dpz = -dpx*(px0 + px)/spz;               /* pz1 - pz */
+        double dx = L*(px0 + px)/spz;                   /* (pz1 - pz)/irho */
+        double dasin = atan2(px0*dpz - pz*dpx, pz*pz1 + px0*px)/irho;
         double dy = r6[py_]*dasin;
         double dct = dp1*dasin;     /* Absolute path length */
 
