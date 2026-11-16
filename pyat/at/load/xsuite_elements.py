@@ -179,7 +179,7 @@ class XsElement(dict, _XsFactory):
     def _set_at_passmethod(self) -> dict[str, str]:
         """Get the AT passmethod."""
         passmethod = self._xsuite2at_model.get(self.get("model"), None)
-        if passmethod is not None:
+        if passmethod is None:
             passmethod = self._xsuite2at_model.get(None, None)
         return {} if passmethod is None else {"PassMethod": passmethod}
 
@@ -446,6 +446,14 @@ class Multipole(XsElement):
     }
     _allow_rot_shift = True
 
+    def _set_at_passmethod(self) -> dict[str, str]:
+        """Get the AT passmethod, 4th order variant for a 4th order integrator."""
+        atparams = super()._set_at_passmethod()
+        passmethod = atparams.get("PassMethod", "")
+        if self.get("integrator") == "yoshida-4" and "Symplectic6" in passmethod:
+            atparams["PassMethod"] = passmethod.replace("Symplectic6", "Symplectic4")
+        return atparams
+
     def _set_xs_integrator(self, atelem) -> None:
         """Set the Yoshida integrator of the same order as the AT PassMethod.
 
@@ -684,8 +692,16 @@ class RBend(Bend):
     _at2xsuite_model = {
         None: "drift-kick-drift-exact",  # Default Xsuite model
         "ExactRectangularBendPass": None,  # Default AT passmethod,
+        "ExactRectangularBendRadPass": None,
+        "ExactRectBendPass": "bend-kick-bend",
+        "ExactRectBendRadPass": "bend-kick-bend",
     }
-    _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
+    # Explicit: the inverse of _at2xsuite_model is not unique
+    _xsuite2at_model = {
+        None: "ExactRectangularBendPass",
+        "drift-kick-drift-exact": "ExactRectangularBendPass",
+        "bend-kick-bend": "ExactRectBendPass",
+    }
 
     @property
     def _integration_length(self):
