@@ -624,9 +624,15 @@ class Bend(Multipole):
     _xsuite2at_edge: ClassVar[dict[str, tuple]] = {
         "suppressed": (0, None),
         "linear": (1, None),
-        "dipole-only": (None, None),
-        "full": (None, 1),
+        # explicit: the default AT FringeBend is linear for BndMPoleSymplectic
+        "dipole-only": (4, None),
+        "full": (4, 1),
     }
+
+    @staticmethod
+    def _nonlinear_bend_fringe(fringe_bend: int) -> bool:
+        """True if the AT FringeBend value is the nonlinear dipole fringe."""
+        return fringe_bend == 4
 
     def _set_at_fringe(self) -> dict[str, Any]:
         def edge_model(xskey, bendkey, quadkey):
@@ -651,10 +657,17 @@ class Bend(Multipole):
     def _set_xs_fringe(self, atelem):
         def edge_model(bendkey, quadkey):
             at_quad_fringe = getattr(atelem, quadkey, 0)
+            at_bend_fringe = getattr(atelem, bendkey, def_bend_fringe)
             if at_quad_fringe > 0:
-                return "full"
-            else:
-                return self._at2xsuite_edge[getattr(atelem, bendkey, def_bend_fringe)]
+                if self._nonlinear_bend_fringe(at_bend_fringe):
+                    return "full"
+                # Xsuite's multipole fringe exists only with the full dipole fringe
+                self._warn(
+                    f"{quadkey}={at_quad_fringe} with {bendkey}={at_bend_fringe}: "
+                    "the multipole fringe is not available with this dipole fringe "
+                    "in Xsuite, ignored"
+                )
+            return self._at2xsuite_edge[at_bend_fringe]
 
         if (gap := getattr(atelem, "FullGap", None)) is not None:
             self["edge_entry_hgap"] = 0.5 * gap
@@ -682,7 +695,15 @@ class Bend(Multipole):
         cls, atelem: elt.Element, *, match_model: bool = True, **kwargs
     ) -> XsElement:
         elem = super().from_at(atelem, match_model=match_model, **kwargs)
-        elem["k0_from_h"] = True
+        knl = elem.get("knl")
+        if knl is not None and knl[0] != 0.0 and elem._integration_length > 0.0:
+            # A dipole error goes in the main k0, the total dipole field: Xsuite
+            # uses knl[0] in the dipole fringe but not in the wedge
+            elem["k0"] = elem["angle"] / elem["length"] + knl[0] / elem._integration_length
+            elem["k0_from_h"] = False
+            knl[0] = 0.0
+        else:
+            elem["k0_from_h"] = True
         return elem
 
 
@@ -702,6 +723,25 @@ class RBend(Bend):
         "drift-kick-drift-exact": "ExactRectangularBendPass",
         "bend-kick-bend": "ExactRectBendPass",
     }
+    # straight_dipole.h: any non-zero FringeBend is the nonlinear dipole fringe
+    _at2xsuite_edge: ClassVar[dict[int, str]] = {
+        0: "suppressed",
+        1: "dipole-only",
+        2: "dipole-only",
+        3: "dipole-only",
+        4: "dipole-only",
+    }
+
+    @staticmethod
+    def _nonlinear_bend_fringe(fringe_bend: int) -> bool:
+        return fringe_bend != 0
+
+    def _set_at_fringe(self) -> dict[str, Any]:
+        for key in ("edge_entry_model", "edge_exit_model"):
+            if self.get(key, "linear") == "linear":
+                self._warn(f"{key} 'linear' is not available in AT rectangular "
+                           "bends: nonlinear dipole fringe")
+        return super()._set_at_fringe()
 
     @property
     def _integration_length(self):
