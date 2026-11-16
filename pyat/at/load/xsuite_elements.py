@@ -112,6 +112,14 @@ class XsElement(dict, _XsFactory):
     def _integration_length(self):
         return self["length"]
 
+    @property
+    def _l_anchor(self) -> float:
+        """Length along which Xsuite measures ``rot_shift_anchor``: the design arc.
+
+        It differs from the integration length for an :py:class:`RBend`.
+        """
+        return self["length"]
+
     def _set_xs_model(self, atelem) -> None:
         """Set the model for the Xsuite element."""
         xs_model = self._at2xsuite_model.get(atelem.PassMethod, None)
@@ -164,7 +172,7 @@ class XsElement(dict, _XsFactory):
             if refpoint == ReferencePoint.ENTRANCE:
                 misalign["rot_shift_anchor"] = 0.0
             else:
-                misalign["rot_shift_anchor"] = self._integration_length / 2.0
+                misalign["rot_shift_anchor"] = self._l_anchor / 2.0
 
         self.update(misalign)
 
@@ -194,7 +202,7 @@ class XsElement(dict, _XsFactory):
                 self._warn("alignment errors available only for H bends, ignored")
             transforms = {"tilt_frame": rot_s_frame}
         elif ismisaligned:
-            length = self._integration_length
+            length = self._l_anchor
             rot_shift_anchor = self.get("rot_shift_anchor", 0.0)
             anchor = 0.5 if length == 0.0 else rot_shift_anchor / length
             if anchor == 0.0:
