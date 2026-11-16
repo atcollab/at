@@ -112,7 +112,7 @@ class Lattice(list):
         "beam_current",
         "nbunch",
     )
-    # excluded attributes
+    # excluded attributes (coming from load_repr, load_json, load_m, load_madx)
     _excluded_attributes = ("nbunch",)
     # Attributes propagated in copies:
     _std_attributes = (
@@ -134,7 +134,7 @@ class Lattice(list):
     _particle: Particle
     _beam_current: float
     _cell_harmnumber: float
-    _capsule: CapsuleType | None = None
+    _cdata: CapsuleType | None = None
 
     # noinspection PyUnusedLocal
     def __init__(
@@ -237,7 +237,6 @@ class Lattice(list):
         periodicity = kwargs.setdefault("periodicity", 1)
         kwargs.setdefault("particle", kwargs.pop("_particle", Particle()))
         kwargs.setdefault("beam_current", kwargs.pop("_beam_current", 0.0))
-        kwargs.setdefault("_capsule", None)
         # Remove temporary keywords
         frequency: float = kwargs.pop("_frequency", 0.0)
         cell_length: float = kwargs.pop("_length", 0.0)
@@ -296,9 +295,7 @@ class Lattice(list):
                 super().__delitem__(i)
 
     def __getstate__(self):
-        dct = super().__getstate__().copy()
-        dct.pop("_capsule", None)
-        return dct
+        return {k: v for k, v in vars(self).items() if k in self._std_attributes}
 
     def __repr__(self):
         ks = ", ".join(f"{k}={v!r}" for k, v in self.attrs.items())

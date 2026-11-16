@@ -7,13 +7,13 @@ from at.tracking.catpass import line_store, line_pass  # Direct access to the C 
 
 def atpass(lattice, r_in, nturns: int=1, reuse: bool = False, **kwargs):
     try:
-        ldata = lattice._capsule
+        ldata = lattice._cdata
     except AttributeError:
         ldata = line_store(lattice)
     else:
         if ldata is None or (not reuse):
             print("Allocate")
-            ldata = lattice._capsule = line_store(lattice)
+            ldata = lattice._cdata = line_store(lattice)
     return line_pass(ldata, r_in, nturns, **kwargs)
 
 def test_incorrect_types_raises_value_error(rin):

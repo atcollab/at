@@ -50,15 +50,15 @@ typedef PyObject atElem;
 
 #define SYSCONFIG "sysconfig"
 #define LIMIT_AMPLITUDE		1
-#define C0  	2.99792458e8
 
 /* define the general signature of a pass function */
-typedef struct elem *(*track_function)(const PyObject *element,
-                                      struct elem *elemptr,
-                                      double *r_in,
-                                      int num_particles,
-                                      struct parameters *param);
-
+typedef struct elem *(*track_function)(
+    const PyObject *element,
+    struct elem *elemptr,
+    double *r_in,
+    int num_particles,
+    struct parameters *param
+);
 
 struct LibraryListElement {
     const char *MethodName;
@@ -127,15 +127,14 @@ static struct LibraryListElement *SearchLibraryList(struct LibraryListElement *L
     return head;
 }
 
-
 static void checkiflost(double *drin, npy_uint32 np, int num_elem, int num_turn, 
         int *xnturn, int *xnelem, bool *xlost, double *xlostcoord)
 {
     unsigned int n, c;
     for (c=0; c<np; c++) {/* Loop over particles */
         if (!xlost[c]) {  /* No change if already marked */
-           double *r6 = drin+c*6;
-           for (n=0; n<6; n++) {
+            double *r6 = drin+c*6;
+            for (n=0; n<6; n++) {
                 if (!isfinite(r6[n]) || ((fabs(r6[n])>LIMIT_AMPLITUDE)&&n<5)) {
                     xlost[c] = 1;
                     xnturn[c] = num_turn;
@@ -161,7 +160,7 @@ static void setlost(double *drin, npy_uint32 np)
     for (c=0; c<np; c++) {/* Loop over particles */
         double *r6 = drin+c*6;
         if (isfinite(r6[0])) {  /* No change if already marked */
-           for (n=0; n<6; n++) {
+            for (n=0; n<6; n++) {
                 if (!isfinite(r6[n]) || ((fabs(r6[n])>LIMIT_AMPLITUDE)&&n<5)) {
                     r6[0] = NAN;
                     r6[1] = 0;
@@ -177,7 +176,7 @@ static void setlost(double *drin, npy_uint32 np)
 }
 
 
-/* Get a reference to a python object in a module
+/* Get a new reference to a python object in a module
    Equivalent to "from module_name import object" */
 static PyObject *get_pyobj(const char *module_name, const char *object)
 {
@@ -298,8 +297,8 @@ static void default_parameters(struct parameters *param, at_state *module_data, 
     param->energy = 1.0e9;
     param->rest_energy = module_data->electron_mass;
     param->charge = -1.0;
-    param->beam_current=0.0;
-    param->nbunch=1;
+    param->beam_current = 0.0;
+    param->nbunch = 1;
     param->bunch_spos = (double[1]){0.0};
     param->bunch_currents = (double[1]){0.0};
     param->common_rng=&(module_data->common_state);
@@ -311,13 +310,12 @@ static void default_parameters(struct parameters *param, at_state *module_data, 
 
 static void lattice_parameters(
     struct parameters *param,
+    at_state *module_data,
     PyObject *lattice,
     PyObject *particle,
     double arg_energy
 )
 {
-    PyObject *pyenergy = NULL;
-
     if (particle != NULL)
         Py_INCREF(particle);
     else if (lattice != NULL)
@@ -343,7 +341,7 @@ static void lattice_parameters(
     }
 
     if (lattice != NULL) {
-        pyenergy = PyObject_GetAttrString(lattice, "energy");
+        PyObject *pyenergy = PyObject_GetAttrString(lattice, "energy");
         if (pyenergy != NULL) {
             param->energy = PyFloat_AsDouble(pyenergy);
             Py_DECREF(pyenergy);
@@ -354,15 +352,15 @@ static void lattice_parameters(
         param->energy = arg_energy;
 
     if (param->rest_energy == 0.0) {
-        param->T0 = param->RingLength/C0;
+        param->T0 = param->RingLength/module_data->clight;
     } else {
         /*  Only relativistic tracking is implemented: keep everything consistent
         double gamma0 = param->energy/param->rest_energy;
         double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
-        param->T0 = param->RingLength/(beta0*C0);
+        param->T0 = param->RingLength/(beta0*module_data->clight);
         */
-        param->T0 = param->RingLength/C0;
+        param->T0 = param->RingLength/module_data->clight;
     }
     PyErr_Clear();
 }
@@ -453,7 +451,7 @@ static void *allocate_lattice(
     lat_state *lattice_data = (lat_state *)calloc(1, sizeof(lat_state));
     struct parameters *param = &(lattice_data->params);
     default_parameters(param, module_data, NULL);
-    lattice_parameters(param, lattice, particle, energy);
+    lattice_parameters(param, module_data, lattice, particle, energy);
     set_current_fillpattern(param, lattice_data, lattice, bspos);
 
     lattice_data->num_elements = num_elements;
@@ -824,7 +822,7 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    lattice_parameters(&param, NULL, particle, energy);
+    lattice_parameters(&param, module_data, NULL, particle, energy);
 
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
@@ -887,7 +885,7 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
         &energy, module_data->particle_type, &particle)) {
         return NULL;
     }
-    lattice_parameters(&param, NULL, particle, energy);
+    lattice_parameters(&param, module_data, NULL, particle, energy);
 
 
     if (PyArray_DIM(rin,0) != 6) {
@@ -1149,6 +1147,7 @@ PyMODINIT_FUNC PyInit_catpass(void)
         return NULL;
     }
 
+    atPrintf("path: %s\n", integrator_path);
     atPrintf("Done init_atpass\n");
 
     return m;

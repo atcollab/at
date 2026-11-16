@@ -68,14 +68,12 @@ def initialize_lpass(lattice: Iterable[Element], nturns: int, kwargs) -> list[El
         lattice = list(lattice)
     nbunch = getattr(lattice, "nbunch", 1)
     if not kwargs.pop("unfold_beam", True):
-        kwargs["bunch_spos"] = np.zeros(len(nbunch))
+        kwargs["bunch_spos"] = np.zeros(nbunch)
     no_bm = _set_beam_monitors(lattice, nbunch, nturns)
     kwargs["keep_lattice"] = kwargs.get("keep_lattice", False) and no_bm
-    pool_size = kwargs.pop("pool_size", None)
-    start_method = kwargs.pop("start_method", None)
-    if kwargs.get("use_mp", False):
-        kwargs["pool_size"] = pool_size
-        kwargs["start_method"] = start_method
+    if not kwargs.get("use_mp", False):
+        kwargs.pop("pool_size", None)
+        kwargs.pop("start_method", None)
     return lattice
 
 
