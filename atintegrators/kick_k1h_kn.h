@@ -102,8 +102,8 @@ theta  = --- B  + ----------
     #endif
     double factor = L * (1.0 + x*irho) / sqrt(1.0 - xpr*xpr - ypr*ypr) / SQR(p_norm);
 
-    /* Momentum loss */
-    r6[4] -= rad_const * B2P * factor;
+    /* Momentum loss, first half: radiation(L/2) - kick(L) - radiation(L/2) */
+    r6[4] -= 0.5 * rad_const * B2P * factor;
 
     /* Recalculate momenta from angles after losing energy */
     p_norm = 1.0 / (1.0 + r6[4]);
@@ -114,4 +114,12 @@ theta  = --- B  + ----------
     /* Multipole kick */
     r6[1] -= L * (ReSum + irho*(B[0]*x + B1*(x*x-0.5*y*y)));
     r6[3] += L * (ImSum + irho*B1*x*y);
+    #ifdef RADIATION
+    /* Momentum loss, second half (same loss as the first half) */
+    xpr = r6[1] * p_norm;
+    ypr = r6[3] * p_norm;
+    r6[4] -= 0.5 * rad_const * B2P * factor;
+    r6[1] = xpr * (1.0 + r6[4]);
+    r6[3] = ypr * (1.0 + r6[4]);
+    #endif /* RADIATION */
 }
