@@ -1122,14 +1122,13 @@ static struct PyModuleDef moduledef = {
 
 PyMODINIT_FUNC PyInit_catpass(void)
 {
-    PyObject *integ_path_obj;
     PyObject *m = PyModuleDef_Init(&moduledef);
 
     if (m == NULL) return NULL;
     import_array();
 
     /* Build path for loading Python integrators */
-    integ_path_obj = get_integrators();
+    PyObject *integ_path_obj = get_integrators();
     if (integ_path_obj) {
         const char *integ_path = PyUnicode_AsUTF8(integ_path_obj);
         PyObject *ext_suffix_obj = get_ext_suffix();
