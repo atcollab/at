@@ -75,7 +75,7 @@ def floodfill(
     bounds: list | tuple = ((-1, 1), (0, 1)),
     npoints: list | tuple = (10, 10),
     offset: list | np.ndarray | None = None,
-    shift_zero: float = 0.0,
+    shift_zero: float = 1e-6,
     dp: float | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
@@ -103,7 +103,7 @@ def floodfill(
           to track particles on the closed orbit, or to add
           a small deviation to the tracked coordinates,
           e.g. [10e-5 10e-5] in the transverse planes.
-        shift_zero = small offset added to the 6d coordinates. Default 0.0.
+        shift_zero = small offset added to the 6d coordinates. Default 1e-6.
         dp: static momentum offset. Default None.
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
@@ -255,7 +255,7 @@ def floodfill_1d(
     bounds: list | tuple = ((-1, 1),),
     npoints: list | tuple = (10,),
     offset: list | np.ndarray | None = None,
-    shift_zero: float = 0.0,
+    shift_zero: float = 1e-6,
     dp: float | None = None,
     obspt: list | np.ndarray | None = None,
     verbose: bool = False,
@@ -284,7 +284,7 @@ def floodfill_1d(
           This is useful to study to add a small deviation in the transverse plane
           to the tracked coordinates
           e.g. 10e-5 in the transverse planes.
-        shift_zero = small offset added to the 6d coordinates. Default 0.0.
+        shift_zero = small offset added to the 6d coordinates. Default 1e-6.
         dp: static momentum offset. Default None.
         obspt: reference points.
         verbose: Print extra info. Default 0.
