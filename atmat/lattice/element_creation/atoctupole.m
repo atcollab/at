@@ -1,21 +1,21 @@
 function elem=atoctupole(fname,varargin)
-%ATSEXTUPOLE Creates an octupole element with class 'Octupole'
+%ATOCTUPOLE Creates an octupole element with class 'Octupole'
 %
-%  ATSEXTUPOLE(FAMNAME,LENGTH,K3N,PASSMETHOD)
-%	
+%  ATOCTUPOLE(FAMNAME,LENGTH,K3N,PASSMETHOD)
+%
 %  INPUTS
-%	 1. FNAME        	family name 
-%    2. LENGTH			length [m]
-%    3. K3N				strength [m-3]
-%    4. PASSMETHOD     tracking function, defaults to 'StrMPoleSymplectic4Pass'
+%  1. FNAME        family name
+%  2. LENGTH       length [m]
+%  3. K3N          strength [m^{-4}]
+%  4. PASSMETHOD   tracking function, defaults to 'StrMPoleSymplectic4Pass'
 %
 %  OPTIONS (order does not matter)
-%    R1				6 x 6 rotation matrix at the entrance
-%	 R2        		6 x 6 rotation matrix at the entrance
-%	 T1				6 x 1 translation at entrance 
-%	 T2				6 x 1 translation at exit
-%	 NumIntSteps    Number of integration steps
-%	 MaxOrder       Max Order for multipole (3 up to quadrupole)
+%  R1       6 x 6 rotation matrix at the entrance
+%  R2       6 x 6 rotation matrix at the entrance
+%  T1       6 x 1 translation at entrance
+%  T2       6 x 1 translation at exit
+%  NumIntSteps    Number of integration steps
+%  MaxOrder       Max Order for multipole (3 up to quadrupole)
 %
 %  OUTPUTS
 %      1. ELEM - Structure with the AT element
