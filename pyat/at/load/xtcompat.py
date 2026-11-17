@@ -9,9 +9,6 @@ __all__ = [
     "line_from_lattice",
 ]
 
-import functools
-import warnings
-
 import xtrack as xt
 from . import xsuite_elements as xs
 from .xsuite_line import XsLine
@@ -30,34 +27,6 @@ _xtclass: dict[type[xs.XsElement], type[xt.BeamElement]] = {
     xs.RBend: xt.RBend,
     xs.FirstOrderTaylorMap: xt.FirstOrderTaylorMap,
 }
-
-
-@functools.cache
-def _xt_has_integrator(name: str) -> bool:
-    """Check if the installed xtrack knows the integrator *name*."""
-    try:
-        xt.Quadrupole(length=1.0, integrator=name)
-    except (ValueError, KeyError):
-        return False
-    return True
-
-
-def _compat_integrator(xsdict: dict) -> dict:
-    """Adapt the integrator name to the installed xtrack, in place.
-
-    Before the ``yoshida-4``/``yoshida-6`` names, xtrack had only ``yoshida4``,
-    which is the 6th order scheme: both are mapped to it.
-    """
-    integrator = xsdict.get("integrator")
-    if integrator is not None and not _xt_has_integrator(integrator):
-        if integrator.startswith("yoshida") and _xt_has_integrator("yoshida4"):
-            if integrator != "yoshida-6":
-                msg = f"integrator {integrator} not available in xtrack, using yoshida4"
-                warnings.warn(msg, stacklevel=3)
-            xsdict["integrator"] = "yoshida4"
-        else:
-            del xsdict["integrator"]
-    return xsdict
 
 
 def element_from_xtrack(xtelem: xt.BeamElement) -> Element:
@@ -82,7 +51,7 @@ def element_to_xtrack(atelem: Element, **kwargs) -> xt.BeamElement:
     """
     xselem = xs.XsElement.static_from_at(atelem, **kwargs)
     xtclass = _xtclass[type(xselem)]
-    return xtclass.from_dict(_compat_integrator(xselem.to_dict()))
+    return xtclass.from_dict(xselem.to_dict())
 
 
 def lattice_from_line(line: xt.Line, use: str | None = None, **kwargs) -> Lattice:
@@ -120,10 +89,7 @@ def line_from_lattice(ring: Lattice, match_model: bool = True) -> xt.Line:
     Returns:
         line:           new :py:class:`.Line` object.
     """
-    linedict = XsLine.from_at(ring, match_model=match_model).to_dict()
-    for xsdict in linedict["elements"].values():
-        _compat_integrator(xsdict)
-    return xt.Line.from_dict(linedict)
+    return xt.Line.from_dict(XsLine.from_at(ring, match_model=match_model).to_dict())
 
 
 Element.to_xtrack = element_to_xtrack
