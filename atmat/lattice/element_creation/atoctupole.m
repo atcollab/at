@@ -1,12 +1,12 @@
 function elem=atoctupole(fname,varargin)
 %ATOCTUPOLE Creates an octupole element with class 'Octupole'
 %
-%  ATOCTUPOLE(FAMNAME,LENGTH,K3N,PASSMETHOD)
+%  ATOCTUPOLE(FAMNAME,LENGTH,b3,PASSMETHOD)
 %
 %  INPUTS
 %  1. FNAME        family name
 %  2. LENGTH       length [m]
-%  3. K3N          strength [m^{-4}]
+%  3. b3           strength [m^{-4}], (b3=K3N/6)
 %  4. PASSMETHOD   tracking function, defaults to 'StrMPoleSymplectic4Pass'
 %
 %  OPTIONS (order does not matter)
@@ -15,7 +15,7 @@ function elem=atoctupole(fname,varargin)
 %  T1       6 x 1 translation at entrance
 %  T2       6 x 1 translation at exit
 %  NumIntSteps    Number of integration steps
-%  MaxOrder       Max Order for multipole (3 up to quadrupole)
+%  MaxOrder       Max Order for multipole (3 up to octupole)
 %
 %  OUTPUTS
 %      1. ELEM - Structure with the AT element
@@ -29,14 +29,14 @@ function elem=atoctupole(fname,varargin)
 %            atcorrector
 
 % Input parser for option
-[rsrc,L,K3N,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
+[rsrc,L,b3,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
 [L,rsrc]          = getoption(rsrc,'Length',L);
 [method,rsrc]     = getoption(rsrc,'PassMethod',method);
 [PolynomB,rsrc]   = getoption(rsrc,'PolynomB',[0 0 0 0]);
 [cl,rsrc]         = getoption(rsrc,'Class','Octupole');
 
 % Sextupole setting if not specified explicitly
-if ~isempty(K3N), PolynomB(4)=K3N; end
+if ~isempty(b3), PolynomB(4)=b3; end
 
 % Build the element
 elem=atbaselem(fname,method,'Class',cl,'Length',L,...
