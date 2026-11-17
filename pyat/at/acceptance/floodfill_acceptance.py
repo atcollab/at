@@ -75,6 +75,8 @@ def floodfill(
     bounds: list | tuple = ((-1, 1), (0, 1)),
     npoints: list | tuple = (10, 10),
     offset: list | np.ndarray | None = None,
+    shift_zero: float = 1e-6,
+    dp: float | None = None,
     verbose: bool = False,
     use_mp: bool | MPMode = True,
     pool_size: int = 10,
@@ -101,6 +103,8 @@ def floodfill(
           to track particles on the closed orbit, or to add
           a small deviation to the tracked coordinates,
           e.g. [10e-5 10e-5] in the transverse planes.
+        shift_zero = small offset added to the 6d coordinates. Default 1e-6.
+        dp: static momentum offset. Default None.
         verbose: Print extra info. Default 0.
         use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
           not at.MPMode.GPU.
@@ -130,19 +134,12 @@ def floodfill(
          doi:10.1103/PhysRevAccelBeams.27.094002
 
     """
-    # Initialize variables
-    if offset is None:
-        offset = 6 * [0]
-    offset = np.array(offset)
-    planesi = np.atleast_1d(axisdef.axis_(tuple(planes), key="index"))
-
     # Initialize output in case we return earlier
     data_tracked = np.zeros((4, 0))
 
     verboseprint = print if verbose else lambda *a, **k: None
 
-    verboseprint("Flood fill starts.")
-    verboseprint(f"Maximum number of turns: {nturns}")
+    _dpp = 0.0 if dp is None else dp
 
     window = np.ravel((np.array(bounds).reshape((2, 2)).T * np.array(amplitudes)).T)
     if window[0] == window[1] or window[2] == window[3]:
@@ -150,7 +147,6 @@ def floodfill(
         return data_tracked
 
     # set the grid
-
     if np.any(np.asarray(npoints) < 1):
         print("Horizontal and vertical grid size should be more than 1")
         return data_tracked
@@ -166,7 +162,11 @@ def floodfill(
     nparticles = n_x * n_y
     points = np.zeros((2, nparticles))
 
+    verboseprint("Flood fill starts.")
+    verboseprint(f"Maximum number of turns: {nturns}")
     verboseprint(f"Number of grid points: {nparticles}")
+    verboseprint(f"Using dp {_dpp:.6g}")
+    verboseprint(f"shift_zero {shift_zero:.6g}")
 
     # set the order
     ii_ = 0
@@ -176,9 +176,14 @@ def floodfill(
             points[1, ii_] = yvals[iy_]
             ii_ = ii_ + 1
 
+    if offset is None:
+        offset, _ = ring.find_orbit(dp=dp)
+    offset = np.array(offset)
+    planesi = np.atleast_1d(axisdef.axis_(tuple(planes), key="index"))
+
     ndims = 6
     particles = np.zeros((nparticles, ndims))
-    particles = particles + offset
+    particles = particles + offset + shift_zero
     particles[:, planesi[0]] = particles[:, planesi[0]] + points[0, :]
     particles[:, planesi[1]] = particles[:, planesi[1]] + points[1, :]
 
@@ -250,7 +255,7 @@ def floodfill_1d(
     bounds: list | tuple = ((-1, 1),),
     npoints: list | tuple = (10,),
     offset: list | np.ndarray | None = None,
-    shift_zero: float = 0.0,
+    shift_zero: float = 1e-6,
     dp: float | None = None,
     obspt: list | np.ndarray | None = None,
     verbose: bool = False,
@@ -279,7 +284,7 @@ def floodfill_1d(
           This is useful to study to add a small deviation in the transverse plane
           to the tracked coordinates
           e.g. 10e-5 in the transverse planes.
-        shift_zero = small offset added to the 6d coordinates. Default 0.0.
+        shift_zero = small offset added to the 6d coordinates. Default 1e-6.
         dp: static momentum offset. Default None.
         obspt: reference points.
         verbose: Print extra info. Default 0.
