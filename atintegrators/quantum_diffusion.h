@@ -500,7 +500,14 @@ static double getEnergy(pcg32_random_t *rng, double ec)
         dee = dee + getEnergy(rng, ec); \
     }; \
     /* photon energies are relative to the particle energy (1+dp/p)*E0 */ \
+    double eps = dee; \
     dee *= (1.0 + r6[4]); \
     r6[4] = r6[4] - dee; \
     r6[1] = r6[1] * p_norm * (1 + r6[4]); \
-    r6[3] = r6[3] * p_norm * (1 + r6[4]);
+    r6[3] = r6[3] * p_norm * (1 + r6[4]); \
+    /* photons are emitted at the end of the step: mean correction of angle and \
+       position for an emission spread along the step (as tradkn in SAD) */ \
+    r6[0] += eps * dxp * SL / 6.0; \
+    r6[2] += eps * dyp * SL / 6.0; \
+    r6[1] += 0.5 * eps * dxp * (1 + r6[4]); \
+    r6[3] += 0.5 * eps * dyp * (1 + r6[4]);
