@@ -374,8 +374,7 @@ def boundary_2d_floodfill(ring, obspt, offset, dp, nturns, config, use_mp, **kwa
     for obs, orbit in zip(obspt, offset, strict=True):
         # set ring and offsets
         _obs = 0 if obs is None else obs
-        _dpp = 0.0 if dp is None else dp
-        _offset, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
+        _offset, _ringrot = set_ring_orbit(ring, dp, _obs, orbit)
         # flood fill
         data_ff = floodfill(
             _ringrot,
@@ -385,6 +384,8 @@ def boundary_2d_floodfill(ring, obspt, offset, dp, nturns, config, use_mp, **kwa
             bounds=config.bounds,
             npoints=config.shape,
             offset=_offset,
+            shift_zero=config.shift_zero,
+            dp=dp,
             verbose=False,
             use_mp=use_mp,
             pool_size=kwargs.get("pool_size"),
