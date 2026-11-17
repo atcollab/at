@@ -468,6 +468,31 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         else:
             return False
 
+    def _default_nb_kicks(self) -> int:
+        # This must mirror default_nb_kicks() in atintegrators/magnet_template.h
+        # phi_step = sqrt(K_eff)*L/NumIntSteps < phi_max, with
+        # K_eff = irho^2 + sum_n n*|PolynomB[n] + 1j*PolynomA[n]|*R0^(n-1)
+        ref_radius = 0.01
+        pm = self.PassMethod
+        if "4" in pm:
+            kicks_per_step, phi_max = 3, 0.015
+        else:
+            kicks_per_step, phi_max = 7, 0.098
+        length = self.Length
+        if ("Bnd" in pm or "Bend" in pm) and length > 0.0:
+            irho = getattr(self, "BendingAngle", 0.0) / length
+        else:
+            irho = 0.0
+        n = np.arange(1, self.MaxOrder + 1)
+        pab = np.hypot(self.PolynomA[n], self.PolynomB[n])
+        keff = irho * irho + np.sum(n * pab * ref_radius ** (n - 1))
+        nsteps = max(1, int(np.ceil(abs(length) * np.sqrt(keff) / phi_max)))
+        if ("Rad" in pm or "Quant" in pm) and irho != 0.0:
+            # radiating bends: quantum excitation needs short steps
+            nrad = max(2, int(np.ceil(abs(length) / 5.0)))
+            nsteps = max(nsteps, nrad)
+        return kicks_per_step * nsteps
+
     @property
     def NumIntKicks(self) -> int:
         r"""Number of multipole kicks.
