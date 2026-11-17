@@ -1,12 +1,12 @@
 function elem=atoctupole(fname,varargin)
 %ATOCTUPOLE Creates an octupole element with class 'Octupole'
 %
-%  ATOCTUPOLE(FAMNAME,LENGTH,OCTVAL,PASSMETHOD)
+%  ATOCTUPOLE(FAMNAME,LENGTH,STRENGTH,PASSMETHOD)
 %
 %  INPUTS
 %  1. FNAME        family name
 %  2. LENGTH       length [m]
-%  3. OCTVAL       strength [m^{-4}]
+%  3. STRENGTH     strength [m^{-4}]
 %  4. PASSMETHOD   tracking function, defaults to 'StrMPoleSymplectic4Pass'
 %
 %  OPTIONS (order does not matter)
@@ -21,7 +21,7 @@ function elem=atoctupole(fname,varargin)
 %      1. ELEM - Structure with the AT element
 %
 %  EXAMPLES
-%    ATOCTUPOLE(FAMNAME,LENGTH,OCTVAL,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+%    ATOCTUPOLE(FAMNAME,LENGTH,STRENGTH,PASSMETHOD,'FIELDNAME1',VALUE1,...)
 %    Each pair {'FIELDNAME',VALUE} is added to the element
 %
 %  See also: atdrift, atquadrupole, atsextupole, atmultipole, atsbend,
@@ -29,14 +29,14 @@ function elem=atoctupole(fname,varargin)
 %            atcorrector
 
 % Input parser for option
-[rsrc,L,octval,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
+[rsrc,L,strength,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
 [L,rsrc]          = getoption(rsrc,'Length',L);
 [method,rsrc]     = getoption(rsrc,'PassMethod',method);
 [PolynomB,rsrc]   = getoption(rsrc,'PolynomB',[0 0 0 0]);
 [cl,rsrc]         = getoption(rsrc,'Class','Octupole');
 
 % Sextupole setting if not specified explicitly
-if ~isempty(octval), PolynomB(4)=octval; end
+if ~isempty(strength), PolynomB(4)=strength; end
 
 % Build the element
 elem=atbaselem(fname,method,'Class',cl,'Length',L,...
