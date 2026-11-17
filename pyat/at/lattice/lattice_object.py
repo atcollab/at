@@ -102,7 +102,7 @@ class Lattice(list):
     """
 
     # Class attributes
-    # Attributes displayed:
+    # Attributes to be displayed:
     _disp_attributes = (
         "name",
         "energy",
@@ -114,16 +114,10 @@ class Lattice(list):
     )
     # excluded attributes (coming from load_repr, load_json, load_m, load_madx)
     _excluded_attributes = ("nbunch",)
-    # Attributes propagated in copies:
-    _std_attributes = (
-        "name",
-        "_energy",
-        "_particle",
-        "periodicity",
-        "_cell_harmnumber",
-        "_radiation",
-        "_beam_current",
-        "_fillpattern",
+    _not_to_be_copied = (
+        "in_file",
+        "use",
+        "_cdata",
     )
 
     # Instance attributes
@@ -295,7 +289,8 @@ class Lattice(list):
                 super().__delitem__(i)
 
     def __getstate__(self):
-        return {k: v for k, v in vars(self).items() if k in self._std_attributes}
+        # Exclude _cdata and other private attributes from pickling and copying
+        return {k: v for k, v in vars(self).items() if k not in self._not_to_be_copied}
 
     def __repr__(self):
         ks = ", ".join(f"{k}={v!r}" for k, v in self.attrs.items())
@@ -640,9 +635,9 @@ class Lattice(list):
             elem_filter:    Element filter
             *args:          Arguments provided to *elem_filter*
         """
-        for key in self._std_attributes:
-            with contextlib.suppress(AttributeError):
-                params.setdefault(key, getattr(self, key))
+        for k, v in vars(self).items():
+            if k not in self._not_to_be_copied:
+                params.setdefault(k, v)
         return elem_filter(params, *args)
 
     @property
