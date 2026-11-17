@@ -11,7 +11,7 @@ function elem=atoctupole(fname,varargin)
 %
 %  OPTIONS (order does not matter)
 %  R1       6 x 6 rotation matrix at the entrance
-%  R2       6 x 6 rotation matrix at the entrance
+%  R2       6 x 6 rotation matrix at the exit
 %  T1       6 x 1 translation at entrance
 %  T2       6 x 1 translation at exit
 %  NumIntSteps    Number of integration steps
@@ -25,7 +25,7 @@ function elem=atoctupole(fname,varargin)
 %    Each pair {'FIELDNAME',VALUE} is added to the element
 %
 %  See also: atdrift, atquadrupole, atsextupole, atmultipole, atsbend,
-%            atrbend, atskewquad, atthinmultipole, atmarker, 
+%            atrbend, atskewquad, atthinmultipole, atmarker,
 %            atcorrector
 
 % Input parser for option
