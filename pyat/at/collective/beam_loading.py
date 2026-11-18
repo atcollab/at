@@ -477,6 +477,7 @@ class BeamLoadingElement(RFCavity, Collective):
             self._vbunch = np.zeros((self.ring_harmonic_number, 2), order="F")
             self._init_bl_params(ring)
             self._init_fb_buffers()
+            self._init_dfb_buffers()
             self._TunerParams = np.array([0.0, 0.0])  # TunerCount and TunerDiff
 
         tl = self._nturns * self._nslice * self._nbunch
