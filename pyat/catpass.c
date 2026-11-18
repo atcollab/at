@@ -51,6 +51,18 @@ typedef PyObject atElem;
 #define SYSCONFIG "sysconfig"
 #define LIMIT_AMPLITUDE		1
 
+#define GET_ATTRIBUTE(value, convert, object, attrname) \
+{\
+    PyObject *attribute = PyObject_GetAttrString(object, attrname);\
+    if (attribute != NULL) {\
+        *value = convert(attribute);\
+        Py_DECREF(attribute);\
+    }\
+    else {\
+        PyErr_Clear();\
+    }\
+}
+
 /* define the general signature of a pass function */
 typedef struct elem *(*track_function)(
     const PyObject *element,
@@ -81,7 +93,7 @@ typedef struct _lat_state {
     double *elemlength_list;
     track_function *integrator_list;
     PyObject **pyintegrator_list;
-    PyObject **kwargs_list;
+/*  PyObject **kwargs_list; */
 } lat_state;
 
 /* Module state */
@@ -100,7 +112,7 @@ typedef struct _at_state {
 /* Global state */
 static char integrator_path[300];
 
-static PyObject *print_error(int elem_number, PyObject *rout)
+static PyObject *error_return(int elem_number, PyObject *rout)
 {
     Py_XDECREF(rout);
     return NULL;
@@ -321,40 +333,28 @@ static void lattice_parameters(
     double arg_energy
 )
 {
-    if (particle != NULL)     /* Try argument first */
+     if (particle != NULL)     /* Try argument first */
         Py_INCREF(particle);
     else if (lattice != NULL) /* otherwise take from lattice */
         particle =  PyObject_GetAttrString(lattice, "particle");
 
     if (particle != NULL) {
-        PyObject *prest_energy = PyObject_GetAttrString(particle, "rest_energy");
-        if (prest_energy != NULL) {
-            param->rest_energy = PyFloat_AsDouble(prest_energy);
-            Py_DECREF(prest_energy);
-        }
-        PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
-        if (pcharge != NULL) {
-            param->charge = PyFloat_AsDouble(pcharge);
-            Py_DECREF(pcharge);
-        }
-        PyObject *ppenergy = PyObject_GetAttrString(particle, "charge");
-        if (ppenergy != NULL) {
-            param->energy = PyFloat_AsDouble(ppenergy);
-            Py_DECREF(ppenergy);
-        }
+        GET_ATTRIBUTE(&(param->rest_energy), PyFloat_AsDouble, particle, "rest_energy");
+        GET_ATTRIBUTE(&param->charge, PyFloat_AsDouble, particle, "charge");
+        GET_ATTRIBUTE(&param->energy, PyFloat_AsDouble, particle, "energy");
         Py_DECREF(particle);
+    }
+    else {
+        PyErr_Clear();
     }
 
     if (lattice != NULL) {
-        PyObject *pyenergy = PyObject_GetAttrString(lattice, "energy");
-        if (pyenergy != NULL) {
-            param->energy = PyFloat_AsDouble(pyenergy);
-            Py_DECREF(pyenergy);
-        }
+       GET_ATTRIBUTE(&param->energy, PyFloat_AsDouble, lattice, "energy");
     }
 
-    if (arg_energy > 0.0)
+    if (arg_energy > 0.0) {
         param->energy = arg_energy;
+    }
 
     if (param->rest_energy == 0.0) {
         param->T0 = param->RingLength/module_data->clight;
@@ -382,37 +382,25 @@ static void set_current_fillpattern(struct parameters *param, lat_state *lattice
         param->nbunch = PyArray_SIZE(bcurrents);
         Py_DECREF(bcurrentsum);
     }
+    else {
+        PyErr_Clear();
+    }
 
     PyArrayObject *fillpattern = (PyArrayObject *)PyObject_GetAttrString(lattice, "fillpattern");
     lattice_data->fillpattern = fillpattern;
     if (fillpattern != NULL) param->fillpattern = PyArray_DATA(fillpattern);
+    else PyErr_Clear();
 
     if (bspos == NULL)
         bspos = (PyArrayObject *)PyObject_GetAttrString(lattice, "bunch_spos");
     else
         Py_INCREF(bspos);
+
     lattice_data->bunch_spos = bspos;
     if (bspos != NULL) param->bunch_spos = PyArray_DATA(bspos);
+    else PyErr_Clear();
 
-    PyObject *harmnumber = PyObject_GetAttrString(lattice, "harmonic_number");
-    if (harmnumber != NULL) {
-        param->harmonic_number = PyLong_AsLong(harmnumber);
-        Py_DECREF(harmnumber);
-    }
-
-    atPrintf("nbunch: %d, Beam_current: %g\n", param->nbunch, param->beam_current);
-    atPrintf("Bunch_currents\n");
-    for (int i=0; i<param->nbunch; i++) atPrintf("%d: %g\n", i, param->bunch_currents[i]);
-    atPrintf("Bunch_spos\n");
-    for (int i=0; i<param->nbunch; i++) atPrintf("%d: %g\n", i, param->bunch_spos[i]);
-    PyErr_Clear();
-}
-
-static void *get_lattice_data(PyObject *lattice)
-{
-    PyObject *capsule = PyObject_GetAttrString(lattice, "Cdata");
-    if (capsule == NULL) return NULL;
-    return PyCapsule_GetPointer(capsule, "at.lattice");
+    GET_ATTRIBUTE(&(param->harmonic_number), PyLong_AsLong, lattice, "harmonic_number");
 }
 
 static void *free_lattice(lat_state *lattice_data)
@@ -420,7 +408,7 @@ static void *free_lattice(lat_state *lattice_data)
     struct elem **elem_data = lattice_data->elemdata_list;
     PyObject **elem = lattice_data->element_list;
 
-    atPrintf("Freeing lattice\n");
+//  atPrintf("Freeing lattice\n");
     for (npy_uint32 elem_index=lattice_data->num_elements; elem_index > 0; elem_index--) {
         free(*elem_data++);
         Py_XDECREF(*elem++);   /* Release the stored elements */
@@ -433,7 +421,7 @@ static void *free_lattice(lat_state *lattice_data)
     free(lattice_data->element_list);
     free(lattice_data->integrator_list);
     free(lattice_data->pyintegrator_list);
-    free(lattice_data->kwargs_list);
+/*  free(lattice_data->kwargs_list); */
     free(lattice_data);
     return NULL;
 }
@@ -483,28 +471,19 @@ static void *allocate_lattice(
     lattice_data->pyintegrator_list = pyintegrator;
 
     /* List of python integrators kwargs, make sure all pointers are initially NULL */
-    lattice_data->kwargs_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
+/*  lattice_data->kwargs_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));*/
 
     for (npy_uint32 elem_index = 0; elem_index < num_elements; elem_index++) {
-        double lg;
-        struct LibraryListElement *LibraryListPtr;
-        PyObject *pylength;
-        PyObject *el = PyList_GET_ITEM(lattice, elem_index);
+        double lg = 0.0;
+        struct LibraryListElement *track_function;
+       PyObject *el = PyList_GET_ITEM(lattice, elem_index);
         PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
         if (!PyPassMethod) return free_lattice(lattice_data);    /* No PassMethod: AttributeError */
-        LibraryListPtr = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
+        track_function = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
         Py_DECREF(PyPassMethod);
-        if (!LibraryListPtr) return free_lattice(lattice_data);  /* No trackFunction for the given PassMethod: RuntimeError */
-        integr = LibraryListPtr->FunctionHandle;
-        pylength = PyObject_GetAttrString(el, "Length");
-        if (pylength) {
-            lg = PyFloat_AsDouble(pylength);
-            Py_XDECREF(pylength);
-        }
-        else {
-            lg = 0.0;
-            PyErr_Clear();
-        }
+        if (!track_function) return free_lattice(lattice_data);  /* No trackFunction for the given PassMethod: RuntimeError */
+        integr = track_function->FunctionHandle;
+        GET_ATTRIBUTE(&lg, PyFloat_AsDouble, el, "Length")
 
         if (integr) {
             *elem_data = (*integr)(el, NULL, NULL, 0, param);
@@ -515,7 +494,7 @@ static void *allocate_lattice(
 
         length += lg;
         *integrator++ = integr;
-        *pyintegrator++ = LibraryListPtr->PyFunctionHandle;
+        *pyintegrator++ = track_function->PyFunctionHandle;
         *elem++ = el;
         elem_data++;
         *elem_length++ = lg;
@@ -542,7 +521,7 @@ static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *lattice;
 
     /* Keyword arguments*/
-    double energy=0.0;
+    double energy=-1.0;
     PyObject *particle=NULL;
     PyArrayObject *bspos=NULL;
 
@@ -711,7 +690,7 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
         double *elem_length = lattice_data->elemlength_list;
         track_function *integrator = lattice_data->integrator_list;
         PyObject **pyintegrator = lattice_data->pyintegrator_list;
-        PyObject **kwargs = lattice_data->kwargs_list;
+/*      PyObject **kwargs = lattice_data->kwargs_list; */
         struct elem **elemdata = lattice_data->elemdata_list;
         double s_coord = 0.0;
 
@@ -738,11 +717,11 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
             /* the actual integrator call */
             if (*pyintegrator) {
                 PyObject *res = PyObject_CallFunctionObjArgs(*pyintegrator, rin, *element, NULL);
-                if (!res) return print_error(elem_index, rout);       /* trackFunction failed */
+                if (!res) return error_return(elem_index, rout);       /* trackFunction failed */
                 Py_DECREF(res);
             } else {
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, param);
-                if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
+                if (!*elemdata) return error_return(elem_index, rout); /* trackFunction failed */
             }
             if (losses) {
                 checkiflost(drin, num_particles, elem_index, param->nturn, ixnturn, ixnelem, bxlost, dxlostcoord);
@@ -798,7 +777,7 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *pyintegrator;
     double *drin;
     struct parameters param;
-    struct LibraryListElement *LibraryListPtr;
+    struct LibraryListElement *track_function;
 
     /* Positional arguments */
     PyObject *element;
@@ -833,11 +812,11 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;
-    LibraryListPtr = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
+    track_function = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
     Py_DECREF(PyPassMethod);
-    if (!LibraryListPtr) return NULL;
-    integrator = LibraryListPtr->FunctionHandle;
-    pyintegrator = LibraryListPtr->PyFunctionHandle;
+    if (!track_function) return NULL;
+    integrator = track_function->FunctionHandle;
+    pyintegrator = track_function->PyFunctionHandle;
     if (pyintegrator) {
         PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
         if (!res) return NULL;
@@ -854,10 +833,6 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"element", "rin", "energy", "particle", NULL};
-    PyObject *element;
-    double energy = 0.0;
-    PyObject *particle = NULL;
-    PyArrayObject *rin;
     npy_uint32 num_particles;
     track_function integrator;
     PyObject *pyintegrator;
@@ -865,10 +840,17 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     const double *drin;
     double orb[6];
     struct parameters param;
-    struct LibraryListElement *LibraryListPtr;
+    struct LibraryListElement *track_function;
     npy_intp dims[2] = {6, 6};
     PyObject *pbdiff = PyArray_ZEROS(2, dims, NPY_DOUBLE ,1);
     double *bdiff = (double *)PyArray_DATA((PyArrayObject *)pbdiff);
+
+    /* Positional parameters */
+    PyObject *element;
+    PyArrayObject *rin;
+    /* Keyword parameters */
+    double energy = 0.0;
+    PyObject *particle = NULL;
 
     at_state *module_data = (at_state*)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
@@ -902,12 +884,12 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
 
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;
-    LibraryListPtr = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
+    track_function = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
     Py_DECREF(PyPassMethod);
 
-    if (!LibraryListPtr) return NULL;
-    integrator = LibraryListPtr->FunctionHandle;
-    pyintegrator = LibraryListPtr->PyFunctionHandle;
+    if (!track_function) return NULL;
+    integrator = track_function->FunctionHandle;
+    pyintegrator = track_function->PyFunctionHandle;
     if (pyintegrator) {
         PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
         if (!res) return NULL;
@@ -1001,8 +983,6 @@ static int catpass_exec(PyObject *self)
     if (pyclight == NULL) return -1;
     module_data->clight = PyFloat_AsDouble(pyclight);
     Py_DECREF(pyclight);
-
-    atPrintf("Done exec_atpass\n");
     return 0;
 }
 
@@ -1138,9 +1118,5 @@ PyMODINIT_FUNC PyInit_catpass(void)
     else {
         return NULL;
     }
-
-    atPrintf("path: %s\n", integrator_path);
-    atPrintf("Done init_atpass\n");
-
     return m;
 }
