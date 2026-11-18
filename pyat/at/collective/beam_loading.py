@@ -684,7 +684,7 @@ class BeamLoadingElement(RFCavity, Collective):
         Return phase shift applied to DFB.
         Defined as self.cav_res.psi - self.DFB_phase_shift.
         """
-        return self.Vgen[2] - self.DFB_phase_shift
+        return self.Vgen[2] - self.DFB_Phase_Shift
 
     @property
     def DFB_psi(self) -> float:
