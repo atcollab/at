@@ -9,7 +9,6 @@ using namespace std;
 StrMPoleSymplectic4Pass::StrMPoleSymplectic4Pass() noexcept : IdentityPass() {
   PolynomA = nullptr;
   PolynomB = nullptr;
-  KickAngle = nullptr;
 }
 
 StrMPoleSymplectic4Pass::~StrMPoleSymplectic4Pass() noexcept {
@@ -28,7 +27,6 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PassMethod
 
   param->get1DArray(&PolynomA,"PolynomA",elemData.mpole.MaxOrder+1);
   param->get1DArray(&PolynomB,"PolynomB",elemData.mpole.MaxOrder+1);
-  param->getOptional1DArray(&KickAngle,"KickAngle",2);
 
   elemData.mpole.FringeQuadEntrance = param->getOptionalInt("FringeQuadEntrance", 0);
   elemData.mpole.FringeQuadExit = param->getOptionalInt("FringeQuadExit", 0);
@@ -71,16 +69,12 @@ void StrMPoleSymplectic4Pass::fillGPUMemory(uint8_t *startAdd,ELEMENT *elemMem,u
     elemData.mpole.PolynomA = (AT_FLOAT *)(*offset);
     AT_FLOAT *PA = (AT_FLOAT *)(startAdd+*offset);
     memcpy(PA,PolynomA,(elemData.mpole.MaxOrder + 1)*sizeof(AT_FLOAT));
-    if( KickAngle )
-      PA[0] += sin(KickAngle[1]) / elemData.Length;
     *offset += (elemData.mpole.MaxOrder + 1)*sizeof(AT_FLOAT);
   }
   if(PolynomB) {
     elemData.mpole.PolynomB = (AT_FLOAT *)(*offset);
     AT_FLOAT *PB = (AT_FLOAT *)(startAdd+*offset);
     memcpy(PB,PolynomB,(elemData.mpole.MaxOrder + 1)*sizeof(AT_FLOAT));
-    if( KickAngle )
-      PB[0] -= sin(KickAngle[0]) / elemData.Length;
     *offset += (elemData.mpole.MaxOrder + 1)*sizeof(AT_FLOAT);
   }
 

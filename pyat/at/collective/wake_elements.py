@@ -42,6 +42,8 @@ class WakeElement(Collective, Element):
             NormFact (Tuple[float,...]):    Normalization for the 3 planes,
               to account for beta function at the observation point for
               example. Default: (1,1,1)
+            
+               
 """
         kwargs.setdefault('PassMethod', self.default_pass[True])
         zcuts = kwargs.pop('ZCuts', None)

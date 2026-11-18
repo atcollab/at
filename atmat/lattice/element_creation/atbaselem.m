@@ -9,13 +9,11 @@ function elem = atbaselem(famname,method,varargin)
 %    1. length of PolynomA and PolynomB are equal (zero padding)
 %    2. MaxOrder is always lenght(PolynomA) - 1
 
-DefaultNumIntSteps = 10;
-
 [famname,rsrc] = getoption(varargin,'FamName',famname);
 [method,rsrc]  = getoption(rsrc,'PassMethod',method);
 [lg,rsrc]      = getoption(rsrc,'Length',0);
 [defmax,rsrc]  = getoption(rsrc,'DefaultMaxOrder',0);
-elem           = struct('FamName',famname,'PassMethod',method,'Length',lg,rsrc{:});
+elem           = struct('FamName',char(famname),'PassMethod',char(method),'Length',lg,rsrc{:});
 
 % Making PolynomA of same length with zero padding when necesssary
 ab = isfield(elem,{'PolynomA','PolynomB'});
@@ -34,7 +32,7 @@ if any(ab)
     if la < lb, elem.PolynomA = [elem.PolynomA zeros(1,lb-la)]; end
     if lb < la, elem.PolynomB = [elem.PolynomB zeros(1,la-lb)]; end
     if elem.Length ~= 0 && ~isfield(elem,'NumIntSteps')
-        elem.NumIntSteps = DefaultNumIntSteps;
+        elem.NumIntSteps = 0;
     end
 end
 

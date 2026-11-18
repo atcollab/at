@@ -1,21 +1,22 @@
-"""Acceptance computation"""
+"""Acceptance computation."""
 
 from __future__ import annotations
 
 __all__ = [
-    "get_acceptance",
     "get_1d_acceptance",
+    "get_acceptance",
     "get_horizontal_acceptance",
-    "get_vertical_acceptance",
     "get_momentum_acceptance",
+    "get_vertical_acceptance",
 ]
 
 import multiprocessing
-from typing import Sequence
+import warnings
+from collections.abc import Sequence
 
 import numpy as np
 
-from at.lattice import AtError
+from at.lattice import AtError, AtWarning
 
 from ..lattice import Lattice, Refpts, frequency_control
 from ..tracking import MPMode, gpu_core_count
@@ -42,19 +43,24 @@ def get_acceptance(
     divider: int = 2,
     shift_zero: float = 1.0e-6,
     start_method: str | None = None,
-    floodfill: bool = False,
     **kwargs,
 ):
     # noinspection PyUnresolvedReferences
-    r"""Computes the acceptance at ``repfts`` observation points
+    r"""Compute the acceptance at ``repfts`` observation points.
 
     Parameters:
         ring:           Lattice definition
         planes:         max. dimension 2, Plane(s) to scan for the acceptance.
-          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
-          ``'yp'``, ``'dp'``, ``'ct'``
-        npoints:        (len(planes),) array: number of points in each
-          dimension
+          Allowed values are: ``'x'``, ``'px'``, ``'y'``,
+          ``'py'``, ``'dp'``, ``'ct'``
+        npoints:        (len(planes),) array: grid sampling. Its meaning
+          depends on ``grid_mode``:
+
+          * :py:attr:`GridMode.CARTESIAN/RADIAL/FLOODFILL <.GridMode.RADIAL>`:
+            number of points in each dimension
+          * :py:attr:`.GridMode.RECURSIVE`: for 2D, a tuple
+            (radial resolution divisor, number of angles); for 1D, the
+            radial resolution divisor
         amplitudes:     (len(planes),) array: set the search range:
 
           * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
@@ -75,6 +81,8 @@ def get_acceptance(
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+          * :py:attr:`.GridMode.FLOODFILL`: cartesian search from exterior
+             region to stable boundary. Only wiht at.MPMode.CPU tracking
         use_mp:         Flag to activate CPU or GPU multiprocessing
           (default: False)
         gpu_pool:       List of GPU id to use when use_mp is
@@ -91,9 +99,7 @@ def get_acceptance(
           Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
           the calculation or to solve runtime errors, however it is
           considered unsafe.
-        floodfill: scan from unstable to stable. Only in `GridMode.CARTESIAN`,
-          and CPU tracking. GPU not implemented.
-        pool_size: number of CPUs. Only has effect with floodfill
+        pool_size: number of CPUs. Only has effect with at.GridMode.FLOODFILL
 
     Returns:
         boundary:   (2,n) array: 2D acceptance
@@ -129,12 +135,20 @@ def get_acceptance(
     if use_mp is True:
         use_mp = MPMode.CPU
 
-    if floodfill and (grid_mode is not GridMode.CARTESIAN):
-        raise AtError("floodfill requires GridMode.CARTESIAN")
-    if floodfill and (use_mp is MPMode.GPU):
-        raise AtError("floodfill is not implemented for GPU tracking")
-    if floodfill:
-        kwargs["floodfill"] = True
+    # For backwards compatibility px could be xp, and py could be yp
+    deprecated_axis_name = ("xp", "yp")
+    axes = list(planes)  # set to a modifiable list
+    for idx_, axis_name in enumerate(planes):
+        if axis_name in deprecated_axis_name:
+            msg = f"Axis name {axis_name} is deprecated."
+            warnings.warn(AtWarning(msg))
+            axes[idx_] = axes[idx_][::-1]  # reverse string
+    planes = tuple(axes)
+
+    if (grid_mode is GridMode.FLOODFILL) and (use_mp is MPMode.GPU):
+        msg = "floodfill is not implemented for GPU tracking"
+        raise AtError(msg) from None
+    if grid_mode is GridMode.FLOODFILL:
         if "pool_size" not in kwargs:
             kwargs["pool_size"] = multiprocessing.cpu_count()
 
@@ -214,14 +228,14 @@ def get_1d_acceptance(
     start_method: str | None = None,
     **kwargs,
 ):
-    r"""Computes the 1D acceptance at ``refpts`` observation points
+    r"""Compute the 1D acceptance at ``refpts`` observation points.
 
     See :py:func:`get_acceptance`
 
     Parameters:
         ring:           Lattice definition
         plane:          Plane to scan for the acceptance.
-          Allowed values are: ``'x'``, ``'xp'``, ``'y'``, ``'yp'``, ``'dp'``,
+          Allowed values are: ``'x'``, ``'px'``, ``'y'``, ``'py'``, ``'dp'``,
           ``'ct'``
         resolution:     Minimum distance between 2 grid points
         amplitude:      Search range:
@@ -238,8 +252,11 @@ def get_1d_acceptance(
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+          * :py:attr:`.GridMode.FLOODFILL`: cartesian search from exterior
+             region to stable boundary. Only wiht at.MPMode.CPU tracking
         use_mp:         Flag to activate CPU or GPU multiprocessing
           (default: False). In case multiprocessing is not enabled,
+          and the grid_mode is other than at.GridMode.FLOODFILL,
           ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         gpu_pool:       List of GPU id to use when use_mp is
@@ -277,9 +294,10 @@ def get_1d_acceptance(
          full parallelization.
     """
     if not use_mp:
-        if verbose:
-            print("No parallel calculation selected, force to GridMode.RECURSIVE")
-        grid_mode = GridMode.RECURSIVE
+        if grid_mode != GridMode.FLOODFILL:
+            if verbose:
+                print("No parallel calculation selected, force to GridMode.RECURSIVE")
+            grid_mode = GridMode.RECURSIVE
     assert len(np.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
     assert np.isscalar(resolution), "1D acceptance: scalar args required"
     assert np.isscalar(amplitude), "1D acceptance: scalar args required"
@@ -312,7 +330,7 @@ def get_1d_acceptance(
 def get_horizontal_acceptance(
     ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
 ):
-    r"""Computes the 1D horizontal acceptance at ``refpts`` observation points
+    r"""Compute the 1D horizontal acceptance at ``refpts`` observation points.
 
     See :py:func:`get_acceptance`
 
@@ -379,7 +397,7 @@ def get_horizontal_acceptance(
 def get_vertical_acceptance(
     ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
 ):
-    r"""Computes the 1D vertical acceptance at refpts observation points
+    r"""Compute the 1D vertical acceptance at refpts observation points.
 
     See :py:func:`get_acceptance`
 
@@ -446,7 +464,7 @@ def get_vertical_acceptance(
 def get_momentum_acceptance(
     ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
 ):
-    r"""Computes the 1D momentum acceptance at refpts observation points
+    r"""Compute the 1D momentum acceptance at refpts observation points.
 
     See :py:func:`get_acceptance`
 
@@ -507,7 +525,7 @@ def get_momentum_acceptance(
          do most of the work in a single function call and allows for
          full parallelization.
     """
-    return get_1d_acceptance(ring, "dp", resolution, amplitude, *args, **kwargs)
+    return get_1d_acceptance(ring, ["dp"], resolution, amplitude, *args, **kwargs)
 
 
 Lattice.get_acceptance = get_acceptance

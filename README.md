@@ -16,7 +16,7 @@ by two interfaces:
 
 ## Installation
 
-- For [Matlab](https://atcollab.github.io/at/m/Installation.html)
+- For [Matlab](https://atcollab.github.io/at/m/getting_started/01_Installation.html)
 - For [python](https://atcollab.github.io/at/p/howto/Installation.html)
 
 ## Online documentation

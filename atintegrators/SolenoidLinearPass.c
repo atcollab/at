@@ -24,12 +24,12 @@ void SolenoidLinearPass(double *r_in, double le, double ks, double *T1, double *
    r_in - 6-by-N matrix of initial conditions reshaped into 
    1-d array of 6*N elements 
 */
-{	int c;
-	double *r6, p_norm, H, S, C, x, xpr, y, ypr, NormL;
+{
+	double p_norm, H, S, C, x, xpr, y, ypr, NormL;
 	
 	if (ks!=0)
-	    for (c = 0;c<num_particles;c++) {
-		    r6 = r_in+c*6;
+	    for (int c = 0;c<num_particles;c++) {
+		    double *r6 = r_in+c*6;
 			p_norm = 1/(1+r6[4]); 
 
             /* Misalignment at entrance */
@@ -55,8 +55,8 @@ void SolenoidLinearPass(double *r_in, double le, double ks, double *T1, double *
 		    if (T2) ATaddvv(r6,T2);
 		}
     else /* Drift */
-        for (c = 0;c<num_particles;c++) {
-		    r6 = r_in+c*6;
+        for (int c = 0;c<num_particles;c++) {
+		    double *r6 = r_in+c*6;
 			p_norm = 1/(1+r6[4]);  
 			NormL  = le*p_norm;
    			r6[0]+= NormL*r6[1];

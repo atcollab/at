@@ -415,6 +415,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
+    num_particles = (PyArray_SIZE(rin)/6);
 
     param.common_rng=&common_state;
     param.thread_rng=&thread_state;
@@ -550,7 +551,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     /* Memory allocation for outputs */
-    num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
     drin = PyArray_DATA(rin);
 

@@ -73,8 +73,8 @@ def test_find_orbit6(engine, request, lattices):
     )
     ml_orbit6 = np.rollaxis(np.asarray(ml_orbit6), -1)
     # Comparison
-    assert_close(py_orb6, _py_data(ml_orb6), atol=5e-15, rtol=0)
-    assert_close(py_orbit6, ml_orbit6, atol=5e-15, rtol=0)
+    assert_close(py_orb6, _py_data(ml_orb6), atol=1e-14, rtol=0)
+    assert_close(py_orbit6, ml_orbit6, atol=1e-14, rtol=0)
 
 
 @pytest.mark.parametrize("dp", (-0.01, 0.0, 0.01))

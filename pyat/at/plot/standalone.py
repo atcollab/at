@@ -175,7 +175,7 @@ def plot_geometry(
         )
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
-    ax.set_aspect("equalxy", "box")
+    ax.set_aspect("equal", "box")
     return geom, radius, ax
 
 

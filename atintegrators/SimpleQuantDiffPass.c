@@ -22,14 +22,11 @@ void SimpleQuantDiffPass(double *r_in,
            pcg32_random_t* rng, int num_particles)
 
 {
-  double *r6;
-  int c, i;
-  
-  #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles) private(c,r6)
-  for (c = 0; c<num_particles; c++) { /*Loop over particles  */
-    r6 = r_in+c*6;
+  #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles)
+  for (int c = 0; c<num_particles; c++) { /*Loop over particles  */
+    double *r6 = r_in+c*6;
     double randnorm[3];
-    for (i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) {
         randnorm[i] = atrandn_r(rng, 0.0, 1.0);
     }
     

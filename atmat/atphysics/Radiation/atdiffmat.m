@@ -15,6 +15,8 @@ function [BCUM,Batbeg] = atdiffmat(ring,varargin)
 
 newmethods = {'BndMPoleSymplectic4RadPass', ...
               'StrMPoleSymplectic4RadPass', ...
+              'BndMPoleSymplectic6RadPass', ...
+              'StrMPoleSymplectic6RadPass', ...
               'ExactMultipoleRadPass',...
               'GWigSymplecticRadPass',...
               'EnergyLossRadPass'};
@@ -23,13 +25,23 @@ NumElements=length(ring);
 
 [orb0,varargs]=getoption(varargin, 'orbit', []); %#ok<ASGLU>
 
-test_mode = getoption('test_mode');
 [energy,cell_length,particle]=atGetRingProperties(ring,'energy','cell_length','particle');
 
 if isempty(orb0)
     orbit=num2cell(findorbit6(ring, 1:NumElements),1)';
 else
     orbit=num2cell(linepass(ring, orb0, 1:NumElements),1)';
+end
+
+% check for non-supported pass methods
+nonsupported_methods = {'QuantumDiffusion','Collective', ...
+                        'SimpleQuantDiff','VariableThinMultipole'};
+for i = 1:length(nonsupported_methods)
+    thepassm = nonsupported_methods{i};
+    lidx = find(atgetcells(ring, 'Class', thepassm));
+    if ~isempty(lidx)
+        ring = atsetfieldvalues(ring, lidx, 'PassMethod', 'IdentityPass');
+    end
 end
 
 zr=zeros(6,6);
@@ -43,16 +55,8 @@ Batbeg=[zr;cellfun(@cumulb,ring,orbit,'UniformOutput',false)];
         passm = elem.PassMethod;
         if ~endsWith(passm, 'RadPass')
             bdiff = zr;
-        elseif ~test_mode
-            % New method
-            bdiff = diffusion_matrix(substitute(elem),orbit,energy,particle,cell_length,0.0);
         else
-            % Old method
-            if isfield(elem, 'Bmax')
-                bdiff = FDW(elem, orbit, energy);
-            else
-                bdiff = findmpoleraddiffmatrix(elem,orbit,energy);
-            end
+            bdiff = diffusion_matrix(substitute(elem),orbit,energy,particle,cell_length,0.0);
         end
         % Calculate 6-by-6 linear transfer matrix in each element
         % near the equilibrium orbit

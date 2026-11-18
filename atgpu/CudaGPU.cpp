@@ -21,7 +21,13 @@ CudaContext::CudaContext(CUDA_GPU_INFO* gpu) {
   info = gpu->info;
   arch = gpu->arch;
 
+#if CUDA_VERSION >= 13000
+  CUctxCreateParams ctxCreateParams = {};
+  cudaCall(cuCtxCreate, &context, &ctxCreateParams, CU_CTX_SCHED_BLOCKING_SYNC, cuDevice);
+#else
   cudaCall(cuCtxCreate,&context,  CU_CTX_SCHED_BLOCKING_SYNC, cuDevice);
+#endif
+
   cudaCall(cuCtxSetSharedMemConfig, CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE);
   cudaCall(cuCtxSetCacheConfig , CU_FUNC_CACHE_PREFER_L1);
 

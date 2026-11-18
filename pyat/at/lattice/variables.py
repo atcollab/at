@@ -263,7 +263,7 @@ class VariableBase(abc.ABC):
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = np.nan
-        self._history: deque[Number] = deque([], self.history_length)
+        self._history: deque[Number] = deque(maxlen=self.history_length)
         with suppress(ValueError):
             self.get(initial=True)
 
@@ -271,7 +271,7 @@ class VariableBase(abc.ABC):
     def _generate_name(cls, name: str) -> str:
         """Generate unique name for variable."""
         cls._counter += 1
-        return name if name else f"{cls._COUNTER_PREFIX}{cls._counter}"
+        return name or f"{cls._COUNTER_PREFIX}{cls._counter}"
 
     @property
     def bounds(self) -> tuple[float, float]:
@@ -345,17 +345,19 @@ class VariableBase(abc.ABC):
             exc.args = (f"{self.name}: history too short (need at least 2 values)",)
             raise
 
-    def set(self, value: Number, **setkw) -> None:
+    def set(self, value: Number, *, force: bool = False, **setkw) -> None:
         r"""Set the variable value.
 
         Args:
             value:      New value to be applied on the variable
 
         Keyword Args:
+            force:      If :py:obj:`True`, do not check bounds
             \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
-        self.check_bounds(value)
+        if not force:
+            self.check_bounds(value)
         self._setfun(value, *self.args, **(self.kwargs | setkw))
         if np.isnan(self._initial):
             self._initial = value
@@ -387,7 +389,8 @@ class VariableBase(abc.ABC):
             self.check_bounds(value)
         return value
 
-    value = property(get, set, doc="Actual value")
+    # noinspection property-definition
+    value = property(get, set, doc="Actual value.")
 
     @property
     def _print_value(self):
@@ -426,7 +429,7 @@ class VariableBase(abc.ABC):
         """
         initial_value = self._initial
         if not np.isnan(initial_value):
-            self._history = deque([], self.history_length)
+            self._history = deque(maxlen=self.history_length)
             self.set(initial_value, **setkw)
         else:
             msg = f"Cannot reset {self.name}: No initial value has been set yet"
@@ -439,6 +442,7 @@ class VariableBase(abc.ABC):
             incr:   Increment value
 
         Keyword Args:
+            force:      If :py:obj:`True`, do not check bounds
             \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
@@ -466,6 +470,7 @@ class VariableBase(abc.ABC):
         r"""Set to initial_value + delta.
 
         Keyword Args:
+            force:      If :py:obj:`True`, do not check bounds
             \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
@@ -475,6 +480,7 @@ class VariableBase(abc.ABC):
         r"""Set to initial_value - delta.
 
         Keyword Args:
+            force:      If :py:obj:`True`, do not check bounds
             \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
@@ -497,7 +503,7 @@ class VariableBase(abc.ABC):
         Returns:
             status: Variable description
         """
-        return "\n".join((self._header(), self._line()))
+        return f"{self._header()}\n{self._line()}"
 
     @contextmanager
     def restore(self, initial: bool = False, **setkw) -> Generator[None, None, None]:
@@ -757,7 +763,7 @@ class VariableList(list):
     def status(self, **kwargs) -> str:
         """String description of the variables."""
         values = "\n".join(var._line(**kwargs) for var in self)
-        return "\n".join((VariableBase._header(), values))
+        return f"{VariableBase._header()}\n{values}"
 
     @contextmanager
     def restore(self, initial: bool = False, **setkw):

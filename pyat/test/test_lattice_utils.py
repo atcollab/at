@@ -6,6 +6,7 @@ from at.lattice import elements as elt
 from at.lattice import checktype, get_cells, refpts_iterator, get_elements
 from at.lattice import elements, uint32_refpts, bool_refpts, checkattr
 from at.lattice import get_s_pos, tilt_elem, shift_elem, set_tilt, set_shift
+from at.lattice import AtError, ReferencePoint, transform_elem
 
 
 @pytest.mark.parametrize(
@@ -242,3 +243,32 @@ def test_set_shift(simple_ring):
     a = numpy.array([3.0, 0.0, 5.0, 0.0, 0.0, 0.0])
     numpy.testing.assert_equal(simple_ring[3].T1, -a)
     numpy.testing.assert_equal(simple_ring[3].T2, a)
+
+
+@pytest.mark.parametrize("reference", [None, *ReferencePoint])
+def test_transform_elem_relative(reference):
+    elem = elt.Quadrupole("Q", 0.3, 1.2)
+    transform_elem(elem, dx=1.0e-4, tilt=1.0e-3, reference=reference)
+    transform_elem(elem, dx=1.0e-4, tilt=1.0e-3, reference=reference, relative=True)
+    numpy.testing.assert_allclose(elem.dx, 2.0e-4)
+    numpy.testing.assert_allclose(elem.tilt, 2.0e-3)
+    shift_elem(elem, dy=1.0e-4, relative=True)
+    tilt_elem(elem, 1.0e-3, relative=True)
+    numpy.testing.assert_allclose(elem.dy, 1.0e-4)
+    numpy.testing.assert_allclose(elem.tilt, 3.0e-3)
+
+
+def test_transform_elem_relative_untransformed():
+    elem = elt.Quadrupole("Q", 0.3, 1.2)
+    transform_elem(elem, dx=1.0e-4, reference=ReferencePoint.ENTRANCE, relative=True)
+    numpy.testing.assert_allclose(elem.dx, 1.0e-4)
+    assert elem.ReferencePoint is ReferencePoint.ENTRANCE
+
+
+def test_transform_elem_relative_reference_change():
+    elem = elt.Quadrupole("Q", 0.3, 1.2)
+    transform_elem(elem, dx=1.0e-4, reference=ReferencePoint.CENTRE)
+    with pytest.raises(AtError, match="Reference point changed"):
+        transform_elem(
+            elem, dx=1.0e-4, reference=ReferencePoint.ENTRANCE, relative=True
+        )

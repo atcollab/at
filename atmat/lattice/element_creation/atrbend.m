@@ -53,6 +53,7 @@ function elem=atrbend(fname,varargin)
 %
 %  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector
+%          atoctupole, atvariablethinmultipole
 
 % Input parser for option
 [rsrc,L,A,K,method]  = decodeatargs({0,0,[],'BndMPoleSymplectic4Pass'},varargin);

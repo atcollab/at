@@ -7,6 +7,7 @@ __all__ = [
     "Aperture",
     "BeamMoments",
     "Collimator",
+    "DeltaQ",
     "Drift",
     "EnergyLoss",
     "LongElement",
@@ -21,7 +22,7 @@ __all__ = [
 ]
 
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import numpy as np
 
@@ -32,6 +33,14 @@ from .element_object import Element
 
 # AtWarning from this module should always be issued (not only on the first occurrence)
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
+
+
+def _array6(value):
+    return _array(value, shape=(6,))
+
+
+def _array2(value):
+    return _array(value, shape=(2,))
 
 
 class LongElement(Element):
@@ -55,8 +64,6 @@ class LongElement(Element):
     def _part(self, fr, sumfr):
         pp = self.copy()
         pp.Length = fr * self.Length
-        if hasattr(self, "KickAngle"):
-            pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:
@@ -442,26 +449,153 @@ class RFCavity(LongtMotion, LongElement):
             )
         return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
 
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> Element:
+        # Ensure that the optional TimeLag is set
+        elem_dict.setdefault("TimeLag", 0.0)
+        return super().new_from_dict(**elem_dict)
 
-class M66(Element):
-    """Linear (6, 6) transfer matrix."""
+
+class M66(Radiative, Element):
+    r"""Linear (6, 6) transfer matrix.
+
+    This implements Taylor maps of order 0 and 1:
+
+    :math:`\mathbf{X}_{out} = \mathbf{M66} \cdot \mathbf{X}_{in} + \mathbf{M6}`
+
+    """
 
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "M66"]
-    _conversions = dict(Element._conversions, M66=_array66)
+    _conversions = Element._conversions | {
+        "M66": _array66,
+        "M66Rad": _array66,
+        "M6": _array6,
+        "M6Rad": _array6,
+    }
     _file_classname = "Matrix66"
 
-    def __init__(self, family_name: str, m66=None, **kwargs):
+    def __init__(
+        self, family_name: str, m66=None, m66rad=None, m6=None, m6rad=None, **kwargs
+    ):
         """
         Args:
             family_name:    Name of the element
-            m66:            Transfer matrix. Default: Identity matrix.
+            m66:            Transfer matrix. Default: 6x6 identity matrix
+            m66rad:         Transfer matrix including radiation. Default: *m66*
+            m6:             6x1 vector added to the particle coordinates. Default: 0
+            m6rad:          6x1 vector added to the particle coordinates,
+              including radiation. Default: *m6*.
 
         Default PassMethod: ``Matrix66Pass``
         """
         if m66 is None:
-            m66 = np.identity(6)
+            m66 = np.asfortranarray(np.identity(6))
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
+        if m66rad is not None:
+            kwargs.setdefault("M66Rad", m66rad)
+        if m6 is not None:
+            kwargs.setdefault("M6", m6)
+        if m6rad is not None:
+            kwargs.setdefault("M6Rad", m6rad)
+        super().__init__(family_name, **kwargs)
+
+
+class DeltaQ(Radiative, Element):
+    """Lumped element describing amplitude detuning and chromaticity."""
+
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+
+    _conversions = dict(
+        Element._conversions,
+        Chrom_MaxOrder=int,
+        Alphac_MaxOrder=int,
+        Beta=_array2,
+        Alpha=_array2,
+        Dispersion=_array,
+        BetaRad=_array2,
+        AlphaRad=_array2,
+        DispersionRad=_array,
+        ChromX=_array,
+        ChromY=_array,
+        Detuning=_array,
+        Alphac=_array,
+    )
+
+    _file_classname = "DeltaQ"
+    default_pass = {False: "DeltaQPass", True: "DeltaQRadPass"}
+
+    def __init__(
+        self,
+        family_name: str,
+        beta: Sequence[float] = (1.0, 1.0),
+        alpha: Sequence[float] = (0.0, 0.0),
+        dispersion: Sequence[float] | None = None,
+        betarad: Sequence[float] | None = None,
+        alpharad: Sequence[float] | None = None,
+        dispersionrad: Sequence[float] | None = None,
+        qpx: Sequence[float] = (0.0,),
+        qpy: Sequence[float] = (0.0,),
+        detuning_coefficients: Sequence[float] = (0.0, 0.0, 0.0),
+        alphac: Sequence[float] | None = None,
+        **kwargs,
+    ):
+        r"""
+        Object to lump sources of tune shifts from a ring in a single Element.
+        All optics imput argument and T1 /T2 have \*Rad equivalent used to
+        enable_6d.
+
+        Args:
+            family_name:    Name of the element
+            beta:                   Beta functions at the entrance of the element
+                                    Default=(1.0, 1.0)
+            alpha:                  Alpha function at the entrance of the element
+                                    Default=(0.0, 0.0)
+            dispersion:             Dispersion function at the entrance of the element.
+                                    Used to cancel dispersion contribution to the closed
+                                    orbit for off-momentum particles before applying the
+                                    rotation in phase-space. Default=None
+            qpx:                    Horizontal energy detuning coefficients
+                                    Default=0.0
+            qpy:                    Vertical energy detuning coefficients
+                                    Default=0.0
+            detuning_coefficients:  First order amplitude detuning coefficients
+                                    [dQx/dJx, dQx/dJy, dQy/dJy]
+                                    Default=[0.0, 0.0, 0.0]
+            alphac:                 Higher order (>1) momentum compaction factor
+                                    Default=[0.0]
+
+
+
+        Default PassMethod: ``DeltaQPass``
+        """
+        if betarad is None:
+            betarad = beta
+        if alpharad is None:
+            alpharad = alpha
+
+        qpx = np.atleast_1d(qpx)
+        qpy = np.atleast_1d(qpy)
+        maxorder = max(len(qpx), len(qpy))
+        qpx = np.pad(qpx, (0, maxorder - len(qpx)))
+        qpy = np.pad(qpy, (0, maxorder - len(qpy)))
+        kwargs.setdefault("PassMethod", "DeltaQPass")
+        kwargs.setdefault("Beta", beta)
+        kwargs.setdefault("Alpha", alpha)
+        kwargs.setdefault("BetaRad", betarad)
+        kwargs.setdefault("AlphaRad", alpharad)
+        kwargs.setdefault("ChromX", qpx)
+        kwargs.setdefault("ChromY", qpy)
+        kwargs.setdefault("Detuning", detuning_coefficients)
+        kwargs.setdefault("Chrom_MaxOrder", maxorder)
+        if dispersion is not None:
+            if dispersionrad is None:
+                dispersionrad = dispersion
+            kwargs.setdefault("Dispersion", dispersion)
+            kwargs.setdefault("DispersionRad", dispersionrad)
+        if alphac is not None:
+            kwargs.setdefault("Alphac", alphac)
+            kwargs.setdefault("Alphac_MaxOrder", len(alphac))
         super().__init__(family_name, **kwargs)
 
 
@@ -539,9 +673,7 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
     """Simple radiation damping and energy loss."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
-    _conversions = dict(
-        Element._conversions, U0=float, damp_mat_diag=lambda v: _array(v, shape=(6,))
-    )
+    _conversions = dict(Element._conversions, U0=float, damp_mat_diag=_array6)
 
     default_pass = {False: "IdentityPass", True: "SimpleRadiationRadPass"}
 

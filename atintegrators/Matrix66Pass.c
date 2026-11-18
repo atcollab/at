@@ -15,10 +15,8 @@ void Matrix66Pass(double *r, const double *M,
         const double *T1, const double *T2,
         const double *R1, const double *R2, int num_particles)
 {
-    double *r6;
-    int c;
-    for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
-        r6 = r+c*6;
+    for (int c = 0; c<num_particles; c++) {	/*Loop over particles  */
+        double *r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
             if (T1 != NULL) ATaddvv(r6, T1);
             if (R1 != NULL) ATmultmv(r6, R1);

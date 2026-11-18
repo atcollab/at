@@ -67,8 +67,7 @@ current = 150e-3
 # Not the old ESRF SR, however for benchmarking this doesn't matter
 beta = 2.8
 q0 = 37500  # unloaded
-qfactor = q0 / (1 + beta)  # loaded
-rshunt = 145 * qfactor * 13  # loaded
+rshunt = 145 * q0 * 13  # unloaded
 
 
 tunes = ring.get_tune()
@@ -91,7 +90,8 @@ simple_ring = at.simple_ring(
 
 simple_ring.set_beam_current(current)
 simple_ring.set_fillpattern(Nbunches)
-simple_ring.pop(2)  # drop diffusion element
+simple_ring.pop(-1)  # drop non-linear element
+simple_ring.pop(2) # drop diffusion element
 
 simple_ring.set_cavity_phase()
 
@@ -109,14 +109,15 @@ Npart = Nbunches
 
 add_beamloading(
     simple_ring,
-    qfactor,
+    q0,
     rshunt,
+    beta,
     Nslice=1,
-    VoltGain=0.001,
-    PhaseGain=0.001,
-    buffersize=1000,
-    windowlength=1000,
-    FBMode=FBMode.WINDOW,
+    Gain=[0.001,0.001],
+    FBMode=FBMode.PROP,
+    TunerGain=0.01,
+    TunerAveragingPeriod=1000,
+    TunerOffset=0.0
 )
 
 
@@ -178,7 +179,7 @@ if rank == 0:
 
     qs_mn, qs_std = numpy.array([numpy.mean(qscoh), numpy.std(qscoh)])
 
-    qs_theory, qs_zerocurrent = analytical_qs(ring, current, qfactor, rshunt, beta)
+    qs_theory, qs_zerocurrent = analytical_qs(ring, current, q0/(1+beta), rshunt/(1+beta), beta)
 
     print("Analytical:", numpy.real(qs_theory))
     print("Simulated:", qs_mn, "pm", qs_std)
@@ -219,3 +220,5 @@ if rank == 0:
     ax2.legend()
     plt.suptitle("VGain=0.001, PGain=0.001")
     plt.show()
+    
+

@@ -31,7 +31,7 @@ function elem=atthinmultipole(fname,varargin)
 %                     fields
 %
 %See also  ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND ATSKEWQUAD,
-%          ATMULTIPOLE, ATMARKER, ATCORRECTOR
+%          ATMULTIPOLE, ATMARKER, ATCORRECTOR, ATOCTUPOLE, ATVARIABLETHINMULTIPOLE
 
 % Input parser for option
 [rsrc,PolynomA,PolynomB,method] = decodeatargs({0,0,'ThinMPolePass'},varargin);

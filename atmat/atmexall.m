@@ -218,8 +218,6 @@ oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
 
 % Diffusion matrices
 cdir=fullfile(atroot,'atphysics','Radiation');
-compile([atoptions, {passinclude}, mexflags], fullfile(cdir,'findmpoleraddiffmatrix.c'));
-compile([atoptions, {passinclude}, mexflags], fullfile(cdir,'FDW.c'));
 compile([atoptions, {passinclude}, LIBDL, mexflags], fullfile(cdir,'diffusion_matrix.c'));
 
 % RDTs

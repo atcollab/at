@@ -1,13 +1,18 @@
 static void thinkickM(const double *r6, const double *A, const double *B, int max_order,
-                      double L, double *bdiff)
+                      double L, double irho, double *bdiff)
 /* Calculate the symplectic (no radiation) transfer matrix of a
    thin multipole kick near the entrance point r6
+   For elements with straight coordinate system irho = 0
+   For curved elements the B polynomial (PolynomB in MATLAB)
+   MUST NOT include the guide field  By0 = irho * E0 /(c*e)
 */
 {
   double M66[36];
   double ReSumNTemp;
   double ImSumN = max_order * A[max_order];
   double ReSumN = max_order * B[max_order];
+  double B0 = (max_order >= 0) ? B[0] : 0.0;
+  double B1 = (max_order >= 1) ? B[1] : 0.0;
 
   /* Recursively calculate the derivatives
           ReSumN = Re(d(By + iBx)/dx)
@@ -26,11 +31,16 @@ static void thinkickM(const double *r6, const double *A, const double *B, int ma
     M66[m*7] = 1.0;
 
   /*  [i, j] <---> [i+6*j] */
-  M66[1] = -L * ReSumN;       /* [1, 0] */
-  M66[13] = L * ImSumN;       /* [1, 2] */
-  M66[3] = L * ImSumN;        /* [3, 0] */
-  M66[15] = L * ReSumN;       /* [3, 2] */
-
+  M66[1] = -L * ReSumN;             /* [1, 0] */
+  M66[13] = L * ImSumN;             /* [1, 2] */
+  M66[3] = L * ImSumN;              /* [3, 0] */
+  M66[15] = L * ReSumN;             /* [3, 2] */
+  M66[25] = L * irho;               /* [1, 4] */
+  M66[5] = L * irho;                /* [5, 0] */
+  M66[1] -= L * irho * (irho + B0 + 2.0*B1*r6[0]);   /* [1, 0] */
+  M66[13] += L * irho * B1 * r6[2]; /* [1, 2] */
+  M66[3] += L * irho * B1 * r6[2];  /* [3, 0] */
+  M66[15] += L * irho * B1 * r6[0]; /* [3, 2] */
   ATsandwichmmt(M66, bdiff);
 }
 

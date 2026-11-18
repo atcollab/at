@@ -9,6 +9,13 @@ import pytest
 from at.lattice import Lattice, RefptsVariable, VariableList, End
 from at.latticetools import LocalOpticsObservable, GlobalOpticsObservable
 from at.latticetools import EmittanceObservable, ObservableList, ring_match
+from at.latticetools import MatchingMethod
+
+methods = pytest.mark.parametrize(
+    "method",
+    (MatchingMethod.LEASTSQUARES, MatchingMethod.JACOBIAN),
+    ids=lambda m: m.name,
+)
 
 
 @pytest.fixture()
@@ -40,7 +47,8 @@ def mline(hmba_lattice: Lattice):
     return ring[: sf[0] + 1], twiss_in
 
 
-def test_linopt_matching(mring: Lattice):
+@methods
+def test_linopt_matching(mring: Lattice, method: MatchingMethod):
     """Test linear optics matching."""
 
     # noinspection PyUnusedLocal
@@ -57,7 +65,9 @@ def test_linopt_matching(mring: Lattice):
     names = ["QF1*", "QD2*", "QD3*", "QF4*", "QD5*", "QF6*", "QF8*"]
     bounds = [[0, 5], [-5, 0], [-5, 0], [0, 5], [-5, 0], [0, 5], [0, 5]]
     variables = VariableList(
-        RefptsVariable(nm, "PolynomB", index=1, bounds=bnd, name=nm, ring=mring)
+        RefptsVariable(
+            nm, "PolynomB", index=1, bounds=bnd, name=nm, ring=mring, delta=1e-3
+        )
         for nm, bnd in zip(names, bounds, strict=True)
     )
 
@@ -88,28 +98,30 @@ def test_linopt_matching(mring: Lattice):
     )
 
     # Perform the fit
-    newring = ring_match(mring, variables, obs, copy=True)
+    newring = ring_match(mring, variables, obs, copy=True, method=method)
 
     # check the residuals
     obs.evaluate(newring)
     assert obs.sum_residuals < 1.0e-08
 
 
-def test_envelope_matching(mring: Lattice):
+@methods
+def test_envelope_matching(mring: Lattice, method: MatchingMethod):
     """Test linear and envelope."""
     # Define the variables: QF1; QF2, cavity voltage
     names = ["QF1*", "QD2*"]
     variables = VariableList(
-        RefptsVariable(nm, "PolynomB", index=1, name=nm, ring=mring) for nm in names
+        RefptsVariable(nm, "PolynomB", index=1, name=nm, ring=mring, delta=1e-3)
+        for nm in names
     )
-    variables.append(RefptsVariable(0, "Voltage", name="voltage"))
+    variables.append(RefptsVariable(0, "Voltage", name="voltage", delta=1e3))
 
     # Define the constraints: fit the tunes from "tunes6"
     obs = ObservableList([EmittanceObservable("tunes6", target=[0.38, 0.85, 1.1e-4])])
 
     # Perform the fit
     ring = mring.enable_6d(copy=True)
-    newring = ring_match(ring, variables, obs, copy=True)
+    newring = ring_match(ring, variables, obs, copy=True, method=method)
 
     # check the residuals
     obs.evaluate(newring)
@@ -122,18 +134,20 @@ def test_envelope_matching(mring: Lattice):
 
     # Perform the fit
     ring = mring.enable_6d(copy=True)
-    newring = ring_match(ring, variables, obs, copy=True)
+    newring = ring_match(ring, variables, obs, copy=True, method=method)
 
     # check the residuals
     obs.evaluate(newring)
     assert obs.sum_residuals < 1.0e-12
 
 
-def test_line_matching(mline):
+@methods
+def test_line_matching(mline, method: MatchingMethod):
     line, twiss_in = mline
     names = ["QF1*", "QD2*"]
     variables = VariableList(
-        RefptsVariable(nm, "PolynomB", index=1, name=nm, ring=line) for nm in names
+        RefptsVariable(nm, "PolynomB", index=1, name=nm, ring=line, delta=1e-3)
+        for nm in names
     )
 
     # Define the constraints: set alpha = [0.0, 0.0] at the end of the line
@@ -141,7 +155,7 @@ def test_line_matching(mline):
     obs.append(LocalOpticsObservable(End, "alpha", target=[0.0, 0.0]))
 
     # Perform the fit
-    newline = ring_match(line, variables, obs, copy=True)
+    newline = ring_match(line, variables, obs, copy=True, method=method)
 
     # check the residuals
     obs.evaluate(newline)
