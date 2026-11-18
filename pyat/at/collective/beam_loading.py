@@ -43,10 +43,17 @@ class FeedbackMode(IntEnum):
     buckets is sampled every Every buckets, filtered with IIRCutoff and
     the error is corrected with Gain[0] (proportional) and Gain[1]
     (integral) after Delay buckets.
+    
+    FeedbackMode.DFB is Direct Feedback
+    
+    FeedbackMode.PI_DFB is both the Proportional Integral Loop and the 
+    Direct Feedback. 
     """
 
     PROP = 1
     PROP_INTEGRAL = 2
+    DFB = 3
+    PI_DFB = 4
 
 
 def add_beamloading(
@@ -176,6 +183,7 @@ class BeamLoadingElement(RFCavity, Collective):
         cutoff=float,
         FF=bool,
         OpenLoop=bool,
+        DFB_OpenLoop=bool,
         _beta=float,
         _wakefact=float,
         _nslice=int,
@@ -282,7 +290,9 @@ class BeamLoadingElement(RFCavity, Collective):
             OpenLoop (bool): Do you want to apply the changes or just monitor?
                 Only the PROP or PROP_INTEGRAL loop is opened, the tuner
                 is controlled by TunerGain.
-
+            DFB_OpenLoop (bool)
+            DFB_Gain (float): DFB Gain
+            DFB_Phase_Shift (float): DFB Phase Shift [rad]
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -354,13 +364,20 @@ class BeamLoadingElement(RFCavity, Collective):
         self._FFconst = np.zeros(2)
         self._I_record = np.zeros(2)
         self.OpenLoop = int(kwargs.pop("OpenLoop", 0))
-
+        self.DFB_OpenLoop = int(kwargs.pop("DFB_OpenLoop", 0))
+        
         # Initlise CavityMode=Passive parameters
         self.detune = detune
 
         # Initialise CavityMode=Passive_SetVoltage parameters
         self._passive_vset = kwargs.pop("PassiveVoltage", 0.0)
 
+        # Initialise DFB Parameters
+        self.DFB_Gain = kwargs.pop("DFB_Gain", 0.0)
+        self.DFB_Phase_Shift = kwargs.pop("DFB_PhaseShift", 0.0)
+        self._DFB_delay, self._DFB_every, self._DFB_samplenum = self._check_fb_params(
+            kwargs.pop("DFB_Delay", self._delay), kwargs.pop("DFB_Every", self._every), kwargs.pop("DFB_SampleNum", self._samplenum)
+        )
         ####################################
         ### Next we perform all the checks #
         ####################################
@@ -445,11 +462,13 @@ class BeamLoadingElement(RFCavity, Collective):
 
         # these big chaps are all for the memory assignment in C
         self._ig_phasor = np.zeros((ring.harmonic_number, 2), order="F")
+        self._ig_phasor_record = np.zeros((ring_harmonic_number, 2), order='F')
         self._generator_phasor_record = np.zeros((ring.harmonic_number, 2), order="F")
         self._cavity_phasor_record = np.zeros((ring.harmonic_number, 2), order="F")
 
         self._samplestart = np.zeros(1, dtype=np.int64)
-
+        self._DFB_samplestart = np.zeros(1, dtype=np.int64)
+        
     def is_compatible(self, other):
         return False
 
@@ -611,6 +630,18 @@ class BeamLoadingElement(RFCavity, Collective):
         self._diff_record = np.zeros((self._recordsize, 2), order="F")
         self._pil_init = np.zeros(1)
 
+    def _init_dfb_buffers(self):
+        self._DFB_recordsize = int(np.ceil(self._DFB_delay / self._DFB_every))
+
+        self._DFB_vc_previous = np.zeros((self._DFB_samplenum, 2), order="F")
+        self._DFB_vc_record = np.zeros((self._DFB_recordsize, 2), order="F")
+
+        self._DFB_ig_phasor = np.zeros((self.ring_harmonic_number, 2), order='F')
+        self._DFB_ig_phasor_record = np.zeros((self.ring_harmonic_number, 2), order='F')
+        
+        self._DFB_init = np.zeros(1)
+
+
     @property
     def Delay(self):
         """Loop delay, in turns (PROP) or buckets (PROP_INTEGRAL)."""
@@ -622,6 +653,105 @@ class BeamLoadingElement(RFCavity, Collective):
             int(value), self._every, self._samplenum
         )
         self._init_fb_buffers()
+
+    @property
+    def DFB_Delay(self):
+        """Loop delay of DFB in buckets."""
+        return self._DFB_delay
+
+    @Delay.setter
+    def DFB_Delay(self, value):
+        self._DFB_delay, self._DFB_every, self._DFB_samplenum = self._check_fb_params(
+            int(value), self._DFB_every, self._DFB_samplenum
+        )
+        self._init_fb_buffers()
+
+    @property
+    def DFB_Phase_Shift(self) -> float:
+        """Return DFB phase shift."""
+        return self._DFB_Phase_Shift
+
+    @DFB_Phase_Shift.setter
+    def DFB_Phase_Shift(self, value: float):
+        """Set DFB_phase_shift"""
+        self._DFB_Phase_Shift = value
+
+    
+    @property
+    def phase_shift(self) -> float:
+        """
+        Return phase shift applied to DFB.
+        Defined as self.cav_res.psi - self.DFB_phase_shift.
+        """
+        return self.Vgen[2] - self.DFB_phase_shift
+
+    @property
+    def DFB_psi(self) -> float:
+        """
+        Return detuning angle value with Direct RF feedback in [rad].
+
+        Fig.4 of ref [1].
+        """
+        value = None
+        if self._DFB_init:
+            phase_cavity = np.mean(self._cavity_phasor_record,axis=0)
+            phase_cavity = np.angle(phase_cavity[0] + 1j*phase_cavity[1])
+            
+            phase_generator = np.mean(self._ig_phasor, axis=0)
+            phase_generator = np.angle(phase_generator[0] +1j*phase_generator[1])
+            value = (phase_cavity - phase_generator)                     
+        return value
+        
+
+    @property
+    def DFB_alpha(self) -> float:
+        """
+        Return the amplitude ratio alpha of the DFB.
+
+        Near Eq. (13) of [1].
+        """
+        value = None
+        if self._DFB_init:
+            mean_ig_phasor = np.mean(self._ig_phasor, axis=0)
+            mean_ig_phasor = mean_ig_phasor[0] + 1j*mean_ig_phasor[1]
+                    
+            mean_dfb_phasor = np.mean(self._DFB_ig_phasor, axis=0)
+            mean_dfb_phasor = mean_dfb_phasor[0] + 1j*mean_dfb_phasor[1]
+                    
+            fac = np.abs(mean_dfb_phasor / mean_ig_phasor )
+            value = 20 * np.log10(fac)
+        return value 
+
+    @property
+    def DFB_gamma(self) -> float:
+        """
+        Return the gain gamma of the DFB.
+
+        Near Eq. (13) of [1].
+        """
+        value = None
+        if self._DFB_init:
+            mean_ig_phasor = np.mean(self._ig_phasor, axis=0)
+            mean_ig_phasor = mean_ig_phasor[0] + 1j*mean_ig_phasor[1]
+                    
+            mean_dfb_phasor = np.mean(self._DFB_ig_phasor, axis=0)
+            mean_dfb_phasor = mean_dfb_phasor[0] + 1j*mean_dfb_phasor[1]        
+            
+            fac = np.abs(mean_dfb_phasor / mean_ig_phasor )
+            value = fac / (1-fac)
+        return value
+
+    @property
+    def DFB_Rs(self) -> float:
+        """
+        Return the shunt impedance of the DFB in [ohm].
+
+        Eq. (15) of [1].
+        """
+        value = None
+        if self._DFB_init:
+            value =  self.rshunt / (1 + self.DFB_gamma * np.cos(self.DFB_psi))
+        return value
 
     @property
     def Every(self):
@@ -636,6 +766,19 @@ class BeamLoadingElement(RFCavity, Collective):
         self._init_fb_buffers()
 
     @property
+    def DFB_Every(self):
+        """Sampling and clock period of the DFB loop [buckets]."""
+        return self._DFB_every
+
+    @DFB_Every.setter
+    def DFB_Every(self, value):
+        self._DFB_delay, self._DFB_every, self._DFB_samplenum = self._check_fb_params(
+            self._DFB_delay, int(value), self._DFB_samplenum
+        )
+        self._init_fb_buffers()
+        
+
+    @property
     def SampleNum(self):
         """Number of buckets for the mean cavity voltage of the PI loop."""
         return self._samplenum
@@ -644,6 +787,18 @@ class BeamLoadingElement(RFCavity, Collective):
     def SampleNum(self, value):
         self._delay, self._every, self._samplenum = self._check_fb_params(
             self._delay, self._every, int(value)
+        )
+        self._init_fb_buffers()
+
+    @property
+    def DFB_SampleNum(self):
+        """Number of buckets for the mean cavity voltage of the DFB loop."""
+        return self._DFB_samplenum
+
+    @DFB_SampleNum.setter
+    def DFB_SampleNum(self, value):
+        self._DFB_delay, self._DFB_every, self._DFB_samplenum = self._check_fb_params(
+            self._DFB_delay, self._DFB_every, int(value)
         )
         self._init_fb_buffers()
 
@@ -661,6 +816,11 @@ class BeamLoadingElement(RFCavity, Collective):
     def RecordSize(self):
         """Length of the PI loop delay record."""
         return self._recordsize
+
+    @property
+    def DFB_RecordSize(self):
+        """Length of the DFB loop delay record."""
+        return self._DFB_recordsize
 
     @property
     def Buffersize(self):

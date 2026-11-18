@@ -79,6 +79,123 @@ void init_PIL(double vgen, double thetag, double psi, double RL, double *vbeam,
     init_IIR(cutoff, IIRcoef, IIRout, T1, every, Vc);
 }
 
+void init_DFB(double *vbunch,
+              double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
+              double *ig_phasor_real, double *ig_phasor_imag,
+              double *ig_phasor_record_real, double *ig_phasor_record_imag,              
+              double *dfb_ig_phasor_real, double *dfb_ig_phasor_imag,
+              double *dfb_ig_phasor_record_real, double *dfb_ig_phasor_record_imag,
+              double *dfb_vc_record_real, double *dfb_vc_record_imag,
+              double *dfb_vc_previous_real, double *dfb_vc_previous_imag,
+              long *dfb_samplestart, bool FF, double dfb_samplenum,
+              double dfb_gain, double dfb_phase_shift_relative,
+              double psi, double rshunt, int ring_harmn, int dfb_recordsize,
+              double vcav_amp, double phis, double *FFconst){
+    /*
+    def DFB_parameter_set(self, DFB_gain: float, DFB_phase_shift: float):
+    """
+    Set DFB gain and phase shift parameters.
+
+    Parameters
+    ----------
+    DFB_gain : float
+        Gain of the DFB.
+    DFB_phase_shift : float
+        Phase shift of the DFB.
+
+    """
+    self.DFB_gain = DFB_gain
+    self.DFB_phase_shift = DFB_phase_shift
+
+    if np.sum(np.abs(self.cav_res.beam_phasor)) == 0:
+        vc = np.ones(self.ring.h) * self.cav_res.Vc * np.exp(
+            1j * self.cav_res.theta)
+    else:
+        vc = self.cav_res.cavity_phasor_record
+    vg_drf = self.DFB_gain * vc * np.exp(1j * self.phase_shift)
+    self.DFB_ig_phasor = self.Vg2Ig(vg_drf)
+
+    self.ig_phasor = self.ig_phasor_record - self.DFB_ig_phasor
+    self.init_FFconst()
+    
+   then 
+
+        if np.sum(np.abs(self.cav_res.beam_phasor)) == 0:
+            cavity_phasor = self.cav_res.Vc * np.exp(1j * self.cav_res.theta)
+        else:
+            cavity_phasor = np.mean(self.cav_res.cavity_phasor_record)
+        self.DFB_VcRecord = np.ones(record_size, dtype=complex) * cavity_phasor
+        self.DFB_vc_previous = np.ones(self.DFB_sample_num,
+                                       dtype=complex) * cavity_phasor
+
+        self.DFB_sample_list = range(0, self.ring.h, self.DFB_every)
+           
+    */
+    int idx;
+    double tmp = 0.0;
+    double vc_tmp_arr[ring_harmn*2];
+
+
+    double complex vc_tmp = 0.0 + _Complex_I * 0.0;
+    double complex dfb_vg = 0.0 + _Complex_I * 0.0;
+    double complex ig_phasor_tmp = 0.0 + _Complex_I * 0.0;
+
+    double complex vc_phasor = vcav_amp*cos(phis) + _Complex_I*vcav_amp*sin(phis);        
+
+    double complex phase_shift_ri = cos(dfb_phase_shift_relative) + _Complex_I * sin(dfb_phase_shift_relative);
+        
+    for(idx=0;idx<ring_harmn;idx++){
+        tmp += sqrt(vbunch[idx]*vbunch[idx]+ vbunch[idx+ring_harmn]*vbunch[idx+ring_harmn]);
+    }
+
+    if(tmp==0.0){
+        for(idx=0;idx<ring_harmn;idx++){
+            vc_tmp_arr[idx] = creal(vc_phasor);
+            vc_tmp_arr[idx+ring_harmn] = cimag(vc_phasor);
+        }
+    }else{
+        for(idx=0;idx<ring_harmn;idx++){
+            vc_tmp_arr[idx] = cavity_phasor_record_real[idx];
+            vc_tmp_arr[idx+ring_harmn] = cavity_phasor_record_imag[idx];
+        }
+    }
+    
+   
+    for(idx=0;idx<ring_harmn;idx++){
+        vc_tmp = vc_tmp_arr[idx] + _Complex_I*vc_tmp_arr[idx+ring_harmn];
+        
+        dfb_vg = dfb_gain * vc_tmp * phase_shift_ri;
+        ig_phasor_tmp = Vg2Ig(dfb_vg, psi, rshunt); 
+        dfb_ig_phasor_real[idx] = creal(ig_phasor_tmp);
+        dfb_ig_phasor_imag[idx+ring_harmn] = cimag(ig_phasor_tmp);
+        ig_phasor_real[idx] = ig_phasor_record_real[idx] - dfb_ig_phasor_real[idx];
+        ig_phasor_imag[idx] = ig_phasor_record_imag[idx] - dfb_ig_phasor_imag[idx];
+
+    }
+    
+    if(tmp==0.0){
+        vc_tmp = vc_phasor;
+    }else{
+        for(idx=0;idx<ring_harmn;idx++){
+            vc_tmp += (cavity_phasor_record_real[idx] + _Complex_I * cavity_phasor_record_imag[idx])/ring_harmn; 
+        }
+    }
+    
+    
+    for(idx=0;idx<dfb_recordsize;idx++){
+        dfb_vc_record_real[idx] = creal(vc_tmp);
+        dfb_vc_record_imag[idx] = cimag(vc_tmp);        
+    }
+    for(idx=0;idx<dfb_samplenum;idx++){
+        dfb_vc_previous_real[idx] = creal(vc_tmp);
+        dfb_vc_previous_imag[idx] = cimag(vc_tmp);        
+    }
+        
+    dfb_samplestart[0] = 0;
+    FFconst[0] = FF ? creal(ig_phasor_tmp) : 0.0;
+    FFconst[1] = FF ? cimag(ig_phasor_tmp) : 0.0;    
+}
+
 void set_cavity_record_phasor_array(double *vbunch, 
                                     double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
                                     double *generator_phasor_record_real, double *generator_phasor_record_imag,
@@ -297,6 +414,9 @@ void track_PIL(double *vc_previous_real, double *vc_previous_imag,
     double complex mean_vc = 0.0 + _Complex_I * 0.0;
     double complex fb_value, ig;
 
+    /* to avoid concatenating which is slow. Here it computes the sum.
+    Then later it 'shifts' the sum by subtracting and adding. So it's 
+    like a rolling sum. Much faster. */
     for(ibucket=window_start;ibucket<window_start+samplenum;ibucket++){
         vc_sum += vc_sample(vc_previous_real, vc_previous_imag,
                             cavity_phasor_record_real, cavity_phasor_record_imag,
@@ -356,6 +476,119 @@ void track_PIL(double *vc_previous_real, double *vc_previous_imag,
               filling_time, psi,
               kloss, T1, ring_harmn, vgen_arr);
     }
+}
+
+
+void track_DFB(double *dfb_vc_record_real, double *dfb_vc_record_imag,
+               double *dfb_ig_phasor_real, double *dfb_ig_phasor_imag,
+               double *dfb_ig_phasor_record_real, double *dfb_ig_phasor_record_imag,
+               double *generator_phasor_record_real, double *generator_phasor_record_imag,
+               double *ig_phasor_real, double *ig_phasor_imag,
+               double *ig_phasor_record_real, double *ig_phasor_record_imag,
+               double *dfb_vc_previous_real, double *dfb_vc_previous_imag,
+               double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
+               long *dfb_samplestart, int dfb_samplenum,
+               double dfb_gain, int dfb_recordsize, int dfb_every,
+               double psi, double RL, 
+               double filling_time, double kloss, double T1,
+               double *vgen_arr, bool dfb_open,
+               double dfb_phase_shift_relative,
+               int ring_harmn){
+    /*
+    vc_list = np.concatenate(
+        [self.DFB_vc_previous, self.cav_res.cavity_phasor_record])
+    self.DFB_ig_phasor = np.roll(self.DFB_ig_phasor, 1)
+    for index in self.DFB_sample_list:
+        # 2) updating Ig using last item of the list
+        vg_drf = self.DFB_gain * self.DFB_VcRecord[-1] * np.exp(
+            1j * self.phase_shift)
+        self.DFB_ig_phasor[index:] = self.Vg2Ig(vg_drf)
+        # Shift the record
+        self.DFB_VcRecord = np.roll(self.DFB_VcRecord, 1)
+        # 1) recording Vc
+        mean_vc = np.mean(vc_list[index:self.DFB_sample_num + index])
+        self.DFB_VcRecord[0] = mean_vc
+    # update sample_list for next turn
+    self.DFB_sample_list = range(index + self.DFB_every - self.ring.h,
+                                 self.ring.h, self.DFB_every)
+    # update vc_previous for next turn
+    self.DFB_vc_previous = self.cav_res.cavity_phasor_record[
+        -self.DFB_sample_num:]
+
+    self.ig_phasor_record = self.ig_phasor + self.DFB_ig_phasor
+
+    self.Ig2Vg()
+    */
+    int index=0;
+    int index2=0;
+    int idx=0;
+    
+    int ibucket;
+    int window_start = dfb_samplestart[0];
+
+    double complex dfb_vg = 0.0 + _Complex_I * 0.0;
+    double complex phase_shift_ri = cos(dfb_phase_shift_relative) + _Complex_I * sin(dfb_phase_shift_relative);
+    double complex dfb_vc_rec = 0.0 + _Complex_I * 0.0;
+    double complex ig_phasor_tmp = 0.0 + _Complex_I * 0.0;
+    double complex vc_sum = 0.0 + _Complex_I * 0.0;
+    double complex mean_vc = 0.0 + _Complex_I * 0.0;
+        
+    for(ibucket=window_start;ibucket<window_start+dfb_samplenum;ibucket++){
+        vc_sum += vc_sample(dfb_vc_previous_real, dfb_vc_previous_imag,
+                            cavity_phasor_record_real, cavity_phasor_record_imag,
+                            dfb_samplenum, ibucket);
+    }
+    
+    roll_array(dfb_ig_phasor_real, dfb_recordsize, 1);
+    roll_array(dfb_ig_phasor_imag, dfb_recordsize, 1);
+    
+    for(index=dfb_samplestart[0];index<ring_harmn;index+=dfb_every){
+        dfb_vc_rec = dfb_vc_record_real[dfb_recordsize] + _Complex_I * dfb_vc_record_imag[dfb_recordsize];
+        dfb_vg = dfb_gain * dfb_vc_rec * phase_shift_ri;
+
+        ig_phasor_tmp = Vg2Ig(dfb_vg, psi, RL);
+
+        for(index2=index;index2<index+dfb_every && index2<ring_harmn;index2++){
+            dfb_ig_phasor_real[index2] = creal(ig_phasor_tmp);
+            dfb_ig_phasor_imag[index2] = cimag(ig_phasor_tmp);
+            }
+            
+        roll_array(dfb_vc_record_real, dfb_recordsize, 1);
+        roll_array(dfb_vc_record_imag, dfb_recordsize, 1);    
+        
+        for(ibucket=window_start;ibucket<index;ibucket++){
+            vc_sum -= vc_sample(dfb_vc_previous_real, dfb_vc_previous_imag,
+                                cavity_phasor_record_real, cavity_phasor_record_imag,
+                                dfb_samplenum, ibucket);
+            vc_sum += vc_sample(dfb_vc_previous_real, dfb_vc_previous_imag,
+                                cavity_phasor_record_real, cavity_phasor_record_imag,
+                                dfb_samplenum, ibucket+dfb_samplenum);
+        }
+        
+        window_start = index;
+        mean_vc = vc_sum / dfb_samplenum;
+        dfb_vc_record_real[0] = creal(mean_vc);
+        dfb_vc_record_imag[0] = cimag(mean_vc);                                    
+    }
+
+    dfb_samplestart[0] = index - ring_harmn;
+    
+    update_vc_previous(dfb_vc_previous_real, dfb_vc_previous_imag,
+                       dfb_samplenum, ring_harmn,
+                       cavity_phasor_record_real, cavity_phasor_record_imag);
+    for(idx=0;idx<dfb_recordsize;idx++){
+        ig_phasor_record_real[idx] = ig_phasor_real[idx] + dfb_ig_phasor_real[idx];
+        ig_phasor_record_imag[idx] = ig_phasor_imag[idx] + dfb_ig_phasor_imag[idx];
+    
+    }
+
+    if(dfb_open==0){
+        Ig2Vg(generator_phasor_record_real, generator_phasor_record_imag,
+              ig_phasor_record_real, ig_phasor_record_imag,
+              filling_time, psi,
+              kloss, T1, ring_harmn, vgen_arr);
+    }
+    
 }
 
 
