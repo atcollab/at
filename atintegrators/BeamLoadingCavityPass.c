@@ -596,7 +596,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if(Elem->cavitymode==0 || Elem->cavitymode>=4){
         atError("Unknown cavitymode provided."); check_error();
     } 
-    if(Elem->fbmode>=3){
+    if(Elem->fbmode>=5){
         atError("Unknown fbmode provided."); check_error();
     } 
 
