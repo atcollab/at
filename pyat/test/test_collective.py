@@ -179,3 +179,41 @@ def test_buffers(hmba_lattice):
             dvbbh = numpy.sum(vbbh[i-1, :, (nturns-i):]
                               - vbbh[i, :, (nturns-i-1):(nturns-1)])
         assert_close([dth, dvbh, dvgh, dvbbh], numpy.zeros(4), atol=1e-9)
+
+
+@pytest.fixture(scope="module")
+def ibs_ring(hmba_lattice):
+    ring = hmba_lattice.enable_6d(copy=True)
+    ring.set_fillpattern(1)
+    ring.beam_current = 0.01
+    return ring
+
+
+@pytest.mark.parametrize("constraint", list(at.IBSConstraint))
+def test_ibs_equilibrium(ibs_ring, constraint):
+    ex0 = ibs_ring.envelope_parameters().emittances[0]
+    kwargs = dict(emity=0.1 * ex0, constraint=constraint)
+    root = at.ibs_equilibrium(ibs_ring, **kwargs)
+    hist = at.ibs_equilibrium(ibs_ring, history=True, **kwargs)
+    assert_close(root["emittances"], hist["emittances"], rtol=1.0e-4)
+    assert root["emittances"][0] > ex0
+
+
+def test_ibs_element(ibs_ring):
+    ring = ibs_ring.deepcopy()
+    rp = ring.envelope_parameters()
+    _, _, ld = ring.get_optics(refpts=0)
+    ex = rp.emittances[0]
+    sig = at.sigma_matrix(betax=ld.beta[0, 0], betay=ld.beta[0, 1],
+                          alphax=ld.alpha[0, 0], alphay=ld.alpha[0, 1],
+                          emitx=ex, emity=0.1 * ex,
+                          blength=rp.sigma_l, espread=rp.sigma_e)
+    rin = at.beam(200, sig)
+    sigma = numpy.cov(rin, bias=True)
+    emit = at.emittances_from_beam(sigma_mat=sigma)[0]
+    expected = at.ibs_rates(ring, emit[0], emit[1],
+                            numpy.sqrt(sigma[4, 4]), numpy.sqrt(sigma[5, 5]))
+    ibs = at.IBSElement("IBS", ring)
+    ring.insert(0, ibs)
+    ring.track(rin, nturns=1, in_place=True)
+    assert_close(ibs.rates[0], expected, rtol=1.0e-6)
