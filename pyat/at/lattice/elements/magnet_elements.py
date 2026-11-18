@@ -435,7 +435,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     PolynomA: np.ndarray  #: Skew strengths
     PolynomB: np.ndarray  #: Normal strengths
     MaxOrder: int  #: Highest multipole order
-    NumIntSteps: int  #: Number of integration slices
+    NumIntSteps: int = 0  #: Number of integration slices
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """

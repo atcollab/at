@@ -190,7 +190,7 @@ class XsElement(dict, _XsFactory):
         cls = self._class_to_at(elem_kwargs)
         return cls.init_from_dict(**elem_kwargs)
 
-    # noinspection PyUnusedLocal,unused-parameter
+    # noinspection unused-parameter
     @classmethod
     def from_dict(
         cls,
@@ -279,7 +279,7 @@ class XsElement(dict, _XsFactory):
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. If :py:obj:`False`, the Xsuite default
               model and integrator are be used.
-            do_warn:        Function to checking if a warning should be issued.
+            do_warn:        Function to check if a warning should be issued.
 
         Returns:
             xselement:  new :py:class:`XsElement` object
@@ -749,7 +749,7 @@ class FirstOrderTaylorMap(XsElement):
     def _set_at_params(self, beta0: float = 1.0, **kwargs) -> dict[str, Any]:
         atparams = super()._set_at_params(beta0=beta0, **kwargs)
         if (m1 := self.get("m1", None)) is not None:
-            m66 = np.asfortranarray(m1)
+            m66 = m1.copy(order="F")
             # Swap columns 4 and 5
             tmp = m66[:, 5].copy()
             m66[:, 5] = -m66[:, 4] / beta0
@@ -760,7 +760,7 @@ class FirstOrderTaylorMap(XsElement):
             m66[4, :] = tmp / beta0
             atparams["M66"] = m66
         if (m0 := self.get("m0", None)) is not None:
-            m6 = np.asfortranarray(m0)
+            m6 = m0.copy(order="F")
             # Swap items 4 and 5
             tmp = m6[5]
             m6[5] = -m6[4] * beta0
@@ -845,9 +845,8 @@ class Dipole:
 class Corrector:
     """Class for handling AT correctors."""
 
-    _tr_keys: set[str] = {"dx", "dy", "dz", "tilt", "yaw", "pitch", "tilt_frame"}
+    _tr_keys = ("dx", "dy", "dz", "tilt", "yaw", "pitch", "tilt_frame")
 
-    # noinspection PyPep8Naming
     @classmethod
     def from_at(cls, atelem: elt.Element, **kwargs) -> XsElement:
         at = {k: v for k in cls._tr_keys if (v := getattr(atelem, k, 0.0)) != 0.0}
@@ -857,6 +856,8 @@ class Corrector:
         else:
             atel = elt.Multipole(atelem.FamName, length, np.zeros(1), np.zeros(1))
         atel.KickAngle = atelem.KickAngle
+        if (fs := getattr(atelem, "FieldScaling", None)) is not None:
+            atel.FieldScaling = fs
         atel.transform(**at)
         return Multipole.from_at(atel, **kwargs)
 

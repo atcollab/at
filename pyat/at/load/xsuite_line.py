@@ -261,36 +261,39 @@ def _separate_apertures(lattice: Lattice) -> Lattice:
             and same_apertures(markers[0], markers[1], aname)
             and same_transforms(markers[0], markers[1])
         ):
-            return [markers[0]]
+            return [markers[-1]]
         return markers
 
     def split_marker(elem):
         r_aperture = getattr(elem, "RApertures", None)
         e_aperture = getattr(elem, "EApertures", None)
         if not (r_aperture is None or e_aperture is None):
-            marker = create_aperture_marker(elem,"EApertures")
-            del elem.EApertures
-            return marker
-        return None
+            rmark = create_aperture_marker(elem,"RApertures")
+            emark = create_aperture_marker(elem,"EApertures")
+            rmark.FamName = elem.FamName
+            return rmark, emark
+        elif e_aperture is not None:
+            return None, elem
+        else:
+            return elem, None
 
     def element_generator(ring: Lattice) -> Iterator[elt.Element]:
         """Insert aperture markers in the lattice."""
         r_pending = None
         e_pending = None
         for el in ring:
-            r_elem = None
-            e_elem = None
             if isinstance(el, elt.Marker):
-                e_elem = split_marker(el)
+                r_elem, e_elem = split_marker(el)
             else:
                 r_elem = create_aperture_marker(el, "RApertures")
                 e_elem = create_aperture_marker(el, "EApertures")
-            yield from compare_markers([r_elem, r_pending], "RApertures")
-            yield from compare_markers([e_elem, e_pending], "EApertures")
+            yield from compare_markers([r_pending, r_elem], "RApertures")
+            yield from compare_markers([e_pending, e_elem], "EApertures")
             r_pending = None
             e_pending = None
 
-            yield el
+            if not isinstance(el, elt.Marker):
+                yield el
 
             if el.Length > 0.0:
                 r_pending = r_elem
