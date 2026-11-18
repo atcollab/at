@@ -751,7 +751,7 @@ class BeamLoadingElement(RFCavity, Collective):
         """
         value = None
         if self._DFB_init:
-            value =  self.rshunt / (1 + self.DFB_gamma * np.cos(self.DFB_psi))
+            value =  self.Rshunt / (1 + self.DFB_gamma * np.cos(self.DFB_psi))
         return value
 
     @property
