@@ -9,20 +9,17 @@
 #define MODULE_NAME _ibs
 #define MODULE_DESCR "Intra-beam scattering growth rates"
 
-static double ibs_lambda[IBS_NQUAD];
-static double ibs_weight[IBS_NQUAD];
-
 static PyObject *growth_rates(PyObject *self, PyObject *args)
 {
     PyObject *pyoptics, *pyrates;
     PyArrayObject *optics;
-    double energy, mass, charge, beta;
+    struct ibs_ring ring;
     struct ibs_beam b;
     npy_intp dims[1] = {3};
 
-    if (!PyArg_ParseTuple(args, "Oddddddddd", &pyoptics, &energy, &mass,
-                          &charge, &beta, &b.npart, &b.emitx, &b.emity,
-                          &b.sigma_e, &b.bunch_length)) {
+    if (!PyArg_ParseTuple(args, "Oddddddddd", &pyoptics, &ring.energy,
+                          &ring.mass, &ring.charge, &ring.beta, &b.npart,
+                          &b.emitx, &b.emity, &b.sigma_e, &b.bunch_length)) {
         return NULL;
     }
     optics = (PyArrayObject *)PyArray_FROM_OTF(pyoptics, NPY_DOUBLE, NPY_ARRAY_FARRAY_RO);
@@ -33,9 +30,8 @@ static PyObject *growth_rates(PyObject *self, PyObject *args)
         return NULL;
     }
     pyrates = PyArray_ZEROS(1, dims, NPY_DOUBLE, 0);
-    ibs_growth_rates((int)PyArray_DIM(optics, 1), PyArray_DATA(optics),
-                     ibs_lambda, ibs_weight, energy, mass, charge, beta, &b,
-                     PyArray_DATA((PyArrayObject *)pyrates));
+    ibs_growth_rates((int)PyArray_DIM(optics, 1), PyArray_DATA(optics), &ring,
+                     &b, PyArray_DATA((PyArrayObject *)pyrates));
     Py_DECREF(optics);
     return pyrates;
 }
@@ -81,6 +77,5 @@ PyMODINIT_FUNC MOD_INIT(MODULE_NAME)
     PyObject *m = PyModule_Create(&moduledef);
     if (m == NULL) return MOD_ERROR_VAL;
     import_array();
-    ibs_quadrature(ibs_lambda, ibs_weight);
     return MOD_SUCCESS_VAL(m);
 }

@@ -16,16 +16,36 @@ implemented in mbtrack2, xfields and elegant.
 
 from __future__ import annotations
 
-__all__ = ["ibs_rates", "ibs_equilibrium", "IBSElement"]
+__all__ = ["IBSConstraint", "IBSElement", "ibs_equilibrium", "ibs_rates"]
+
+from enum import Enum
 
 import numpy as np
 from scipy.optimize import root
 
 from ..constants import e_mass, qe
-from ..lattice import All, Collective, Element, Lattice
+from ..lattice import All, AtError, Collective, Element, Lattice, check_6d
+
 # noinspection PyProtectedMember
 from ..lattice.elements.conversions import _array
 from ._ibs import growth_rates
+
+
+class IBSConstraint(Enum):
+    r"""Evolution of the vertical emittance in :py:func:`ibs_equilibrium`."""
+
+    #: Independent vertical emittance, with its own damping and IBS rate
+    UNCOUPLED = 1
+    #: Betatron coupling: :math:`\epsilon_x + \epsilon_y` is shared with a
+    #: constant ratio :math:`\kappa=\epsilon_y/\epsilon_x`. The radiation
+    #: equilibrium :math:`\epsilon_{x0}` is reduced so that
+    #: :math:`\epsilon_{x0} + \frac{J_y}{J_x}\,\epsilon_{y0}` is the natural
+    #: emittance, and :math:`\kappa=\epsilon_{y0}/\epsilon_{x0}`
+    COUPLED = 2
+    #: Vertical excitation: :math:`\epsilon_y = \kappa\,\epsilon_x` with
+    #: :math:`\kappa=\epsilon_{y0}/\epsilon_{x0}`
+    FIXED_RATIO = 3
+
 
 def _ibs_optics(ring: Lattice, step: float) -> np.ndarray:
     """Optics sampled around the ring.
@@ -34,10 +54,10 @@ def _ibs_optics(ring: Lattice, step: float) -> np.ndarray:
         optics: (9, N) array of integration weights normalised to 1,
           beta_x, beta_y, alpha_x, alpha_y, D_x, D'_x, D_y, D'_y
     """
-    lat = ring.disable_6d(copy=True).slice(size=step)
+    lat = ring.slice(size=step)
     _, _, ld = lat.get_optics(refpts=All)
     s = ld.s_pos
-    w = np.zeros_like(s)  # trapezoidal weights
+    w = np.zeros_like(s)
     w[:-1] += np.diff(s)
     w[1:] += np.diff(s)
     return np.vstack((w / w.sum(), ld.beta.T, ld.alpha.T, ld.dispersion.T))
@@ -53,23 +73,21 @@ def _beam_constants(ring: Lattice) -> np.ndarray:
     return np.array([ring.energy, mass, particle.charge, ring.beta])
 
 
-def _growth_rates(optics: np.ndarray, consts: np.ndarray, npart: float,
-                  emitx: float, emity: float, sigma_e: float,
-                  bunch_length: float) -> np.ndarray:
-    """Emittance growth rates [1/s] for given beam parameters, computed in C
-    as in the IBSPass pass method."""
-    return growth_rates(optics, *consts, npart, emitx, emity, sigma_e,
-                        bunch_length)
-
-
 def _npart(ring: Lattice, bunch_current):
     """Number of particles in bunches of given current."""
     return bunch_current / (ring.revolution_frequency * qe * abs(ring.particle.charge))
 
 
-def ibs_rates(ring: Lattice, emitx: float, emity: float, sigma_e: float,
-              bunch_length: float, bunch_current: float | None = None, *,
-              step: float = 0.1) -> np.ndarray:
+def ibs_rates(
+    ring: Lattice,
+    emitx: float,
+    emity: float,
+    sigma_e: float,
+    bunch_length: float,
+    bunch_current: float | None = None,
+    *,
+    step: float = 0.1,
+) -> np.ndarray:
     r"""IBS emittance growth rates.
 
     Parameters:
@@ -91,42 +109,53 @@ def ibs_rates(ring: Lattice, emitx: float, emity: float, sigma_e: float,
     """
     if bunch_current is None:
         bunch_current = ring.bunch_currents[0]
-    return _growth_rates(_ibs_optics(ring, step), _beam_constants(ring),
-                         _npart(ring, bunch_current), emitx, emity, sigma_e,
-                         bunch_length)
+    return growth_rates(
+        _ibs_optics(ring, step),
+        *_beam_constants(ring),
+        _npart(ring, bunch_current),
+        emitx,
+        emity,
+        sigma_e,
+        bunch_length,
+    )
 
 
-def ibs_equilibrium(ring: Lattice, bunch_current: float | None = None, *,
-                    coupling: float = 0.0,
-                    constraint: str = "coupling", rtol: float = 1.0e-6,
-                    max_steps: int = 100000, step: float = 0.1,
-                    history: bool = False) -> dict:
+@check_6d(True)
+def ibs_equilibrium(
+    ring: Lattice,
+    bunch_current: float | None = None,
+    *,
+    emity: float | None = None,
+    constraint: IBSConstraint = IBSConstraint.UNCOUPLED,
+    rtol: float = 1.0e-6,
+    max_steps: int = 100000,
+    step: float = 0.1,
+    history: bool = False,
+) -> dict:
     r"""Equilibrium emittances with IBS and synchrotron radiation.
 
     Solves for the steady state of :math:`\frac{d\epsilon}{dt} =
     -\frac{2}{\tau}(\epsilon - \epsilon_0) + r_{IBS}\,\epsilon` in the
-    3 planes, where :math:`\epsilon_0` is the radiation equilibrium. The
-    ratio of bunch length to momentum spread is kept constant.
+    3 planes, where :math:`\epsilon` are the mode emittances and
+    :math:`\epsilon_0` the radiation equilibrium. The momentum spread and
+    bunch length scale as :math:`\sqrt{\epsilon_z/\epsilon_{z0}}`.
 
     The steady state is found with a root solver. If it fails, or if
     *history* is :py:obj:`True`, the equations are instead integrated in
-    time from :math:`\epsilon_0` with adaptive time steps, until the
-    relative change of the emittances is below *rtol*.
+    time from :math:`\epsilon_0` with adaptive time steps, until
+    :math:`|\frac{d\epsilon}{dt}| / (\frac{2}{\tau}\epsilon)` is below *rtol*
+    in all planes, the same criterion as for the root solver.
 
     Parameters:
-        ring:           Lattice description. Radiation parameters are
-          computed from the radiation integrals
+        ring:           Lattice description, must be 6D. Radiation
+          parameters are computed with :py:func:`.envelope_parameters`
         bunch_current:  Bunch current [A]. Default: current of the 1st bunch
           of *ring*
-        coupling:       Emittance ratio :math:`\kappa=\epsilon_y/\epsilon_x`.
-          Default: 0, use the vertical equilibrium emittance of *ring*
-        constraint:     How the vertical emittance follows the horizontal
-          one when *coupling* is non-zero:
-
-          * ``"coupling"``: betatron coupling, :math:`\epsilon_x +
-            \epsilon_y` is shared according to :math:`\kappa`,
-          * ``"excitation"``: vertical excitation, :math:`\epsilon_y =
-            \kappa\,\epsilon_x`.
+        emity:          Vertical equilibrium emittance without IBS [m].
+          Default: vertical equilibrium emittance of *ring*
+        constraint:     How the vertical emittance evolves with IBS, see
+          :py:class:`IBSConstraint`. Default:
+          :py:attr:`IBSConstraint.UNCOUPLED`
         rtol:           Relative tolerance for convergence
         max_steps:      Maximum number of time steps
         step:           Maximum distance between optics sampling points [m]
@@ -136,8 +165,8 @@ def ibs_equilibrium(ring: Lattice, bunch_current: float | None = None, *,
     Returns:
         result: dictionary with keys:
 
-          * ``emittances``: equilibrium emittances [m], horizontal, vertical
-            and longitudinal (:math:`\sigma_\delta\sigma_z`),
+          * ``emittances``: equilibrium mode emittances [m], horizontal,
+            vertical and longitudinal,
           * ``sigma_e``: equilibrium momentum spread,
           * ``bunch_length``: equilibrium bunch length [m],
           * ``rates``: IBS emittance growth rates at equilibrium [1/s],
@@ -145,85 +174,98 @@ def ibs_equilibrium(ring: Lattice, bunch_current: float | None = None, *,
           * ``history``: (nsteps, 3) evolution of the emittances [m], only
             with time integration.
     """
-    constraint = constraint.lower()
-    if constraint not in ("coupling", "excitation"):
-        raise ValueError("constraint must be 'coupling' or 'excitation'")
     if bunch_current is None:
         bunch_current = ring.bunch_currents[0]
     optics = _ibs_optics(ring, step)
     consts = _beam_constants(ring)
     npart = _npart(ring, bunch_current)
 
-    rp = ring.disable_6d(copy=True).radiation_parameters()
-    damping = 2.0 / rp.Tau  # emittance damping rates
-    ratio = rp.sigma_l / rp.sigma_e
-    eq0 = np.nan_to_num(np.array([*rp.emittances[:2], rp.sigma_l * rp.sigma_e]))
-    if coupling > 0.0 and constraint == "coupling":
+    rp = ring.envelope_parameters()
+    damping = 2.0 / rp.Tau
+    eq0 = rp.emittances.copy()
+    if emity is not None:
+        eq0[1] = emity
+    if not eq0[1] > 1.0e-14:
+        msg = "No vertical emittance: set emity"
+        raise AtError(msg)
+    if constraint is IBSConstraint.COUPLED:
         jx, jy = rp.J[:2]
-        eq0[0] /= 1.0 + coupling * jy / jx
-        eq0[1] = coupling * eq0[0]
-    elif coupling > 0.0:
-        eq0[1] = coupling * eq0[0]
-    if eq0[1] <= 0.0:
-        raise ValueError("No vertical emittance: set the coupling")
+        enat = rp.emittances[0] + jy / jx * rp.emittances[1]
+        emax = enat * jx / (jx + jy)
+        if eq0[1] > emax:
+            msg = (
+                f"emity larger than emitx: the maximum, at full coupling, "
+                f"is {emax:.4g} m"
+            )
+            raise AtError(msg)
+        eq0[0] = enat - jy / jx * eq0[1]
+    kappa = eq0[1] / eq0[0]
+    tied = constraint is not IBSConstraint.UNCOUPLED
+    free = [0, 2] if tied else [0, 1, 2]
+
+    def long_sizes(emit):
+        scale = np.sqrt(emit[2] / eq0[2])
+        return rp.sigma_e * scale, rp.sigma_l * scale
 
     def constrain(emit):
-        if coupling > 0.0 and constraint == "coupling":
-            emit[0] = (emit[0] + emit[1]) / (1.0 + coupling)
-            emit[1] = coupling * emit[0]
-        elif coupling > 0.0:
-            emit[1] = coupling * emit[0]
+        if constraint is IBSConstraint.COUPLED:
+            emit[0] = (emit[0] + emit[1]) / (1.0 + kappa)
+            emit[1] = kappa * emit[0]
+        elif constraint is IBSConstraint.FIXED_RATIO:
+            emit[1] = kappa * emit[0]
         return emit
 
     def ibs(emit):
-        return _growth_rates(optics, consts, npart, emit[0], emit[1],
-                             np.sqrt(emit[2] / ratio), np.sqrt(emit[2] * ratio))
+        return growth_rates(optics, *consts, npart, emit[0], emit[1], *long_sizes(emit))
 
-    def derivative(emit):
-        return -damping * (emit - eq0) + ibs(emit) * emit
+    def derivative(emit, rates):
+        return -damping * (emit - eq0) + rates * emit
+
+    def normalized(deriv, emit):
+        res = deriv / (damping * emit)
+        if constraint is IBSConstraint.COUPLED:
+            res[0] += deriv[1] / (damping[0] * emit[0])
+        return res[free]
 
     def result(emit, **kwargs):
-        return dict(emittances=emit, sigma_e=np.sqrt(emit[2] / ratio),
-                    bunch_length=np.sqrt(emit[2] * ratio), rates=ibs(emit),
-                    **kwargs)
+        sigma_e, bunch_length = long_sizes(emit)
+        return dict(
+            emittances=emit,
+            sigma_e=sigma_e,
+            bunch_length=bunch_length,
+            rates=ibs(emit),
+            **kwargs,
+        )
 
-    # Unknowns: log of the independent emittances. With coupling, the
-    # vertical emittance follows the horizontal one
     def emittances(u):
-        emit = np.exp(u)
-        if coupling > 0.0:
-            emit = np.array([emit[0], coupling * emit[0], emit[1]])
+        emit = eq0.copy()
+        emit[free] = np.exp(u)
+        if tied:
+            emit[1] = kappa * emit[0]
         return emit
 
-    def residual(u):
-        emit = emittances(u)
-        deriv = derivative(emit)
-        if coupling > 0.0 and constraint == "coupling":
-            deriv[0] += deriv[1]
-        deriv /= damping * emit
-        return deriv[[0, 2]] if coupling > 0.0 else deriv
+    def residual(emit):
+        return normalized(derivative(emit, ibs(emit)), emit)
 
     if not history:
-        u0 = np.log(eq0[[0, 2]] if coupling > 0.0 else eq0)
-        sol = root(residual, u0, tol=rtol)
-        if sol.success and np.max(np.abs(residual(sol.x))) < rtol:
+        sol = root(lambda u: residual(emittances(u)), np.log(eq0[free]), tol=rtol)
+        if sol.success and np.max(np.abs(sol.fun)) < rtol:
             return result(emittances(sol.x))
 
-    emit = eq0.copy()
-    times, evolution = [0.0], [emit.copy()]
+    emit = eq0
+    times, evolution = [0.0], [emit]
     for _ in range(max_steps):
         rates = ibs(emit)
-        # Time step as in xsuite: 1% of the fastest amplitude rate
-        dt = 0.02 / np.max(np.abs(np.concatenate((rates, damping))))
-        new = constrain(emit + dt * (-damping * (emit - eq0) + rates * emit))
-        times.append(times[-1] + dt)
-        evolution.append(new.copy())
-        converged = np.max(np.abs(new / emit - 1.0)) < rtol
-        emit = new
-        if converged:
+        deriv = derivative(emit, rates)
+        if np.max(np.abs(normalized(deriv, emit))) < rtol:
             break
+        dt = 0.02 / np.max(np.abs(np.concatenate((rates, damping))))
+        emit = constrain(emit + dt * deriv)
+        times.append(times[-1] + dt)
+        evolution.append(emit)
     else:
-        raise RuntimeError(f"IBS equilibrium not reached in {max_steps} steps")
+        msg = f"IBS equilibrium not reached in {max_steps} steps"
+        raise AtError(msg)
 
     return result(emit, time=np.array(times), history=np.array(evolution))
 
@@ -253,17 +295,28 @@ class IBSElement(Collective, Element):
     """
 
     default_pass = {False: "IdentityPass", True: "IBSPass"}
-    _conversions = dict(Element._conversions, UpdateTurns=int,
-                        NSlice=int, _trev=float,
-                        _optics=lambda v: _array(v, (9, -1)),
-                        _local_beta=lambda v: _array(v, (2,)),
-                        _local_disp=lambda v: _array(v, (4,)),
-                        _rates=lambda v: _array(v, (-1, 3)))
+    _conversions = dict(
+        Element._conversions,
+        UpdateTurns=int,
+        NSlice=int,
+        _npart_per_amp=float,
+        _optics=lambda v: _array(v, (9, -1)),
+        _local_beta=lambda v: _array(v, (2,)),
+        _local_disp=lambda v: _array(v, (4,)),
+        _rates=lambda v: _array(v, (-1, 3)),
+    )
 
-    def __init__(self, family_name: str, ring: Lattice, *,
-                 update_turns: int = 1, nslice: int = 51,
-                 step: float = 0.1, refpt: int = 0,
-                 **kwargs):
+    def __init__(
+        self,
+        family_name: str,
+        ring: Lattice,
+        *,
+        update_turns: int = 1,
+        nslice: int = 51,
+        step: float = 0.1,
+        refpt: int = 0,
+        **kwargs,
+    ):
         """
         Parameters:
             family_name:    Element name
@@ -288,9 +341,9 @@ class IBSElement(Collective, Element):
         kwargs.setdefault("PassMethod", self.default_pass[True])
         self.UpdateTurns = update_turns
         self.NSlice = nslice
-        self._trev = 1.0 / ring.revolution_frequency
+        self._npart_per_amp = _npart(ring, 1.0)
         self._optics = _ibs_optics(ring, step)
-        _, _, ld = ring.disable_6d(copy=True).get_optics(refpts=refpt)
+        _, _, ld = ring.get_optics(refpts=refpt)
         self._local_beta = ld.beta[0]
         self._local_disp = ld.dispersion[0]
         self._rates = np.full((ring.nbunch, 3), np.nan)
@@ -311,6 +364,6 @@ class IBSElement(Collective, Element):
         self._rates = np.full((nbunch, 3), np.nan)
 
     def __repr__(self):
-        """Simplified __repr__: the element cannot be rebuilt without *ring*"""
+        """Simplified __repr__: the element cannot be rebuilt without *ring*."""
         att = {k: v for (k, v) in self.items() if not k.startswith("_")}
         return f"{self.__class__.__name__}({att})"
