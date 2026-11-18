@@ -25,6 +25,7 @@ function elem=atdrift(fname,varargin)
 
 %See also  atquadrupole, atsextupole, atsbend, atrbend
 %          atmultipole, atthinmultipole, atmarker, atcorrector
+%          atoctupole, atvariablethinmultipole
 
 [rsrc,L,method]=decodeatargs({0,'DriftPass'},varargin);
 [L,rsrc]=getoption(rsrc,'Length',L);

@@ -36,6 +36,7 @@ function elem=atquadrupole(fname,varargin)
 %     
 %  See also atdrift, atsextupole, atsbend, atrbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector, atringparam
+%          atoctupole, atvariablethinmultipole
 
 [rsrc,L,K,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
 [L,rsrc]          = getoption(rsrc,'Length',L);

@@ -26,7 +26,7 @@ function elem=atoctupole(fname,varargin)
 %
 %  See also: atdrift, atquadrupole, atsextupole, atmultipole, atsbend,
 %            atrbend, atskewquad, atthinmultipole, atmarker,
-%            atcorrector
+%            atcorrector, atvariablethinmultipole
 
 % Input parser for option
 [rsrc,L,strength,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);

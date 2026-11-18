@@ -82,6 +82,11 @@ function elem=atvariablethinmultipole(fname,varargin)
 %   derivative with respect to ct
 % >> atvariablethimultipole('PULSE','DERIVATIVE_TABLE','AmplitudeB',1e-3, ...
 %        'FuncB',[1 0.1;der1turn0 der1turn1],'FuncDelay',0.2)
+%
+%  See also  atquadrupole, atsextupole, atsbend, atrbend
+%          atmultipole, atthinmultipole, atmarker, atcorrector
+%          atoctupole
+
 
 % Input parser for option
 [modename, rsrc] = getargs(varargin,'SINE', ...

@@ -23,6 +23,8 @@ function elem = atskewquad(fname,varargin)
 %
 %  See also atdrift, atquadrupole, atsextupole, atsbend, atrbend,
 %          atmultipole, atthinmultipole, atmarker, atcorrector
+%          atoctupole, atvariablethinmultipole
+
 
 % Input parser for option
 [rsrc,L,Qs,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
