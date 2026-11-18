@@ -29,6 +29,7 @@ function elem=atmarker(fname,varargin)
 %
 %See also  atdrift, atquadrupole, atsextupole, atsbend, atrbend atskewquad,
 %          atthinmultipole, atcorrector
+%          atoctupole, atvariablethinmultipole
 
 % Input parser for option
 [rsrc,method,~] = decodeatargs({'IdentityPass',''},varargin);

@@ -22,6 +22,7 @@ function elem=atcorrector(fname,varargin)
 %
 %  See also atquadrupole, atsextupole, atsbend, atrbend
 %           atmultipole, atthinmultipole, atmarker
+%           atoctupole, atvariablethinmultipole
 
 % Input parser for option
 [rsrc,L,kick,method] = decodeatargs({0,[0 0],'CorrectorPass'},varargin);

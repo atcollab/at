@@ -26,7 +26,7 @@ function elem=atmultipole(fname,varargin)
 %   each pair {'fieldname',value} is added to the element
 %
 %  See also atdrift, atquadrupole, atsextupole, atsbend, atrbend, atskewquad,
-%          atthinmultipole, atmarker, atcorrector
+%          atthinmultipole, atmarker, atcorrector, atoctupole, atvariablethinmultipole
 
 % Input parser for option
 [rsrc,L,PolynomA,PolynomB,method] = decodeatargs({0,0,0,'StrMPoleSymplectic4Pass'},varargin);
