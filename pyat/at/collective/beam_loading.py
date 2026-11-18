@@ -462,7 +462,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
         # these big chaps are all for the memory assignment in C
         self._ig_phasor = np.zeros((ring.harmonic_number, 2), order="F")
-        self._ig_phasor_record = np.zeros((ring_harmonic_number, 2), order='F')
+        self._ig_phasor_record = np.zeros((ring.harmonic_number, 2), order='F')
         self._generator_phasor_record = np.zeros((ring.harmonic_number, 2), order="F")
         self._cavity_phasor_record = np.zeros((ring.harmonic_number, 2), order="F")
 
