@@ -656,11 +656,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *diff_record;
       long *samplestart;
 
-      double dfb_gain, dfb_phaseshift, *DFB_init;
+      double dfb_gain, dfb_phaseshift, *dfb_init;
       long *dfb_samplestart;
       double *dfb_vc_previous;
       double *dfb_vc_record;
-      long dfb_delay, dfb_samplenum, dfb_every, dfb_recordsize, dfb_every;
+      long dfb_delay, dfb_samplenum, dfb_recordsize, dfb_every;
       double *dfb_ig_phasor;
       double *dfb_ig_phasor_record;
       
@@ -744,7 +744,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       IIRcoef=atGetOptionalDoubleArray(ElemData,"_IIRcoef"); check_error();
       IIRout=atGetOptionalDoubleArray(ElemData,"_IIRout"); check_error();
       pil_init=atGetOptionalDoubleArray(ElemData,"_pil_init"); check_error();
-      dfb_init=atGetOptionalDoubleArray(ElemData,"_DFB_init"); check_error();
       
       Elem = (struct elem*)atMalloc(sizeof(struct elem));
       Elem->Length=Length;
@@ -814,7 +813,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->dfb_delay=dfb_delay;
       Elem->dfb_recordsize=dfb_recordsize;
       Elem->dfb_samplenum=dfb_samplenum;
-      Elem->dfg_ig_phasor=dfb_ig_phasor;
+      Elem->dfb_ig_phasor=dfb_ig_phasor;
       Elem->dfb_ig_phasor_record=dfb_ig_phasor_record;
       Elem->dfb_gain=dfb_gain;
       Elem->dfb_phaseshift=dfb_phaseshift;
