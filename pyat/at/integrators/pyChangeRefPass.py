@@ -1,13 +1,4 @@
-import numpy
-'''
-This is an example of a python passmethod, here the Drift
-passmethod. This is a simplified version that does not check
-aperture.
-
-The python passmethods has to be in the python path or in 
-at.integratorsand contain a function trackFunction()
-'''
-
+"""Pytohn implementation of ChangeRefPass."""
 
 def trackFunction(rin, elem=None):
     scaling = elem.FieldScaling

@@ -5,7 +5,7 @@ This is an example of a python passmethod, here the Identity
 passmethod.
 
 The python passmethods has to be in the python path or in
-at.integratorsand contain a function trackFunction()
+at.integrators, and contain a function trackFunction()
 
 The element creation is as follows:
 
@@ -18,7 +18,7 @@ ib_elem = Element('py_id',**params)
 To be noted:
 The particles are described by a 2 dimensional vector
 (6,num_particles)
-In case a pyhton passmethod and a c passmethod with the same name
+In case a python passmethod and a c passmethod with the same name
 are found, the c passmethod is used
 '''
 

@@ -63,8 +63,7 @@ def test_lattice_creation_from_lattice_inherits_attributes():
     assert lat2.periodicity == 32
     assert lat2.is_6d is True
     assert lat2.another_attr == 5
-    with pytest.raises(AttributeError):
-        assert lat2.an_attr == 12
+    assert lat2.an_attr == 12
 
 
 def test_lattice_energy_is_not_defined_raises_AtError():

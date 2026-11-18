@@ -68,7 +68,6 @@ def _atpass(lattice, r_in, nturns: int = 1, reuse: bool = False, **kwargs):
         ldata = line_store(lattice, **store_args)
     else:
         if ldata is None or (not reuse):
-            print("Allocate")
             ldata = lattice._cdata = line_store(lattice, **store_args)
     return line_pass(ldata, r_in, nturns, **kwargs)
 
