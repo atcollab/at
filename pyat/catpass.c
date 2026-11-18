@@ -60,11 +60,12 @@ typedef struct elem *(*track_function)(
     struct parameters *param
 );
 
+/* Passmethod descriptor */
 struct LibraryListElement {
     const char *MethodName;
     LIBRARYHANDLETYPE LibraryHandle;
-    track_function FunctionHandle;
-    PyObject *PyFunctionHandle;
+    track_function FunctionHandle;  /* C passmethod */
+    PyObject *PyFunctionHandle;     /* python passmethod */
     struct LibraryListElement *Next;
 };
 
@@ -256,9 +257,11 @@ static struct LibraryListElement* get_track_function(at_state *module_data, cons
         LIBRARYHANDLETYPE dl_handle=NULL;
         track_function fn_handle = NULL;
 
+        /* Look first for a python integrator */
         PyObject *pyfunction = GetpyFunction(fn_name);
         PyErr_Clear();      /* Clear any import error if there is no python integrator */
 
+        /* Then look for a C integrator */
         if (!pyfunction){
             char lib_file[300];
             snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
@@ -287,6 +290,7 @@ static struct LibraryListElement* get_track_function(at_state *module_data, cons
     return LibraryListPtr;
 }
 
+/* Fill the param structure with default values */
 static void default_parameters(struct parameters *param, at_state *module_data, double *bdiff)
 {
     param->nturn = 0;
@@ -308,6 +312,7 @@ static void default_parameters(struct parameters *param, at_state *module_data, 
     param->harmonic_number = 1;
 }
 
+/* Fill the param structure with data form the Lattice object */
 static void lattice_parameters(
     struct parameters *param,
     at_state *module_data,
@@ -316,9 +321,9 @@ static void lattice_parameters(
     double arg_energy
 )
 {
-    if (particle != NULL)
+    if (particle != NULL)     /* Try argument first */
         Py_INCREF(particle);
-    else if (lattice != NULL)
+    else if (lattice != NULL) /* otherwise take from lattice */
         particle =  PyObject_GetAttrString(lattice, "particle");
 
     if (particle != NULL) {
@@ -365,6 +370,7 @@ static void lattice_parameters(
     PyErr_Clear();
 }
 
+/* Fill the param structure with filling pattern */
 static void set_current_fillpattern(struct parameters *param, lat_state *lattice_data, PyObject *lattice, PyArrayObject *bspos)
 {
     PyArrayObject *bcurrents = (PyArrayObject *)PyObject_GetAttrString(lattice, "bunch_currents");
@@ -551,21 +557,12 @@ static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
     if (lattice_data == NULL) return NULL;
     return PyCapsule_New(lattice_data, "at.lattice", free_capsule);
 }
-/*
- * Parse the arguments to line_pass, set things up, and execute.
- * Arguments:
- *  - line: sequence of elements
- *  - rin: numpy 6-vector of initial conditions
- *  - nturns: int number of turns to simulate
- *  - refpts: numpy uint32 array denoting elements at which to return state
- *  - reuse: whether to reuse the cached state of the ring
- *  - start_elem: start tracking at element #start_elem
- *  - end_elem: end tracking at element #end_elem (exclusive)
- */
+
 static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"lattice_data","rin","nturns","refpts","turn",
-                             "keep_counter", "omp_num_threads","losses",
-                             "start_elem", "end_elem", NULL};
+    static char *kwlist[] = {
+        "lattice_data", "rin", "nturns", "refpts", "turn", "keep_counter",
+        "omp_num_threads", "losses", "start_elem", "end_elem", NULL
+    };
     PyObject *rout;
     double *drin, *drout;
     PyObject *xnturn = NULL;
@@ -686,7 +683,7 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
     rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
-    if(losses){
+    if (losses) {
         pdims[0]= num_particles;
         lxdims[0]= 6;
         lxdims[1]= num_particles;
@@ -729,7 +726,6 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
             }
         }
 
-        /*PySys_WriteStdout("turn: %i\n", param->nturn);*/
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (npy_uint32 elem_index = start_elem; elem_index < end_elem; elem_index++) {
@@ -795,8 +791,7 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
 static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = {"element", "rin",
-                             "energy", "particle", NULL};
+    static char *kwlist[] = {"element", "rin", "energy", "particle", NULL};
     PyObject *PyPassMethod;
     npy_uint32 num_particles;
     track_function integrator;
@@ -821,7 +816,6 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
         &energy, module_data->particle_type, &particle)) {
         return NULL;
     }
-
     lattice_parameters(&param, module_data, NULL, particle, energy);
 
     if (PyArray_DIM(rin,0) != 6) {
@@ -886,7 +880,6 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     lattice_parameters(&param, module_data, NULL, particle, energy);
-
 
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
