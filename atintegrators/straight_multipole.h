@@ -1,17 +1,22 @@
 #ifndef STRAIGHT_MULTIPOLE
 #define STRAIGHT_MULTIPOLE
+#include "bendfringe.h"
 #include "multipolefringe.h"
 
+/* With a multipole fringe, the normal dipole component B[0] gets the dipole
+   fringe, as in bends (multipole_fringe starts at order 1) */
 #ifndef MAGNET_ENTRY
 #define MAGNET_ENTRY \
     /* Entry face */ \
+    if (FringeQuadEntrance && (B[0] != 0.0)) bend_fringe(r6, B[0], 0.0); \
     multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0);
 #endif /*MAGNET_ENTRY*/
 
 #ifndef MAGNET_EXIT
 #define MAGNET_EXIT \
     /* Exit face */ \
-    multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0);
+    multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
+    if (FringeQuadExit && (B[0] != 0.0)) bend_fringe(r6, -B[0], 0.0);
 #endif /*MAGNET_EXIT*/
 
 #define MAGNET_ARGUMENTS
