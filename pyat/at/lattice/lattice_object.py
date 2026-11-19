@@ -29,7 +29,10 @@ import math
 
 from typing import Any, SupportsIndex
 from collections.abc import Callable, Iterable, Generator
-from types import CapsuleType
+if sys.version_info >= (3, 13):
+    from types import CapsuleType
+else:
+    CapsuleType = object
 import warnings
 import contextlib
 

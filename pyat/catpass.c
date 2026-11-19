@@ -515,7 +515,7 @@ static void free_capsule(PyObject *capsule)
 
 static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = {"lattice","energy", "particle", "bunch_spos", NULL};
+    static char *kwlist[] = {"","energy", "particle", "bunch_spos", NULL};
 
     /* Positional arguments */
     PyObject *lattice;
@@ -539,7 +539,7 @@ static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
 
 static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {
-        "lattice_data", "rin", "nturns", "refpts", "turn", "keep_counter",
+        "", "", "nturns", "refpts", "turn", "keep_counter",
         "omp_num_threads", "losses", "start_elem", "end_elem", NULL
     };
     PyObject *rout;
@@ -770,7 +770,7 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
 static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = {"element", "rin", "energy", "particle", NULL};
+    static char *kwlist[] = {"", "", "energy", "particle", NULL};
     PyObject *PyPassMethod;
     npy_uint32 num_particles;
     track_function integrator;
@@ -832,7 +832,7 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 
 static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = {"element", "rin", "energy", "particle", NULL};
+    static char *kwlist[] = {"", "", "energy", "particle", NULL};
     npy_uint32 num_particles;
     track_function integrator;
     PyObject *pyintegrator;
@@ -997,35 +997,42 @@ static void catpass_free(void *self)
 
 static PyMethodDef AtMethods[] = {
     {"line_store",  (PyCFunction)line_store, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("line_store(lattice, energy=None, Particle=None)\n\n"
+    PyDoc_STR("line_store(lattice, *, energy=None, Particle=None)\n\n"
               "Allocate memory for a lattice.\n\n"
               "Parameters:\n"
-              "    lattice (Lattice):   AT lattice\n\n"
-              "    energy (float | None):  nominal energy [eV]\n"
-              "    particle (Particle | None):  circulating particle\n"
+              "    lattice (Lattice):          AT lattice\n\n"
+              "Keyword Arguments:\n"
+              "    energy (float | None):      nominal energy [eV]. Default: from the lattice\n"
+              "    particle (Particle | None): circulating particle. Default: from the lattice\n"
             )},
     {"line_pass",  (PyCFunction)line_pass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("line_pass(line: Sequence[Element], r_in, n_turns: int, refpts=[], "
-              "turn=0, *, keep_counter=False, losses=False, start_elem=0, end_elem=nb_elems, omp_num_threads = 0)\n\n"
+    PyDoc_STR("(linedata, r_in, n_turns=1, refpts=at.End, *, "
+              "turn=0, energy=None, Particle=None, keep_counter=False, losses=False, "
+              "start_elem=0, end_elem=nb_elems, omp_num_threads = 0)\n\n"
               "Track input particles *r_in* along *line* for *nturns* turns.\n"
-              "Record 6D phase space at elements corresponding to *refpts* for each turn.\n\n"
+              "Record 6D phase space at elements corresponding to *refpts* for each turn.\n"
+              "\n"
               "Parameters:\n"
-              "    linedata:lattice data as returned by *line_store*\n"
-              "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
-              "      On return, rin contains the final coordinates of the particles\n"
-              "    n_turns: number of turns to be tracked\n"
-              "    refpts (Uint32_refs):  numpy array of indices of elements where output is desired\n"
+              "    linedata:           lattice data as returned by *line_store*\n"
+              "    rin:                6 x n_particles Fortran-ordered numpy array.\n"
+              "      On return, rin contains the final coordinates of the particles\n\n"
+              "Keyword Arguments:\n"
+              "    n_turns (int):      number of turns to be tracked. Default: 1\n"
+              "    refpts (Uint32_refs): numpy array of indices of elements where output is desired\n"
               "       0 means entrance of the first element\n"
               "       len(line) means end of the last element\n"
-              "    turn (int): Initial turn number (ignored if *keep_counter* is True)\n"
-              "    keep_counter (int): Start with the current turn number"
+              "    energy (float | None): nominal energy [eV]. Default: from the lattice\n"
+              "    particle (Particle | None): circulating particle. Default: from the lattice\n"
+              "    turn (int):         Initial turn number (ignored if *keep_counter* is True)."
+              "        Default: 0\n"
+              "    keep_counter (int): Start with the current turn number\n"
               "    omp_num_threads (int): number of OpenMP threads (default 0: automatic)\n"
-              "    losses (bool):  if True, process losses\n"
-              "    start_elem (int): Start tracking at the specified element. The\n"
-              "       behavior is different from :py:meth:`~.Lattice.rotate`, *refpts* are\n"
+              "    losses (bool):      if True, process losses\n"
+              "    start_elem (int):   Start tracking at the specified element. The\n"
+              "       behavior is different from :py:meth:`.Lattice.rotate`, *refpts* are\n"
               "       still indexed from the beginning of the ring and *s_coord* starts at\n"
               "       the beginning of the ring. Default 0.\n"
-              "    end_elem (int): End tracking at the specified element (exclusive).\n"
+              "    end_elem (int):     End tracking at the specified element (exclusive).\n"
               "       When end_elem is different from the number of lattice elements,\n"
               "       nturns=1 is required. Default number of elements.\n\n"
               "Returns:\n"
@@ -1033,25 +1040,27 @@ static PyMethodDef AtMethods[] = {
               "         of particle coordinates\n\n"
               )},
     {"elem_pass",  (PyCFunction)elem_pass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("elem_pass(element, r_in)\n\n"
-              "Track input particles r_in through a single element.\n\n"
+    PyDoc_STR("elem_pass(element, r_in, *, energy=1.0E9, Particle=Particle('relativistic')\n\n"
+              "Track input particles *r_in* through a single element.\n\n"
               "Parameters:\n"
-              "    element (Element):   AT element\n"
-              "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
-              "      On return, rin contains the final coordinates of the particles\n"
-              "    energy (float):      nominal energy [eV]\n"
-              "    particle (Optional[Particle]):  circulating particle\n\n"
+              "    element (Element):          AT element\n"
+              "    rin:                        6 x n_particles Fortran-ordered numpy array.\n"
+              "      On return, rin contains the final coordinates of the particles\n\n"
+              "Keyword Arguments:\n"
+              "    energy (float | None):      nominal energy [eV]. Default: 1.0E9\n"
+              "    particle (Particle | None): circulating particle. Default: relativistic\n\n"
             )},
     {"diffusion_matrix",  (PyCFunction)at_diffmatrix, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("diffusion_matrix(element, r_in)\n\n"
-              "Track a particles r_in through a single element,\n"
-              "computes the diffusion matrix\n\n"
+    PyDoc_STR("diffusion_matrix(element, r_in, *, energy=1.0E9, Particle=Particle('relativistic')\n\n"
+              "Track a single particle *r_in* through a single element,\n"
+              "computes the diffusion matrix.\n\n"
               "Parameters:\n"
-              "    element (Element):   AT element\n"
-              "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
-              "      On return, rin contains the final coordinates of the particles\n"
-              "    energy (float):      nominal energy [eV]\n"
-              "    particle (Optional[Particle]):  circulating particle\n\n"
+              "    element (Element):          AT element\n"
+              "    rin:                        6 x n_particles Fortran-ordered numpy array.\n"
+              "      On return, rin contains the final coordinates of the particle\n\n"
+              "Keyword Arguments:\n"
+              "    energy (float | None):      nominal energy [eV]. Default: 1.0E9\n"
+              "    particle (Particle | None): circulating particle. Default: relativistic\n\n"
             )},
     {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("reset_rng(*, rank=0, seed=None)\n\n"
