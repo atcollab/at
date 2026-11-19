@@ -1,23 +1,26 @@
 /*
  * Intra-beam scattering pass method.
  *
- * Each pass, the eigen emittances, momentum spread and bunch length of each
- * bunch are computed from the 6D sigma matrix of its particles. Every
- * UpdateTurns turns, the IBS emittance growth rates are computed from these
- * beam parameters and the optics sampled around the ring, with the
- * Bjorken-Mtingwa formalism and the Coulomb logarithm of MAD-X. Each particle
- * then receives random momentum kicks weighted by the longitudinal line
- * density (R. Bruce et al., PRSTAB 13, 091001 (2010)). The momentum kick is
- * compensated by the local dispersion so that it does not change the
- * betatron coordinates.
+ * Each pass, the transverse emittances, momentum spread and bunch length of
+ * each bunch are computed from the 6D sigma matrix of its particles. The
+ * emittances are the projections of the sigma matrix on the 2 transverse
+ * modes of the lattice at the element: for a matched bunch they are the eigen
+ * emittances, for a mismatched one the emittances it filaments to. The
+ * momentum spread and bunch length are the rms of delta and ct. Every UpdateTurns turns, the
+ * IBS emittance growth rates are computed from these beam parameters and the
+ * optics sampled around the ring, with the Bjorken-Mtingwa formalism and the
+ * Coulomb logarithm of MAD-X. Each particle then receives a random kick
+ * weighted by the longitudinal line density (R. Bruce et al., PRSTAB 13,
+ * 091001 (2010)). The kick of mode k is A_k n, with n two normal random
+ * numbers and R_k = A_k A_k^T the mode matrix at the element, the
+ * longitudinal one normalised to R_3[delta,delta] = 1: each mode grows at its
+ * own rate.
  *
- * IBS is not defined for a bunch with a singular sigma matrix (for instance
- * a plane with zero spread): such a bunch receives no kick and its growth
- * rates are set to NaN.
+ * IBS is not defined for a bunch with zero emittance or spread in a plane:
+ * such a bunch receives no kick and its growth rates are set to NaN.
  */
 
 #include "atelem.c"
-#include "atlalib.c"
 #include "atrandom.c"
 #include "atibslib.c"
 #include <float.h>
@@ -33,9 +36,9 @@ struct elem
     long update_turns;
     long nslice;
     int npoints;
-    double *optics;         /* (9, npoints) */
-    double *local_beta;     /* (2,) */
-    double *local_disp;     /* (4,) */
+    double *optics;         /* (21, npoints) */
+    double *local_kicks;    /* (3, 6, 2) */
+    double *local_modes;    /* (2, 6, 6) */
     double npart_per_amp;   /* Particles per ampere of bunch current */
     double *rates;          /* (nbunch, 3) emittance growth rates [1/s] */
 };
@@ -46,11 +49,19 @@ static long ibs_slice(double ct, double ctmin, double ctmax, long nslice)
     return (k < nslice) ? k : nslice-1;
 }
 
+static void ibs_mode_emittances(const double *sigma, const double *q, double *emit)
+{
+    int i, k;
+    for (k = 0; k < 2; k++) {
+        emit[k] = 0.0;
+        for (i = 0; i < 36; i++) emit[k] += 0.5*q[36*k+i]*sigma[i];
+    }
+}
+
 void IBSPass(double *r_in, int num_particles, struct elem *Elem, struct parameters *Param)
 {
     int nbunch = Param->nbunch;
     long nslice = Elem->nslice;
-    double *disp = Elem->local_disp;
     double *rates = Elem->rates;
     double mass = (Param->rest_energy > 0.0) ? Param->rest_energy : __E0*1.0e9;
     double gamma = Param->energy/mass;
@@ -114,7 +125,9 @@ void IBSPass(double *r_in, int num_particles, struct elem *Elem, struct paramete
                 sigma[6*a+c] = sigma[6*c+a] = m[nm++]/n - (m[1+a]/n)*(m[1+c]/n);
             }
         }
-        if (!eigen_emittances(sigma, emit)) {
+        ibs_mode_emittances(sigma, Elem->local_modes, emit);
+        emit[2] = sigma[6*4+4];
+        if (!(emit[0] > 0.0 && emit[1] > 0.0 && emit[2] > 0.0 && sigma[6*5+5] > 0.0)) {
             for (j = 0; j < 3; j++) rates[ib + nbunch*j] = atGetNaN();
             continue;
         }
@@ -122,7 +135,7 @@ void IBSPass(double *r_in, int num_particles, struct elem *Elem, struct paramete
         b.npart = Param->bunch_currents[ib]*Elem->npart_per_amp;
         b.emitx = emit[0];
         b.emity = emit[1];
-        b.sigma_e = sqrt(sigma[6*4+4]);
+        b.sigma_e = sqrt(emit[2]);
         b.bunch_length = sqrt(sigma[6*5+5]);
         if (update || atIsNaN(rates[ib])) {
             double r[3];
@@ -134,10 +147,7 @@ void IBSPass(double *r_in, int num_particles, struct elem *Elem, struct paramete
         if (h2 <= 0.0) continue;
         /* Weights sqrt(line density) normalised to a mean density of 1 */
         for (j = 0; j < nslice; j++) h[j] = sqrt(h[j]*n/h2);
-        /* <dp^2> per pass = 2 d(emittance) / beta in the transverse planes */
-        k[0] = sqrt(2.0*fmax(rates[ib], 0.0)*dt*b.emitx/Elem->local_beta[0]);
-        k[1] = sqrt(2.0*fmax(rates[ib + nbunch], 0.0)*dt*b.emity/Elem->local_beta[1]);
-        k[2] = sqrt(2.0*fmax(rates[ib + 2*nbunch], 0.0)*dt)*b.sigma_e;
+        for (j = 0; j < 3; j++) k[j] = sqrt(fmax(rates[ib + nbunch*j], 0.0)*dt*emit[j]);
     }
 
     /* Random kicks */
@@ -149,14 +159,15 @@ void IBSPass(double *r_in, int num_particles, struct elem *Elem, struct paramete
         if (!atIsNaN(r6[0]) && (k[0] > 0.0 || k[1] > 0.0 || k[2] > 0.0)) {
             long s = ibs_slice(r6[5], -ctrange[ib], ctrange[nbunch+ib], nslice);
             double w = hist[nslice*ib + s];
-            double dpx = k[0]*w*atrandn_r(Param->thread_rng, 0.0, 1.0);
-            double dpy = k[1]*w*atrandn_r(Param->thread_rng, 0.0, 1.0);
-            double dd = k[2]*w*atrandn_r(Param->thread_rng, 0.0, 1.0);
-            r6[0] += disp[0]*dd;
-            r6[1] += disp[1]*dd + dpx;
-            r6[2] += disp[2]*dd;
-            r6[3] += disp[3]*dd + dpy;
-            r6[4] += dd;
+            double dz[6] = {0.0};
+            int a, c;
+            for (c = 0; c < 3; c++) {
+                const double *ak = Elem->local_kicks + 12*c;
+                double n1 = k[c]*w*atrandn_r(Param->thread_rng, 0.0, 1.0);
+                double n2 = k[c]*w*atrandn_r(Param->thread_rng, 0.0, 1.0);
+                for (a = 0; a < 6; a++) dz[a] += ak[2*a]*n1 + ak[2*a+1]*n2;
+            }
+            for (a = 0; a < 6; a++) r6[a] += dz[a];
         }
     }
     atFree(buffer);
@@ -172,19 +183,19 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
         long nslice = atGetLong(ElemData, "NSlice"); check_error();
         double npart_per_amp = atGetDouble(ElemData, "_npart_per_amp"); check_error();
         double *optics = atGetDoubleArraySz(ElemData, "_optics", &msz, &nsz); check_error();
-        double *local_beta = atGetDoubleArray(ElemData, "_local_beta"); check_error();
-        double *local_disp = atGetDoubleArray(ElemData, "_local_disp"); check_error();
+        double *local_kicks = atGetDoubleArray(ElemData, "_local_kicks"); check_error();
+        double *local_modes = atGetDoubleArray(ElemData, "_local_modes"); check_error();
         double *rates = atGetDoubleArray(ElemData, "_rates"); check_error();
         int dims[] = {Param->nbunch, 3};
         atCheckArrayDims(ElemData, "_rates", 2, dims); check_error();
-        if (msz != IBS_NOPTICS) atError("_optics must have 9 rows."); check_error();
+        if (msz != IBS_NOPTICS) atError("_optics must have 21 rows."); check_error();
         Elem = (struct elem *)atMalloc(sizeof(struct elem));
         Elem->update_turns = (update_turns > 0) ? update_turns : 1;
         Elem->nslice = (nslice > 0) ? nslice : 1;
         Elem->npoints = nsz;
         Elem->optics = optics;
-        Elem->local_beta = local_beta;
-        Elem->local_disp = local_disp;
+        Elem->local_kicks = local_kicks;
+        Elem->local_modes = local_modes;
         Elem->npart_per_amp = npart_per_amp;
         Elem->rates = rates;
     }
@@ -211,8 +222,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],1,mxCreateString("NSlice"));
         mxSetCell(plhs[0],2,mxCreateString("_npart_per_amp"));
         mxSetCell(plhs[0],3,mxCreateString("_optics"));
-        mxSetCell(plhs[0],4,mxCreateString("_local_beta"));
-        mxSetCell(plhs[0],5,mxCreateString("_local_disp"));
+        mxSetCell(plhs[0],4,mxCreateString("_local_kicks"));
+        mxSetCell(plhs[0],5,mxCreateString("_local_modes"));
         mxSetCell(plhs[0],6,mxCreateString("_rates"));
     }
     else {

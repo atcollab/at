@@ -26,7 +26,7 @@ static PyObject *growth_rates(PyObject *self, PyObject *args)
     if (optics == NULL) return NULL;
     if (PyArray_NDIM(optics) != 2 || PyArray_DIM(optics, 0) != IBS_NOPTICS) {
         Py_DECREF(optics);
-        PyErr_SetString(PyExc_ValueError, "optics must be a (9, N) array");
+        PyErr_SetString(PyExc_ValueError, "optics must be a (21, N) array");
         return NULL;
     }
     pyrates = PyArray_ZEROS(1, dims, NPY_DOUBLE, 0);
@@ -43,15 +43,14 @@ static PyMethodDef IbsMethods[] = {
     "             sigma_e, bunch_length)\n\n"
     "IBS emittance growth rates [1/s], Bjorken-Mtingwa model\n\n"
     "Args:\n"
-    "    optics:       (9, N) array: integration weights normalised to 1,\n"
-    "                  beta_x, beta_y, alpha_x, alpha_y, D_x, D'_x, D_y, D'_y\n"
+    "    optics:       (21, N) array from at.collective.ibs._ibs_optics\n"
     "    energy:       Energy [eV]\n"
     "    mass:         Rest energy [eV]\n"
     "    charge:       Particle charge [e]\n"
     "    beta:         Relativistic beta\n"
     "    npart:        Number of particles in the bunch\n"
-    "    emitx:        Horizontal emittance [m]\n"
-    "    emity:        Vertical emittance [m]\n"
+    "    emitx:        Horizontal (mode 1) emittance [m]\n"
+    "    emity:        Vertical (mode 2) emittance [m]\n"
     "    sigma_e:      Relative momentum spread\n"
     "    bunch_length: RMS bunch length [m]\n\n"
     "Returns:\n"

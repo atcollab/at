@@ -10,6 +10,12 @@ the vertical dispersion: F. Antoniou, F. Zimmermann, CERN-ATS-2012-066. The
 Coulomb logarithm is computed as in MAD-X (``twclog``). They are computed in
 C, by the same code as the ``IBSPass`` pass method.
 
+The local momentum distribution entering the Bjorken-Mtingwa integrals is
+built from the 6D mode matrices of :py:func:`.linopt6`, so that betatron
+and synchro-betatron coupling are taken into account, as in K. Kubo,
+K. Oide, PRSTAB 4, 124401 (2001). The emittances are the mode emittances.
+For an uncoupled lattice this reduces to the MAD-X formulas.
+
 The kick model follows R. Bruce et al., PRSTAB 13, 091001 (2010), as also
 implemented in mbtrack2, xfields and elegant.
 """
@@ -28,6 +34,7 @@ from ..lattice import All, AtError, Collective, Element, Lattice, check_6d
 
 # noinspection PyProtectedMember
 from ..lattice.elements.conversions import _array
+from ..physics.amat import jmat
 from ._ibs import growth_rates
 
 
@@ -47,20 +54,38 @@ class IBSConstraint(Enum):
     FIXED_RATIO = 3
 
 
+_J = jmat(3)
+_MOM = [1, 4, 3]
+
+
+@check_6d(True)
 def _ibs_optics(ring: Lattice, step: float) -> np.ndarray:
-    """Optics sampled around the ring.
+    r"""Optics sampled around the ring.
 
     Returns:
-        optics: (9, N) array of integration weights normalised to 1,
-          beta_x, beta_y, alpha_x, alpha_y, D_x, D'_x, D_y, D'_y
+        optics: (21, N) array: trapezoidal integration weights normalised to
+          1, for the ring averages of the growth rates and Coulomb logarithm,
+          :math:`D_x, D_y`, and the upper triangles of the momentum blocks
+          :math:`P_k` of :math:`J^TR_kJ` in the Bjorken-Mtingwa coordinates
+          :math:`(p_x, \delta/\gamma, p_y)`, for the 3 modes. The longitudinal
+          mode matrix is divided by its :math:`\delta\delta` element at the
+          entrance of the ring, so that its emittance is
+          :math:`\sigma_\delta^2`
     """
-    lat = ring.slice(size=step)
-    _, _, ld = lat.get_optics(refpts=All)
-    s = ld.s_pos
-    w = np.zeros_like(s)
-    w[:-1] += np.diff(s)
-    w[1:] += np.diff(s)
-    return np.vstack((w / w.sum(), ld.beta.T, ld.alpha.T, ld.dispersion.T))
+    _, _, ld = ring.slice(size=step).get_optics(refpts=All)
+    w = np.convolve(np.diff(ld.s_pos), [1.0, 1.0])
+    q = _J.T @ ld.R @ _J
+    q[:, 2] *= ld.R[0, 2, 4, 4]
+    scale = np.array([1.0, ring.gamma, 1.0])
+    pmat = q[:, :, _MOM][:, :, :, _MOM] * np.outer(scale, scale)
+    iu = np.triu_indices(3)
+    return np.vstack(
+        (
+            w / w.sum(),
+            ld.dispersion[:, [0, 2]].T,
+            pmat[:, :, iu[0], iu[1]].reshape(len(w), 18).T,
+        )
+    )
 
 
 def _beam_constants(ring: Lattice) -> np.ndarray:
@@ -78,6 +103,7 @@ def _npart(ring: Lattice, bunch_current):
     return bunch_current / (ring.revolution_frequency * qe * abs(ring.particle.charge))
 
 
+@check_6d(True)
 def ibs_rates(
     ring: Lattice,
     emitx: float,
@@ -91,9 +117,9 @@ def ibs_rates(
     r"""IBS emittance growth rates.
 
     Parameters:
-        ring:           Lattice description
-        emitx:          Horizontal emittance [m]
-        emity:          Vertical emittance [m]
+        ring:           Lattice description, must be 6D
+        emitx:          Horizontal (mode 1) emittance [m]
+        emity:          Vertical (mode 2) emittance [m]
         sigma_e:        Relative momentum spread
         bunch_length:   RMS bunch length [m]
         bunch_current:  Bunch current [A]. Default: current of the 1st bunch
@@ -102,8 +128,8 @@ def ibs_rates(
 
     Returns:
         rates:  Emittance growth rates :math:`\frac{1}{\epsilon}
-          \frac{d\epsilon}{dt}` [1/s] in the horizontal, vertical and
-          longitudinal planes. The longitudinal rate is the one of
+          \frac{d\epsilon}{dt}` [1/s] of the horizontal, vertical and
+          longitudinal modes. The longitudinal emittance is scaled to
           :math:`\sigma_\delta^2`. Amplitude growth rates, as returned by
           xsuite, are half of these values.
     """
@@ -273,20 +299,22 @@ def ibs_equilibrium(
 class IBSElement(Collective, Element):
     """Element applying IBS momentum kicks during tracking.
 
-    Every turn, each particle receives random kicks in :math:`p_x`,
-    :math:`p_y` and :math:`\\delta`. The kick amplitudes are computed from
-    analytical growth rates (see :py:func:`ibs_rates`) evaluated with the
-    emittances, momentum spread and bunch length of the tracked bunch. They
-    are weighted by the local longitudinal line density.
+    Every turn, each particle receives a random 6D kick. The kick amplitudes
+    are computed from analytical growth rates (see :py:func:`ibs_rates`)
+    evaluated with the transverse mode emittances, momentum spread and bunch
+    length of the tracked bunch. They are weighted by the local longitudinal
+    line density.
 
-    The emittances are the eigen emittances of the 6D sigma matrix of the
-    bunch, as in :py:func:`.emittances_from_beam`. IBS is not defined for a
-    bunch with a singular sigma matrix (for instance a plane with zero
-    spread): such a bunch receives no kick and its growth rates are set to
-    NaN. The momentum kick is compensated in
-    :math:`x, p_x, y, p_y` by the local dispersion, so that it does not
-    change the betatron coordinates: the dispersive contribution to
-    transverse growth is already included in the growth rates.
+    The transverse emittances are the projections
+    :math:`\\frac{1}{2}\\mathrm{Tr}(J^TR_kJ\\Sigma)` of the sigma matrix of
+    the bunch on the modes :math:`R_k` of the lattice at the element: for a
+    matched bunch they are the eigen emittances, for a mismatched one the
+    emittances it filaments to. The element must therefore be created with
+    the lattice in which it is tracked. IBS is not defined for a bunch with
+    zero emittance or spread in a plane: such a bunch receives no kick and
+    its growth rates are set to NaN. The kick of each mode has the shape
+    :math:`R_k` of the mode at the element, so that each mode grows at its
+    own rate without exciting the others or mismatching the bunch.
 
     The kicks are computed by the ``IBSPass`` C pass method, with random
     numbers from the AT C generators, seeded with :py:func:`.reset_rng`.
@@ -300,9 +328,9 @@ class IBSElement(Collective, Element):
         UpdateTurns=int,
         NSlice=int,
         _npart_per_amp=float,
-        _optics=lambda v: _array(v, (9, -1)),
-        _local_beta=lambda v: _array(v, (2,)),
-        _local_disp=lambda v: _array(v, (4,)),
+        _optics=lambda v: _array(v, (21, -1)),
+        _local_kicks=lambda v: _array(v, (36,)),
+        _local_modes=lambda v: _array(v, (72,)),
         _rates=lambda v: _array(v, (-1, 3)),
     )
 
@@ -320,7 +348,8 @@ class IBSElement(Collective, Element):
         """
         Parameters:
             family_name:    Element name
-            ring:           Lattice in which the element will be inserted
+            ring:           Lattice in which the element will be inserted,
+              must be 6D
             update_turns:   Number of turns between updates of the growth
               rates. Between updates, the kicks are rescaled with the
               current beam parameters at constant rates: the interval must
@@ -344,8 +373,10 @@ class IBSElement(Collective, Element):
         self._npart_per_amp = _npart(ring, 1.0)
         self._optics = _ibs_optics(ring, step)
         _, _, ld = ring.get_optics(refpts=refpt)
-        self._local_beta = ld.beta[0]
-        self._local_disp = ld.dispersion[0]
+        scale = np.sqrt([1.0, 1.0, ld.R[0, 2, 4, 4]])
+        a = ld.A[0].reshape(6, 3, 2).transpose(1, 0, 2) / scale[:, None, None]
+        self._local_kicks = a.ravel()
+        self._local_modes = (_J.T @ ld.R[0, :2] @ _J).ravel()
         self._rates = np.full((ring.nbunch, 3), np.nan)
         super().__init__(family_name, **kwargs)
 
