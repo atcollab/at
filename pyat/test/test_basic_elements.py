@@ -625,39 +625,39 @@ def test_variable_thin_multipole(rin, func):
     )
     expected = v.track(np.array([1e-3, 0, 0, 0, 0, 0]))
     np.testing.assert_equal(expected[1], -1e-6)
-#     fakering = at.Lattice([v], energy=1e9)
-#     expected, *_ = fakering.track(np.array([1e-3, 0, 0, 0, 0, 0]), nturns=2)
-#     np.testing.assert_equal(expected[1, 0, 0, :], np.array([-1e-6, -3e-6]))
-#     # mode INTERPOLATION_TABLE
-#     f = np.array([[-1, 0, 1, 2], [2, 1, 0, 1]])
-#     v = elements.VariableThinMultipole(
-#         "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
-#     )
-#     expected = v.track(np.array([0, 0, 0, 0, 0, 0.5 * 299792458]))
-#     np.testing.assert_equal(expected[3], 0.5e-3)
-#     f = np.array([[-1, 0, 1, 2], [2, 1, 1, 2]])
-#     v = elements.VariableThinMultipole(
-#         "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
-#     )
-#     expected = v.track(np.array([0, 0, 0, 0, 0, -4.1 * 299792458]))
-#     np.testing.assert_allclose(expected[3], 1.9e-3)
-#     expected = v.track(np.array([0, 0, 0, 0, 0, 5.1 * 299792458]))
-#     np.testing.assert_allclose(expected[3], 1.9e-3)
-#     # mode DERIVATIVE_TABLE
-#     f = np.array([[0.01, -0.032, 0.02], [0.3, 0.00, 0.000], [0.2, 0.05, 0.000]])
-#     v = at.VariableThinMultipole(
-#         "v",
-#         at.ACMode.DERIVATIVE_TABLE,
-#         AmplitudeA=1e-3,
-#         FuncA=f,
-#         FuncDelay=0.005,
-#         Periodic=False,
-#     )
-#     expected = v.track(np.array([0, 0, 0, 0, 0, 0.1]))
-#     np.testing.assert_allclose(expected[3], 4.0305e-05)
-#     fakering = at.Lattice([v], energy=1e9)
-#     expected, *_ = fakering.track(np.array([0.0, 0, 0, 0, 0, 0.1]), nturns=6)
-#     np.testing.assert_allclose(expected[3, 0, 0, -1], 2.875625e-05)
+    fakering = at.Lattice([v], energy=1e9)
+    expected, *_ = fakering.track(np.array([1e-3, 0, 0, 0, 0, 0]), nturns=2)
+    np.testing.assert_equal(expected[1, 0, 0, :], np.array([-1e-6, -3e-6]))
+    # mode INTERPOLATION_TABLE
+    f = np.array([[-1, 0, 1, 2], [2, 1, 0, 1]])
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, 0.5 * 299792458]))
+    np.testing.assert_equal(expected[3], 0.5e-3)
+    f = np.array([[-1, 0, 1, 2], [2, 1, 1, 2]])
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, -4.1 * 299792458]))
+    np.testing.assert_allclose(expected[3], 1.9e-3)
+    expected = v.track(np.array([0, 0, 0, 0, 0, 5.1 * 299792458]))
+    np.testing.assert_allclose(expected[3], 1.9e-3)
+    # mode DERIVATIVE_TABLE
+    f = np.array([[0.01, -0.032, 0.02], [0.3, 0.00, 0.000], [0.2, 0.05, 0.000]])
+    v = at.VariableThinMultipole(
+        "v",
+        at.ACMode.DERIVATIVE_TABLE,
+        AmplitudeA=1e-3,
+        FuncA=f,
+        FuncDelay=0.005,
+        Periodic=False,
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, 0.1]))
+    np.testing.assert_allclose(expected[3], 4.0305e-05)
+    fakering = at.Lattice([v], energy=1e9)
+    expected, *_ = fakering.track(np.array([0.0, 0, 0, 0, 0, 0.1]), nturns=6)
+    np.testing.assert_allclose(expected[3, 0, 0, -1], 2.875625e-05)
 
 
 def test_exit_entrance():

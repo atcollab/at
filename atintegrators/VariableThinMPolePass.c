@@ -22,7 +22,11 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
+#if defined(MATLAB_MEX_FILE)
 #include "atrandom.c"
+#else
+#include "atrandom.h"
+#endif /* MATLAB_MEX_FILE */
 #include "kick_kn.h"  /* kick */
 #include "interpolate.c"
 #include <math.h>

@@ -1,22 +1,18 @@
 /*
  * This file contains the Python interface to AT, compatible with
  * Python 3 only. It provides a module 'catpass' containing 4 python functions:
- * line_store, line_pass, elem_pass, diffusion_matrix, isopenmp, ismpi
+ * line_store, line_pass, elem_pass, diffusion_matrix
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "catpass.h"
 #ifdef _OPENMP
 #include <string.h>
 #include <omp.h>
 #endif /*_OPENMP*/
-#ifdef MPI
-#include <mpi.h>
-#endif /* MPI */
 #include "attypes.h"
-#include <stdbool.h> 
 #include <math.h>
 #include <float.h>
-#include <atrandom.c>
 
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
 
@@ -95,19 +91,6 @@ typedef struct _lat_state {
     PyObject **pyintegrator_list;
 /*  PyObject **kwargs_list; */
 } lat_state;
-
-/* Module state */
-typedef struct _at_state {
-    struct LibraryListElement *LibraryList;
-    double electron_mass;
-    double clight;
-    /* state buffers for RNGs */
-    pcg32_random_t common_state;
-    pcg32_random_t thread_state;
-    PyObject *particle_type;
-    PyObject *element_type;
-    int last_turn;
-} at_state;
 
 /* Global state */
 static char integrator_path[300];
@@ -569,7 +552,7 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
     /* Positional arguments */
     PyObject *capsule = NULL;
     PyArrayObject *rin;
-    int num_turns;
+    int num_turns=1;
     /* Keyword arguments */
     PyArrayObject *refs=NULL;
     int counter=0;
@@ -582,7 +565,7 @@ static PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
     at_state *module_data = (at_state *)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$ipIpii", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|iO!$ipIpii", kwlist,
         &PyCapsule_Type, &capsule, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
         &keep_counter, &omp_num_threads, &losses,
@@ -902,65 +885,13 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     return pbdiff;
 }
 
-static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = {"rank", "seed", NULL};
-    uint64_t seed = AT_RNG_STATE;
-#ifdef MPI
-    int irank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &irank);
-    uint64_t rank = irank;
-#else
-    uint64_t rank = 0;
-#endif /* MPI */
-
-    at_state *module_data = (at_state*)PyModule_GetState(self);
-    if (module_data == NULL) return NULL;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|$KK", kwlist,
-        &rank, &seed)) {
-        return NULL;
-    }
-    pcg32_srandom_r(&(module_data->common_state), seed, AT_RNG_INC);
-    pcg32_srandom_r(&(module_data->thread_state), seed, rank);
-    Py_RETURN_NONE;
-}
-
-static PyObject *common_rng(PyObject *self)
-{
-    at_state *module_data = (at_state*)PyModule_GetState(self);
-    if (module_data == NULL) return NULL;
-
-    double drand = atrandd_r(&(module_data->common_state));
-    return Py_BuildValue("d", drand);
-}
-
-static PyObject *thread_rng(PyObject *self)
-{
-    at_state *module_data = (at_state*)PyModule_GetState(self);
-    if (module_data == NULL) return NULL;
-
-    double drand = atrandd_r(&(module_data->thread_state));
-    return Py_BuildValue("d", drand);
-}
-
 
 static int catpass_exec(PyObject *self)
 {
-#ifdef MPI
-    int irank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &irank);
-    uint64_t rank = irank;
-#else
-    uint64_t rank = 0;
-#endif /* MPI */
-
     at_state *module_data = (at_state *)PyModule_GetState(self);
     if (module_data == NULL) return -1;
 
     module_data -> LibraryList = NULL;
-    pcg32_srandom_r(&(module_data->common_state), AT_RNG_STATE, AT_RNG_INC);
-    pcg32_srandom_r(&(module_data->thread_state), AT_RNG_STATE, rank);
 
     /* get Particle type */
     PyObject *particle_type = get_pyobj("at.lattice", "Particle");
@@ -1084,6 +1015,7 @@ static PyMethodDef AtMethods[] = {
 
 static PyModuleDef_Slot catpass_slots[] = {
     {Py_mod_exec, catpass_exec},
+    {Py_mod_exec, catpass_random_exec},
 #ifdef Py_GIL_DISABLED
     {Py_mod_gil, Py_MOD_GIL_NOT_USED},
 #endif

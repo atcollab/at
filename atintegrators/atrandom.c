@@ -22,6 +22,7 @@
  */
 #include <math.h>
 #include <stdint.h>
+#include "atrandom.h"
 
 /* initial RNG definitions */
 #define AT_RNG_STATE 0x853c49e6748fea9bULL
@@ -29,15 +30,6 @@
 
 #define COMMON_PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC, 0.0, false }
 #define THREAD_PCG32_INITIALIZER   { AT_RNG_STATE, 1ULL, 0.0, false }
-
-struct pcg_state_setseq_64 {    // Internals are *Private*.
-    uint64_t state;             // RNG state.  All values are possible.
-    uint64_t inc;               // Controls which RNG sequence (stream) is
-                                // selected. Must *always* be odd.
-    double spare;               // spare value for normal distribution
-    bool hasSpare;
-};
-typedef struct pcg_state_setseq_64 pcg32_random_t;
 
 // If you *must* statically initialize it, here's one.
 
@@ -91,13 +83,13 @@ static void pcg32_srandom(uint64_t seed, uint64_t seq)
 /* Functions for uniform, normal and Poisson distributions with
    external state variable */
 
-static double atrandd_r(pcg32_random_t* rng)
+double atrandd_r(pcg32_random_t* rng)
 /* Uniform [0, 1) distribution */
 {
     return ldexp(pcg32_random_r(rng), -32);
 }
 
-static double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
+double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
 /* gaussian distribution */
 {
     /* Marsaglia polar method: https://en.wikipedia.org/wiki/Marsaglia_polar_method */
@@ -121,7 +113,7 @@ static double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
 	return mean + stdDev * u * s;
 }
 
-static int atrandp_r(pcg32_random_t* rng, double lamb)
+int atrandp_r(pcg32_random_t* rng, double lamb)
 /* poisson distribution */
 {
     int pk;
