@@ -49,6 +49,13 @@ def _no_encoder(v):
     return v
 
 
+def _values_equal(value, default) -> bool:
+    if isinstance(value, dict) and isinstance(default, dict):
+        return value.keys() == default.keys() and all(
+            _values_equal(value[key], default[key]) for key in value
+        )
+    return np.array_equal(value, default)
+
 def _passmethod(v):
     """Check for existing PassMethod."""
     pm = str(v)
@@ -272,7 +279,7 @@ class Element:
         keywords = {
             k: v
             for k, v in sorted(attrs.items())
-            if not np.array_equal(v, getattr(defelem, k, None))
+            if not _values_equal(v, getattr(defelem, k, None))
             and k not in self._drop_attr
         }
         return self.__class__.__name__, arguments, keywords
