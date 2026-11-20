@@ -19,7 +19,7 @@ PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
     uint64_t rank = 0;
 #endif /* MPI */
 
-    at_state *module_data = (at_state*)PyModule_GetState(self);
+    at_state *module_data = (at_state *)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|$KK", kwlist,

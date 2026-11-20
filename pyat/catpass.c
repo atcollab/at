@@ -424,7 +424,7 @@ static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
 
     lat_state *lattice_data = allocate_lattice(module_data, lattice, energy, particle, bspos);
     if (lattice_data == NULL) return NULL;
-    return PyCapsule_New(lattice_data, "at.lattice", free_capsule);
+    return PyCapsule_New(lattice_data, CAPSULE_NAME, free_capsule);
 }
 
 static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)

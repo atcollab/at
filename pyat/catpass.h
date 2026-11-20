@@ -11,6 +11,8 @@
 #include "attypes.h"
 #include "atrandom.h"
 
+#define CAPSULE_NAME "at.lattice"
+
 /* define the general signature of a pass function */
 typedef struct elem *(*track_function)(
     const PyObject *element,
