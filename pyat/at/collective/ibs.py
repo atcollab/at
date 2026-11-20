@@ -59,7 +59,7 @@ _MOM = [1, 4, 3]
 
 
 @check_6d(True)
-def _ibs_optics(ring: Lattice, step: float) -> np.ndarray:
+def _ibs_optics(ring: Lattice, step: float, refpt: int = 0) -> np.ndarray:
     r"""Optics sampled around the ring.
 
     Returns:
@@ -68,14 +68,15 @@ def _ibs_optics(ring: Lattice, step: float) -> np.ndarray:
           :math:`D_x, D_y`, and the upper triangles of the momentum blocks
           :math:`P_k` of :math:`J^TR_kJ` in the Bjorken-Mtingwa coordinates
           :math:`(p_x, \delta/\gamma, p_y)`, for the 3 modes. The longitudinal
-          mode matrix is divided by its :math:`\delta\delta` element at the
-          entrance of the ring, so that its emittance is
-          :math:`\sigma_\delta^2`
+          mode matrix is divided by its :math:`\delta\delta` element at
+          *refpt*, so that its emittance is :math:`\sigma_\delta^2` at
+          *refpt*
     """
     _, _, ld = ring.slice(size=step).get_optics(refpts=All)
+    _, _, lr = ring.get_optics(refpts=refpt)
     w = np.convolve(np.diff(ld.s_pos), [1.0, 1.0])
     q = _J.T @ ld.R @ _J
-    q[:, 2] *= ld.R[0, 2, 4, 4]
+    q[:, 2] *= lr.R[0, 2, 4, 4]
     scale = np.array([1.0, ring.gamma, 1.0])
     pmat = q[:, :, _MOM][:, :, :, _MOM] * np.outer(scale, scale)
     iu = np.triu_indices(3)
@@ -112,7 +113,7 @@ def ibs_rates(
     bunch_length: float,
     bunch_current: float | None = None,
     *,
-    step: float = 0.1,
+    step: float = 0.5,
 ) -> np.ndarray:
     r"""IBS emittance growth rates.
 
@@ -155,7 +156,7 @@ def ibs_equilibrium(
     constraint: IBSConstraint = IBSConstraint.UNCOUPLED,
     rtol: float = 1.0e-6,
     max_steps: int = 100000,
-    step: float = 0.1,
+    step: float = 0.5,
     history: bool = False,
 ) -> dict:
     r"""Equilibrium emittances with IBS and synchrotron radiation.
@@ -316,6 +317,14 @@ class IBSElement(Collective, Element):
     :math:`R_k` of the mode at the element, so that each mode grows at its
     own rate without exciting the others or mismatching the bunch.
 
+    .. warning::
+        *ring* must have the 6D configuration (cavities, radiation, etc.)
+        of the tracked lattice. A lattice with the cavities on and
+        radiation off (``ring.enable_6d(at.RFCavity)``) has a different
+        longitudinal mode shape than the full 6D lattice. Tracked in a
+        radiating lattice, the longitudinal growth is then wrong by several
+        percent.
+
     The kicks are computed by the ``IBSPass`` C pass method, with random
     numbers from the AT C generators, seeded with :py:func:`.reset_rng`.
     The number of particles of each bunch is computed from the bunch
@@ -341,15 +350,16 @@ class IBSElement(Collective, Element):
         *,
         update_turns: int = 1,
         nslice: int = 51,
-        step: float = 0.1,
+        step: float = 0.5,
         refpt: int = 0,
         **kwargs,
     ):
         """
         Parameters:
             family_name:    Element name
-            ring:           Lattice in which the element will be inserted,
-              must be 6D
+            ring:           Lattice in which the element will be inserted.
+              Must have the same 6D configuration as the tracked lattice
+              (see the warning above)
             update_turns:   Number of turns between updates of the growth
               rates. Between updates, the kicks are rescaled with the
               current beam parameters at constant rates: the interval must
@@ -371,7 +381,7 @@ class IBSElement(Collective, Element):
         self.UpdateTurns = update_turns
         self.NSlice = nslice
         self._npart_per_amp = _npart(ring, 1.0)
-        self._optics = _ibs_optics(ring, step)
+        self._optics = _ibs_optics(ring, step, refpt)
         _, _, ld = ring.get_optics(refpts=refpt)
         scale = np.sqrt([1.0, 1.0, ld.R[0, 2, 4, 4]])
         a = ld.A[0].reshape(6, 3, 2).transpose(1, 0, 2) / scale[:, None, None]
