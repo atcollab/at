@@ -8,6 +8,7 @@
 //     #define NPY_RAVEL_AXIS 32
 // #endif
 
+#include <stdarg.h>
 #include "attypes.h"
 #include "atrandom.h"
 
@@ -55,5 +56,16 @@ PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs);
 PyObject *common_rng(PyObject *self);
 PyObject *thread_rng(PyObject *self);
 int catpass_random_exec(PyObject *self);
+
+static void *error_return(int elem_number, int count, ...)
+{
+    va_list ap;
+    va_start(ap, count);
+    for (int i = 0; i < count; i++) {
+        Py_XDECREF(va_arg(ap, void *));
+    }
+    va_end(ap);
+    return NULL;
+}
 
 #endif /* CATPASS _H */

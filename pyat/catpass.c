@@ -126,33 +126,30 @@ static PyObject *get_ext_suffix(void) {
  */
 static PyObject *GetpyFunction(const char *fn_name)
 {
-  char dest[300];
-  strcpy(dest,"at.integrators.");
-  strcat(dest,fn_name);
-  PyObject *pModule;
-  pModule = PyImport_ImportModule(fn_name);
-  if (!pModule){
-      PyErr_Clear();
-      pModule = PyImport_ImportModule(dest);
-  }
-  if(!pModule){
-      return NULL;
-  }
-  PyObject *pyfunction = PyObject_GetAttrString(pModule, "trackFunction");
-  if ((!pyfunction) || !PyCallable_Check(pyfunction)) {
-      Py_DECREF(pModule);
-      Py_XDECREF(pyfunction);
-      return NULL;
-  }
-  Py_DECREF(pModule);
-  return pyfunction;
+    PyObject *pModule;
+    pModule = PyImport_ImportModule(fn_name);
+    if (!pModule){
+        PyErr_Clear();
+        char dest[300];
+        snprintf(dest, sizeof(dest), "at.integrators.%s", fn_name);
+        pModule = PyImport_ImportModule(dest);
+    }
+    if(!pModule) return error_return(0, 0);
+    PyObject *pyfunction = PyObject_GetAttrString(pModule, "trackFunction");
+    if ((!pyfunction) || !PyCallable_Check(pyfunction)) return error_return(0, 2, pModule, pyfunction);
+     Py_DECREF(pModule);
+    return pyfunction;
 }
 
 /*
  * Find the correct track function by name.
  */
-static struct LibraryListElement* get_track_function(at_state *module_data, const char *fn_name)
+static struct LibraryListElement* get_track_function(at_state *module_data, PyObject *element)
 {
+    PyObject *PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
+    if (!PyPassMethod) return error_return(0, 0);     /* No PassMethod: AttributeError */
+    const char *fn_name = PyUnicode_AsUTF8(PyPassMethod);
+    if (fn_name == NULL) return error_return(0, 1, PyPassMethod);
     struct LibraryListElement *LibraryListPtr = SearchLibraryList(module_data->LibraryList, fn_name);
 
     if (!LibraryListPtr) {
@@ -178,7 +175,7 @@ static struct LibraryListElement* get_track_function(at_state *module_data, cons
             PyErr_Format(PyExc_RuntimeError,
             "PassMethod %s: library, module or trackFunction not found",
             fn_name);
-            return NULL;
+            return error_return(0, 1, PyPassMethod);
         }
 
         LibraryListPtr = (struct LibraryListElement *)malloc(sizeof(struct LibraryListElement));
@@ -189,11 +186,12 @@ static struct LibraryListElement* get_track_function(at_state *module_data, cons
         LibraryListPtr->Next = module_data->LibraryList;
         module_data->LibraryList = LibraryListPtr;
     }
+    Py_DECREF(PyPassMethod);
     return LibraryListPtr;
 }
 
 /* Fill the param structure with default values */
-static void default_parameters(struct parameters *param, at_state *module_data, double *bdiff)
+static void default_parameters(struct parameters *param, at_state *module_data)
 {
     param->nturn = 0;
     param->num_turns = 0;
@@ -209,7 +207,7 @@ static void default_parameters(struct parameters *param, at_state *module_data, 
     param->bunch_currents = (double[1]){0.0};
     param->common_rng=&(module_data->common_state);
     param->thread_rng=&(module_data->thread_state);
-    param->bdiff = bdiff;
+    param->bdiff = NULL;
     param->fillpattern = (double[1]){1.0};
     param->harmonic_number = 1;
 }
@@ -334,7 +332,7 @@ static void *allocate_lattice(
 
     lat_state *lattice_data = (lat_state *)calloc(1, sizeof(lat_state));
     struct parameters *param = &(lattice_data->params);
-    default_parameters(param, module_data, NULL);
+    default_parameters(param, module_data);
     lattice_parameters(param, module_data, lattice, particle, energy);
     set_current_fillpattern(param, lattice_data, lattice, bspos);
 
@@ -366,11 +364,8 @@ static void *allocate_lattice(
     for (npy_uint32 elem_index = 0; elem_index < num_elements; elem_index++) {
         double lg = 0.0;
         struct LibraryListElement *track_function;
-       PyObject *el = PyList_GET_ITEM(lattice, elem_index);
-        PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
-        if (!PyPassMethod) return free_lattice(lattice_data);    /* No PassMethod: AttributeError */
-        track_function = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
-        Py_DECREF(PyPassMethod);
+        PyObject *el = PyList_GET_ITEM(lattice, elem_index);
+        track_function = get_track_function(module_data, el);
         if (!track_function) return free_lattice(lattice_data);  /* No trackFunction for the given PassMethod: RuntimeError */
         integr = track_function->FunctionHandle;
         GET_ATTRIBUTE(&lg, PyFloat_AsDouble, el, "Length")
@@ -430,11 +425,8 @@ static PyObject *line_store(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"", "", "energy", "particle", NULL};
-    PyObject *PyPassMethod;
-    npy_uint32 num_particles;
     track_function integrator;
     PyObject *pyintegrator;
-    double *drin;
     struct parameters param;
     struct LibraryListElement *track_function;
 
@@ -448,7 +440,7 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
     at_state *module_data = (at_state*)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
 
-    default_parameters(&param, module_data, NULL);
+    default_parameters(&param, module_data);
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$dO!", kwlist,
         module_data->element_type, &element,  &PyArray_Type, &rin,
         &energy, module_data->particle_type, &particle)) {
@@ -465,14 +457,10 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
+    double *drin = PyArray_DATA(rin);
+    npy_uint32 num_particles = (PyArray_SIZE(rin)/6);
 
-    num_particles = (PyArray_SIZE(rin)/6);
-    drin = PyArray_DATA(rin);
-
-    PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
-    if (!PyPassMethod) return NULL;
-    track_function = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
-    Py_DECREF(PyPassMethod);
+    track_function = get_track_function(module_data, element);
     if (!track_function) return NULL;
     integrator = track_function->FunctionHandle;
     pyintegrator = track_function->PyFunctionHandle;
@@ -492,17 +480,12 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"", "", "energy", "particle", NULL};
-    npy_uint32 num_particles;
     track_function integrator;
     PyObject *pyintegrator;
-    PyObject *PyPassMethod;
-    const double *drin;
     double orb[6];
     struct parameters param;
     struct LibraryListElement *track_function;
     npy_intp dims[2] = {6, 6};
-    PyObject *pbdiff = PyArray_ZEROS(2, dims, NPY_DOUBLE ,1);
-    double *bdiff = (double *)PyArray_DATA((PyArrayObject *)pbdiff);
 
     /* Positional parameters */
     PyObject *element;
@@ -514,7 +497,7 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     at_state *module_data = (at_state*)PyModule_GetState(self);
     if (module_data == NULL) return NULL;
 
-    default_parameters(&param, module_data, bdiff);
+    default_parameters(&param, module_data);
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$dO!", kwlist,
         module_data->element_type, &element,  &PyArray_Type, &rin,
         &energy, module_data->particle_type, &particle)) {
@@ -531,31 +514,29 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
-    num_particles = (PyArray_SIZE(rin)/6);
+    npy_uint32 num_particles = (PyArray_SIZE(rin)/6);
     if (num_particles != 1) {
         return PyErr_Format(PyExc_ValueError, "Number of particles should be 1");
     }
+    const double *drin = (const double *)PyArray_DATA(rin);
 
-    drin = (const double *)PyArray_DATA(rin);
-    for (int i=0; i<6; i++) orb[i] = drin[i];
+    for (int i = 0; i < 6; i++) orb[i] = drin[i];
 
-    for (int i = 0; i < 36; i++) bdiff[i] = 0.0;
+    PyObject *pbdiff = PyArray_ZEROS(2, dims, NPY_DOUBLE ,1);
+    double *bdiff = (double *)PyArray_DATA((PyArrayObject *)pbdiff);
+    param.bdiff = bdiff;
 
-    PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
-    if (!PyPassMethod) return NULL;
-    track_function = get_track_function(module_data, PyUnicode_AsUTF8(PyPassMethod));
-    Py_DECREF(PyPassMethod);
-
-    if (!track_function) return NULL;
+    track_function = get_track_function(module_data, element);
+    if (!track_function) return error_return(0, 1, pbdiff);
     integrator = track_function->FunctionHandle;
     pyintegrator = track_function->PyFunctionHandle;
     if (pyintegrator) {
         PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
-        if (!res) return NULL;
+        if (!res) return error_return(0, 1, pbdiff);
         Py_DECREF(res);
     } else {
         struct elem *elem_data = integrator(element, NULL, orb, 1, &param);
-        if (!elem_data) return NULL;
+        if (!elem_data) return error_return(0, 1, pbdiff);
         free(elem_data);
     }
     return pbdiff;
@@ -588,7 +569,7 @@ static int catpass_exec(PyObject *self)
     Py_DECREF(electron_mass);
 
     /* get speed of light */
-    PyObject *pyclight = get_pyobj("at.constants", "e_mass");
+    PyObject *pyclight = get_pyobj("at.constants", "clight");
     if (pyclight == NULL) return -1;
     module_data->clight = PyFloat_AsDouble(pyclight);
     Py_DECREF(pyclight);
@@ -702,14 +683,14 @@ static PyModuleDef_Slot catpass_slots[] = {
 
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "catpass",         /* m_name */
+    "catpass",        /* m_name */
     PyDoc_STR("Low-level tracking functions"),      /* m_doc */
     sizeof(at_state), /* m_size */
     AtMethods,        /* m_methods */
-    catpass_slots,     /* m_slots */
+    catpass_slots,    /* m_slots */
     NULL,             /* m_traverse */
     NULL,             /* m_clear */
-    catpass_free,      /* m_free */
+    catpass_free,     /* m_free */
 };
 
 PyMODINIT_FUNC PyInit_catpass(void)
@@ -723,15 +704,15 @@ PyMODINIT_FUNC PyInit_catpass(void)
     if (integ_path_obj) {
         const char *integ_path = PyUnicode_AsUTF8(integ_path_obj);
         PyObject *ext_suffix_obj = get_ext_suffix();
-        Py_DECREF(integ_path_obj);
         if (ext_suffix_obj) {
             const char *ext_suffix = (ext_suffix_obj == Py_None) ? OBJECTEXT : PyUnicode_AsUTF8(ext_suffix_obj);
-            Py_DECREF(ext_suffix_obj);
             snprintf(integrator_path, sizeof(integrator_path), "%s%s%%s%s", integ_path, SEPARATOR, ext_suffix);
+            Py_DECREF(ext_suffix_obj);
         }
         else {
             return NULL;
         }
+        Py_DECREF(integ_path_obj);
     }
     else {
         return NULL;

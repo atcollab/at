@@ -1,6 +1,6 @@
 
 #include "atelem.c"
-#include "atrandom.c"
+#include "atrandom.h"
 
 struct elem 
 {

@@ -1,3 +1,5 @@
+#ifndef ATRANDOM_C
+#define ATRANDOM_C
 /*
  * PCG Random Number Generation for C.
  *
@@ -152,3 +154,4 @@ static inline int atrandp(double lamb)
 {
     return atrandp_r(&pcg32_global, lamb);
 }
+#endif /* ATRANDOM_C */

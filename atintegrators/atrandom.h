@@ -15,5 +15,8 @@ double atrandd_r(pcg32_random_t* rng);
 double atrandn_r(pcg32_random_t* rng, double mean, double stdDev);
 int atrandp_r(pcg32_random_t* rng, double lamb);
 
+#ifdef MATLAB_MEX_FILE
+#include "atrandom.c"
+#endif /* MATLAB_MEX_FILE */
 
 #endif /* ATRANDOM_H */

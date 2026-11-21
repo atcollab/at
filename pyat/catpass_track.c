@@ -13,25 +13,19 @@
 
 #define LIMIT_AMPLITUDE		1
 
-static PyObject *error_return(int elem_number, PyObject *rout)
-{
-    Py_XDECREF(rout);
-    return NULL;
-}
-
 static void checkiflost(double *drin, npy_uint32 np, int num_elem, int num_turn,
-        int *xnturn, int *xnelem, bool *xlost, double *xlostcoord)
+        int *lossTurn, int *lossElem, bool *lost, double *lossCoords)
 {
     for (unsigned int c=0; c<np; c++) {/* Loop over particles */
-        if (!xlost[c]) {  /* No change if already marked */
+        if (!lost[c]) {  /* No change if already marked */
             double *r6 = drin+c*6;
             for (unsigned int n=0; n<6; n++) {
                 if (!isfinite(r6[n]) || ((fabs(r6[n])>LIMIT_AMPLITUDE)&&n<5)) {
-                    if (xnturn) {
-                        xlost[c] = 1;
-                        xnturn[c] = num_turn;
-                        xnelem[c] = num_elem;
-                        memcpy(xlostcoord+6*c,r6,6*sizeof(double));
+                    if (lossTurn) {
+                        lost[c] = 1;
+                        lossTurn[c] = num_turn;
+                        lossElem[c] = num_elem;
+                        memcpy(lossCoords+6*c,r6,6*sizeof(double));
                     }
                     r6[0] = NAN;
                     r6[1] = 0;
@@ -51,14 +45,14 @@ PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
         "", "", "nturns", "refpts", "turn", "keep_counter",
         "omp_num_threads", "losses", "start_elem", "end_elem", NULL
     };
-    PyObject *xnturn = NULL;
-    PyObject *xnelem = NULL;
-    PyObject *xlost = NULL;
-    PyObject *xlostcoord = NULL;
-    int *ixnturn = NULL;
-    int *ixnelem = NULL;
-    bool *bxlost = NULL;
-    double *dxlostcoord = NULL;
+    PyObject *pyLossTurn = NULL;
+    PyObject *pyLossElem = NULL;
+    PyObject *pyLost = NULL;
+    PyObject *pyLossCoords = NULL;
+    int *lossTurn = NULL;
+    int *lossElem = NULL;
+    bool *lost = NULL;
+    double *lossCoords = NULL;
     npy_uint32 *refpts = NULL;
     npy_uint32 nextref;
     unsigned int nextrefindex;
@@ -163,19 +157,18 @@ PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
     double *drout = PyArray_DATA((PyArrayObject *)rout);
 
     /* Memory allocation for loss information */
-    xlost = PyArray_ZEROS(1, pdims, NPY_BOOL, 1);
-    bxlost = PyArray_DATA((PyArrayObject *)xlost);
+    pyLost = PyArray_ZEROS(1, pdims, NPY_BOOL, 1);
+    lost = PyArray_DATA((PyArrayObject *)pyLost);
     if (losses) {
-        xnturn = PyArray_ZEROS(1, pdims, NPY_UINT32, 1);
-        xnelem = PyArray_ZEROS(1, pdims, NPY_UINT32, 1);
-        xlostcoord = PyArray_ZEROS(2, outdims, NPY_DOUBLE, 1);
-        ixnturn = PyArray_DATA((PyArrayObject *)xnturn);
-        ixnelem = PyArray_DATA((PyArrayObject *)xnelem);
-        dxlostcoord = PyArray_DATA((PyArrayObject *)xlostcoord);
+        pyLossTurn = PyArray_ZEROS(1, pdims, NPY_UINT32, 1);
+        pyLossElem = PyArray_ZEROS(1, pdims, NPY_UINT32, 1);
+        pyLossCoords = PyArray_ZEROS(2, outdims, NPY_DOUBLE, 1);
+        lossTurn = PyArray_DATA((PyArrayObject *)pyLossTurn);
+        lossElem = PyArray_DATA((PyArrayObject *)pyLossElem);
+        lossCoords = PyArray_DATA((PyArrayObject *)pyLossCoords);
     }
 
     for (int turn = 0; turn < num_turns; turn++) {
-
         PyObject **element = lattice_data->element_list;
         double *elem_length = lattice_data->elemlength_list;
         track_function *integrator = lattice_data->integrator_list;
@@ -207,13 +200,13 @@ PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
             /* the actual integrator call */
             if (*pyintegrator) {
                 PyObject *res = PyObject_CallFunctionObjArgs(*pyintegrator, rin, *element, NULL);
-                if (!res) return error_return(elem_index, rout);       /* trackFunction failed */
+                if (!res) return error_return(elem_index, 5, rout, pyLost, pyLossTurn, pyLossElem, pyLossCoords);       /* trackFunction failed */
                 Py_DECREF(res);
             } else {
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, param);
-                if (!*elemdata) return error_return(elem_index, rout); /* trackFunction failed */
+                if (!*elemdata) return error_return(elem_index, 5, rout, pyLost, pyLossTurn, pyLossElem, pyLossCoords); /* trackFunction failed */
             }
-            checkiflost(drin, num_particles, elem_index, param->nturn, ixnturn, ixnelem, bxlost, dxlostcoord);
+            checkiflost(drin, num_particles, elem_index, param->nturn, lossTurn, lossElem, lost, lossCoords);
             s_coord += *elem_length++;
             element++;
             integrator++;
@@ -238,19 +231,19 @@ PyObject *line_pass(PyObject *self, PyObject *args, PyObject *kwargs) {
     if (losses) {
         PyObject *tout = PyTuple_New(2);
         PyObject *dict = PyDict_New();
-        PyDict_SetItemString(dict,(char *)"islost",(PyObject *)xlost);
-        PyDict_SetItemString(dict,(char *)"turn",(PyObject *)xnturn);
-        PyDict_SetItemString(dict,(char *)"elem",(PyObject *)xnelem);
-        PyDict_SetItemString(dict,(char *)"coord",(PyObject *)xlostcoord);
+        PyDict_SetItemString(dict,(char *)"islost",(PyObject *)pyLost);
+        PyDict_SetItemString(dict,(char *)"turn",(PyObject *)pyLossTurn);
+        PyDict_SetItemString(dict,(char *)"elem",(PyObject *)pyLossElem);
+        PyDict_SetItemString(dict,(char *)"coord",(PyObject *)pyLossCoords);
         PyTuple_SetItem(tout, 0, rout);
         PyTuple_SetItem(tout, 1, dict);
-        Py_DECREF(xlost);
-        Py_DECREF(xnturn);
-        Py_DECREF(xnelem);
-        Py_DECREF(xlostcoord);
+        Py_DECREF(pyLost);
+        Py_DECREF(pyLossTurn);
+        Py_DECREF(pyLossElem);
+        Py_DECREF(pyLossCoords);
         return tout;
     } else {
-        Py_DECREF(xlost);
+        Py_DECREF(pyLost);
         return rout;
     }
 }
