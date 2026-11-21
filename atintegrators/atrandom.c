@@ -47,10 +47,11 @@ static uint32_t pcg32_random_r(pcg32_random_t* rng)
 {
     if (!rng) rng = &pcg32_global;
     uint64_t oldstate;
-    #pragma omp atomic read
-    oldstate = rng->state;
-    #pragma omp atomic write
-    rng->state = oldstate * 6364136223846793005ULL + rng->inc;
+    #pragma omp atomic capture
+    {
+        oldstate = rng->state;
+        rng->state = oldstate * 6364136223846793005ULL + rng->inc;
+    }
     uint32_t xorshifted = ((oldstate >> 18u) ^ oldstate) >> 27u;
     uint32_t rot = oldstate >> 59u;
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
@@ -92,27 +93,29 @@ double atrandd_r(pcg32_random_t* rng)
 }
 
 double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
-/* gaussian distribution */
 {
-    /* Marsaglia polar method: https://en.wikipedia.org/wiki/Marsaglia_polar_method */
+    double result;
 
-	double u, v, s;
+    #pragma omp critical(atrandn_r_state)
+    {
+        if (rng->hasSpare) {
+            rng->hasSpare = false;
+            result = mean + stdDev * rng->spare;
+        } else {
+            double u, v, s;
+            do {
+                u = 2.0 * atrandd_r(rng) - 1.0;
+                v = 2.0 * atrandd_r(rng) - 1.0;
+                s = u * u + v * v;
+            } while (s >= 1.0 || s == 0.0);
 
-	if (rng->hasSpare) {
-		rng->hasSpare = false;
-		return mean + stdDev * rng->spare;
-	}
-
-	rng->hasSpare = true;
-	do {
-		u = 2.0 * atrandd_r(rng) - 1.0;
-		v = 2.0 * atrandd_r(rng) - 1.0;
-		s = u * u + v * v;
-	}
-	while ((s >= 1.0) || (s == 0.0));
-	s = sqrt(-2.0 * log(s) / s);
-	rng->spare = v * s;
-	return mean + stdDev * u * s;
+            s = sqrt(-2.0 * log(s) / s);
+            rng->spare = v * s;
+            rng->hasSpare = true;
+            result = mean + stdDev * u * s;
+        }
+    }
+    return result;
 }
 
 int atrandp_r(pcg32_random_t* rng, double lamb)
