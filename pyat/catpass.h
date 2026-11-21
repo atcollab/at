@@ -1,6 +1,9 @@
 #ifndef CATPASSS_H
 #define CATPASSS_H
 
+#ifndef NPY_MAIN
+#define NO_IMPORT_ARRAY
+#endif
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL PYAT_ARRAY_API
 #include <numpy/ndarrayobject.h>

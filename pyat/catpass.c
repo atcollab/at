@@ -5,6 +5,7 @@
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#define NPY_MAIN
 #include "catpass.h"
 #include <math.h>
 #include <float.h>

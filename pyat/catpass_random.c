@@ -1,6 +1,5 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#define NO_IMPORT_ARRAY
 #include "catpass.h"
 #include "atrandom.c"
 #ifdef MPI

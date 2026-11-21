@@ -74,7 +74,7 @@ typedef mxArray atElem;
 #define atPrintf(...) mexPrintf(__VA_ARGS__)
 #include "ringproperties.c"
 
-double atEnergy(double ringenergy, double elemenergy)
+static double atEnergy(double ringenergy, double elemenergy)
 {
     if (ringenergy > 0.0)
         return ringenergy;
@@ -229,7 +229,7 @@ typedef PyObject atElem;
 
 static int array_imported = 0;
 
-double atEnergy(double ringenergy, double elemenergy)
+static double atEnergy(double ringenergy, double elemenergy)
 {
     if (ringenergy > 0.0)
         return ringenergy;
@@ -283,7 +283,7 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
-void atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
+static void atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
 {
     char errmessage[60];
     PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
@@ -430,7 +430,7 @@ static long *atGetOptionalLongArray(const PyObject *element, char *name)
 #define C_LINK
 #endif
 
-double atGamma(double ringenergy, double elemenergy, double rest_energy)
+static double atGamma(double ringenergy, double elemenergy, double rest_energy)
 {
     double energy = atEnergy(ringenergy, elemenergy);
     if (rest_energy == 0.0)
