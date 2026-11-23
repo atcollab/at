@@ -1,4 +1,4 @@
-"""Python port of the Accelerator Toolbox"""
+"""Python port of the Accelerator Toolbox."""
 
 from ._version import __version__, __version_tuple__
 
@@ -12,3 +12,4 @@ from .matching import *
 from .acceptance import *
 from .collective import *
 from .plot import *
+from .cconfig import *
