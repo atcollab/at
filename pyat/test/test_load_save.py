@@ -32,7 +32,7 @@ def simple_hmba(hmba_lattice: Lattice) -> Lattice:
     ring = hmba_lattice.deepcopy()
     # Set NumIntSteps to default, remove FringeQuadEntrance and FringeQuadExit
     for mult in ring.select(elt.Multipole):
-        mult.NumIntSteps = 10
+        mult.NumIntSteps = 0
         if isinstance(mult, (elt.Dipole, elt.Quadrupole)):
             del mult.FringeQuadEntrance
             del mult.FringeQuadExit
@@ -69,7 +69,10 @@ def test_m(request, lattice: Lattice, suffix: str, options: dict[str, Any]) -> N
         suffix: output filename extension
         options: options
     """
-    ring0 = request.getfixturevalue(lattice)
+    ring0 = request.getfixturevalue(lattice).deepcopy()
+    # MAD-X and Elegant files do not keep NumIntSteps: use the default for all
+    for mult in ring0.select(elt.Multipole):
+        mult.NumIntSteps = 0
     fhandle, fname = mkstemp(suffix=suffix)
     os.close(fhandle)
 

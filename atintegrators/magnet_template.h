@@ -51,10 +51,44 @@ struct elem
 #endif /*E2_DIPOLE*/
 };
 
-static int default_nb_kicks(double l, double h, double *polya, double *polyb)
+/* Default number of integration kicks: the phase advance per step
+ *     sqrt(K_eff) * L / NumIntSteps < NB_KICKS_PHI_MAX,
+ *     K_eff = irho^2 + sum_{n>=1} n * |PolynomB[n] + i PolynomA[n]| * R0^(n-1)
+ * NB_KICKS_PHI_MAX gives a relative error of 1e-8 on the element map:
+ * (1e-8 / (3*C))^(1/p), C = 0.066 (p=4), C = 0.0038 (p=6).
+ * Radiating bends: at least NB_KICKS_RAD_MIN_STEPS steps of at most
+ * NB_KICKS_RAD_MAX_STEP (quantum excitation). */
+#define NB_KICKS_REF_RADIUS 0.01      /* [m] */
+#if (KICKS_PER_STEP == 7)
+#define NB_KICKS_PHI_MAX 0.098
+#else
+#define NB_KICKS_PHI_MAX 0.015
+#endif
+#define NB_KICKS_RAD_MIN_STEPS 2
+#define NB_KICKS_RAD_MAX_STEP 5.0     /* [m] */
+
+#ifndef DEFAULT_IRHO
+#define DEFAULT_IRHO ((Length > 0.0) ? BendingAngle / Length : 0.0)
+#endif
+
+static int default_nb_kicks(double l, double irho, double *polya, double *polyb, int max_order)
 {
-//    return 42;
-    return (KICKS_PER_STEP == 7) ? 42 : 30;
+    double keff = irho * irho;
+    double rn = 1.0;    /* R0^(n-1) */
+    for (int n = 1; n <= max_order; n++) {
+        keff += n * sqrt(polya[n]*polya[n] + polyb[n]*polyb[n]) * rn;
+        rn *= NB_KICKS_REF_RADIUS;
+    }
+    int nsteps = (int)ceil(fabs(l) * sqrt(keff) / NB_KICKS_PHI_MAX);
+    if (nsteps < 1) nsteps = 1;
+#if defined(RADIATION) || defined(QUANTUM)
+    if (irho != 0.0) {
+        int nrad = (int)ceil(fabs(l) / NB_KICKS_RAD_MAX_STEP);
+        if (nrad < NB_KICKS_RAD_MIN_STEPS) nrad = NB_KICKS_RAD_MIN_STEPS;
+        if (nsteps < nrad) nsteps = nrad;
+    }
+#endif
+    return KICKS_PER_STEP * nsteps;
 }
 
 static void magnet(double *r, double le, double bending_angle,
@@ -192,7 +226,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         #endif
         int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
         if (NumIntSteps == 0) {
-            int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
+            int def_nb_k = default_nb_kicks(Length, DEFAULT_IRHO, PolynomA, PolynomB, MaxOrder);
             div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
             NumIntSteps = dvt.quot + 1;
         }
@@ -291,7 +325,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /*optional fields*/
         int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 0); check_error();
         if (NumIntSteps == 0) {
-            int def_nb_k = default_nb_kicks(Length, 0.0, PolynomA, PolynomB);
+            int def_nb_k = default_nb_kicks(Length, DEFAULT_IRHO, PolynomA, PolynomB, MaxOrder);
             div_t dvt = div(def_nb_k-1, KICKS_PER_STEP);
             NumIntSteps = dvt.quot + 1;
         }

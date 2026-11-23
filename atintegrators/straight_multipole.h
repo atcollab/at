@@ -16,6 +16,8 @@
 
 #define MAGNET_ARGUMENTS
 
+#define DEFAULT_IRHO 0.0
+
 #define MAGNET_ITEMS \
     Elem->BendingAngle=0.0; \
     Elem->EntranceAngle=0.0; \
