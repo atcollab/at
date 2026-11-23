@@ -475,25 +475,27 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
     energy = atEnergy(Param->energy, Elem->Energy); check_error();
 
-    if(num_particles<Param->nbunch){
-        atError("Number of particles has to be greater or equal to the number of bunches."); check_error();
-    }else if (num_particles%Param->nbunch!=0){
-        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load."); check_error();
-    }
-    if(Elem->cavitymode==0 || Elem->cavitymode>=4){
-        atError("Unknown cavitymode provided."); check_error();
-    } 
-    if(Elem->fbmode>=3){
-        atError("Unknown fbmode provided."); check_error();
-    } 
+    if (num_particles > 0) {
+        if (num_particles<Param->nbunch) {
+            atError("Number of particles has to be greater or equal to the number of bunches."); check_error();
+        } else if (num_particles%Param->nbunch!=0) {
+            atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load."); check_error();
+        }
+        if (Elem->cavitymode==0 || Elem->cavitymode>=4) {
+            atError("Unknown cavitymode provided."); check_error();
+        }
+        if (Elem->fbmode>=3) {
+            atError("Unknown fbmode provided."); check_error();
+        }
 
-    #ifdef _MSC_VER
-    atError("Beam loading module not implemented in Windows."); check_error();
-    #endif
-    
-    BeamLoadingCavityPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
-                          Param->bunch_currents, Param->fillpattern, rl, 
-                          nturn, energy, Param->harmonic_number, Param->nturn, Elem);
+        #ifdef _MSC_VER
+        atError("Beam loading module not implemented in Windows."); check_error();
+        #endif
+
+        BeamLoadingCavityPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
+                              Param->bunch_currents, Param->fillpattern, rl,
+                              nturn, energy, Param->harmonic_number, Param->nturn, Elem);
+    }
     return Elem;
 }
 
