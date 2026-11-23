@@ -22,7 +22,7 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "atrandom.h"
+#include "atrandom.c"
 #include "kick_kn.h"  /* kick */
 #include "interpolate.c"
 #include <math.h>

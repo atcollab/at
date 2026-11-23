@@ -6,7 +6,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
-#include "atrandom.h"
+#include "atrandom.c"
 #ifdef MPI
 #include <mpi.h>
 #endif

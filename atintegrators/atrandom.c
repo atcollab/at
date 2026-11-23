@@ -85,14 +85,16 @@ static void pcg32_srandom(uint64_t seed, uint64_t seq)
 /* Functions for uniform, normal and Poisson distributions with
    external state variable */
 
-double atrandd_r(pcg32_random_t* rng)
+static double atrandd_r(pcg32_random_t* rng)
 /* Uniform [0, 1) distribution */
 {
     return ldexp(pcg32_random_r(rng), -32);
 }
 
-double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
+static double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
+/* gaussian distribution */
 {
+    /* Marsaglia polar method: https://en.wikipedia.org/wiki/Marsaglia_polar_method */
     double result;
 
     #pragma omp critical(atrandn_r_state)
@@ -117,7 +119,7 @@ double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
     return result;
 }
 
-int atrandp_r(pcg32_random_t* rng, double lamb)
+static int atrandp_r(pcg32_random_t* rng, double lamb)
 /* poisson distribution */
 {
     int pk;

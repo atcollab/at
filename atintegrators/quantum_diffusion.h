@@ -1,6 +1,6 @@
 #include <math.h>
 #include "atconstants.h"
-#include "atrandom.h"
+#include "atrandom.c"
 
 const double alpha0 = 7.2973525643e-3; // fine-structure constant [] - from CODATA 2022
 const double emass = 510998.95069; // electron mass [eV] - from CODATA 2022

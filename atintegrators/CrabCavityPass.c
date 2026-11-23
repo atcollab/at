@@ -5,7 +5,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
-#include "atrandom.h"
+#include "atrandom.c"
 #include "drift_expanded.h"
 
 struct elem
