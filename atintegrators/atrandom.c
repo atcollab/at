@@ -23,7 +23,6 @@
  *     http://www.pcg-random.org
  */
 #include <math.h>
-#include <stdint.h>
 #include "atrandom.h"
 
 /* initial RNG definitions */

@@ -1,6 +1,7 @@
 #ifndef ATRANDOM_H
 #define ATRANDOM_H
 #include <stdbool.h>
+#include <stdint.h>
 
 struct pcg_state_setseq_64 {    // Internals are *Private*.
     uint64_t state;             // RNG state.  All values are possible.
