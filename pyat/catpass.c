@@ -269,6 +269,7 @@ static void set_current_fillpattern(struct parameters *param, lat_state *lattice
         param->beam_current = PyFloat_AsDouble(bcurrentsum);
         param->bunch_currents = PyArray_DATA(bcurrents);
         param->nbunch = PyArray_SIZE(bcurrents);
+        atPrintf("beam_current: %g, nbunch: %d\n", param->beam_current, param->nbunch);
         Py_DECREF(bcurrentsum);
     }
     else {
