@@ -40,7 +40,7 @@ class _AtEncoder(json.JSONEncoder):
 
 def json_decoder(elem_dict: Mapping) -> Generator[tuple[str, Any], None, None]:
     for k, v in elem_dict.items():
-        if isinstance(v, str):
+        if isinstance(v, (str, int, float, bool)):
             yield k, v
         elif isinstance(v, Mapping):
             yield k, dict(json_decoder(v))
