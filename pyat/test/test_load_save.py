@@ -40,7 +40,7 @@ def simple_hmba(hmba_lattice: Lattice) -> Lattice:
     for idx in ring.get_uint32_index("OF*"):
         _q = ring[idx]
         ring[idx] = elt.Octupole(_q.FamName, _q.Length, _q.PolynomA, _q.PolynomB)
-    # Disable useless e;ements
+    # Disable useless elements
     for idx in ring.get_uint32_index("SH*"):
         _q = ring[idx]
         ring[idx] = elt.Drift(_q.FamName, _q.Length)
@@ -56,11 +56,12 @@ def simple_hmba(hmba_lattice: Lattice) -> Lattice:
         (".mat", {"use": "abcd"}),
         (".mat", {"mat_key": "efgh"}),
         (".json", {}),
+        (".pkl", {}),
         (".seq", {"use": "ring", "particle": "relativistic"}),
         (".lte", {"use": "ring"}),
     ],
 )
-def test_m(request, lattice: Lattice, suffix: str, options: dict[str, Any]) -> None:
+def test_m(request, lattice: str, suffix: str, options: dict[str, Any]) -> None:
     """Test m.
 
     Arguments:
@@ -148,8 +149,8 @@ def test_save_variable_element() -> None:
 
 
 @pytest.mark.parametrize("lattice", ["dba_lattice", "simple_hmba"])
-def test_xsuite_json(request, lattice: Lattice) -> None:
-    """Test xsuite json saving in .json file.
+def test_xsuite_json(request, lattice: str) -> None:
+    """Test xsuite JSON saving.
 
     This checks that the Xsuite json output can be written and read without loosing
     information, but does not check that Xsuite can interpret it.

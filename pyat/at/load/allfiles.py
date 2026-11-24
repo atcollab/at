@@ -115,7 +115,7 @@ def load_pkl(filename: str | Path, **kwargs) -> Lattice:
     """
     p = Path(filename)
     with p.open("rb") as fp:
-        lattice = pickle.load(fp, **kwargs)
+        lattice = pickle.load(fp)
     if not isinstance(lattice, Lattice):
         msg = f"File load failed: unexpected type {type(lattice)} instead of Lattice."
         raise TypeError(msg)
