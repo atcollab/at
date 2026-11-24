@@ -86,8 +86,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->means=means;
         Elem->turn = 0;
     }
-    BeamMomentsPass(r_in, Param->nbunch, num_particles, Elem);
-    Elem->turn++;
+    if (num_particles > 0) {}
+        BeamMomentsPass(r_in, Param->nbunch, num_particles, Elem);
+        Elem->turn++;
+    }
     return Elem;
 }
 

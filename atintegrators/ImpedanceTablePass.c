@@ -261,7 +261,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->waketableQY=waketableQY;
         Elem->waketableZ=waketableZ;
     }
-    impedance_tablePass(r_in,num_particles,Elem);
+    if (num_particles > 0) {
+        impedance_tablePass(r_in,num_particles,Elem);
+    }
     return Elem;
 }
 
