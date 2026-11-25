@@ -17,6 +17,8 @@ struct parameters
   double energy;
   double rest_energy;
   double charge;
+  double gamma0;
+  double beta0;
   double beam_current;
   int nbunch;
   double *bunch_spos;

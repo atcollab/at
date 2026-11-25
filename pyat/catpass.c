@@ -202,6 +202,8 @@ static void default_parameters(struct parameters *param, at_state *module_data)
     param->energy = 1.0e9;
     param->rest_energy = module_data->electron_mass;
     param->charge = -1.0;
+    param->gamma0 = 1.0E-9 * param->energy / __E0;
+    param->beta0 = 1.0;
     param->beam_current = 0.0;
     param->nbunch = 1;
     param->bunch_spos = (double[1]){0.0};
@@ -219,7 +221,6 @@ static void lattice_parameters(
     at_state *module_data,
     PyObject *lattice,
     PyObject *particle,
-    double arg_energy
 )
 {
      if (particle != NULL)     /* Try argument first */
@@ -240,23 +241,27 @@ static void lattice_parameters(
     if (lattice != NULL) {
        GET_ATTRIBUTE(&param->energy, PyFloat_AsDouble, lattice, "energy");
     }
+}
 
+static void energy_parameters(struct parameters *param, double arg_energy)
+{
     if (arg_energy > 0.0) {
         param->energy = arg_energy;
     }
 
     if (param->rest_energy == 0.0) {
         param->T0 = param->RingLength/module_data->clight;
-    } else {
-        /*  Only relativistic tracking is implemented: keep everything consistent
-        double gamma0 = param->energy/param->rest_energy;
+        param->gamma0 = 1.0E-9 * param->energy / __E0;
+        param->beta0 = 1.0;
+    }
+    else {
+        double gamma0 = param->energy / param->rest_energy;
         double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
+        param->gamma0 = gamma0;
+        param->beta0 = beta0;
         param->T0 = param->RingLength/(beta0*module_data->clight);
-        */
-        param->T0 = param->RingLength/module_data->clight;
     }
-    PyErr_Clear();
 }
 
 /* Fill the param structure with filling pattern */
@@ -334,7 +339,7 @@ static void *allocate_lattice(
     lat_state *lattice_data = (lat_state *)calloc(1, sizeof(lat_state));
     struct parameters *param = &(lattice_data->params);
     default_parameters(param, module_data);
-    lattice_parameters(param, module_data, lattice, particle, energy);
+    lattice_parameters(param, module_data, lattice, particle);
     set_current_fillpattern(param, lattice_data, lattice, bspos);
 
     lattice_data->num_elements = num_elements;
@@ -389,6 +394,7 @@ static void *allocate_lattice(
 
     param->RingLength = length;
     param->nturn = 0;
+    energy_parameters(param, energy);
 
     return lattice_data;
 }
@@ -447,7 +453,8 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
         &energy, module_data->particle_type, &particle)) {
         return NULL;
     }
-    lattice_parameters(&param, module_data, NULL, particle, energy);
+    lattice_parameters(&param, module_data, NULL, particle);
+    energy_parameters(&param, energy);
 
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
@@ -504,7 +511,8 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
         &energy, module_data->particle_type, &particle)) {
         return NULL;
     }
-    lattice_parameters(&param, module_data, NULL, particle, energy);
+    lattice_parameters(&param, module_data, NULL, particle);
+    energy_parameters(&param, energy);
 
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
