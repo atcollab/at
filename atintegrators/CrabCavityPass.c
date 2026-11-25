@@ -86,11 +86,9 @@ void CrabCavityPass(
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param)
 {
-    double energy, nvx, nvy;
-    double PhaseLag, SigPhi, SigVV;
-
     if (!Elem) {
         double Length, Frequency, *Voltages, Energy, HarmNumber, TimeLag;
+        double PhaseLag, SigPhi, SigVV;
 		Length = atGetDouble(ElemData,"Length"); check_error();
 		Voltages = atGetDoubleArray(ElemData,"Voltages"); check_error();
 		Frequency = atGetDouble(ElemData,"Frequency"); check_error();
@@ -117,24 +115,24 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->SigPhi=SigPhi;
         Elem->SigVV=SigVV;
     }
-    else {
-        PhaseLag=Elem->PhaseLag;
-        SigPhi=Elem->SigPhi;
-        SigVV=Elem->SigVV;
-    }
-    energy = atEnergy(Param->energy, Elem->Energy); check_error(); check_error();
-    nvx = Elem->Vx;
-    nvy = Elem->Vy;
+    if (num_particles > 0) {
+        double PhaseLag=Elem->PhaseLag;
+        double SigPhi=Elem->SigPhi;
+        double SigVV=Elem->SigVV;
+        double energy = atEnergy(Param->energy, Elem->Energy);
+        double nvx = Elem->Vx;
+        double nvy = Elem->Vy;
 
-    if (SigPhi > 0.0)
-        PhaseLag += atrandn_r(Param->common_rng, 0.0, SigPhi);
-    if (SigVV > 0.0) {
-        nvx *= atrandn_r(Param->common_rng, 1.0, SigVV);
-        nvy *= atrandn_r(Param->common_rng, 1.0, SigVV);
-    }
+        if (SigPhi > 0.0)
+            PhaseLag += atrandn_r(Param->common_rng, 0.0, SigPhi);
+        if (SigVV > 0.0) {
+            nvx *= atrandn_r(Param->common_rng, 1.0, SigVV);
+            nvy *= atrandn_r(Param->common_rng, 1.0, SigVV);
+        }
 
-    CrabCavityPass(r_in, Elem->Length, nvx/energy, nvy/energy, Elem->Frequency, Elem->HarmNumber,
-        Elem->TimeLag, PhaseLag, Param->nturn, Param->T0, Param->s_coord, energy/Param->rest_energy, num_particles);
+        CrabCavityPass(r_in, Elem->Length, nvx/energy, nvy/energy, Elem->Frequency, Elem->HarmNumber,
+            Elem->TimeLag, PhaseLag, Param->nturn, Param->T0, Param->s_coord, energy/Param->rest_energy, num_particles);
+    }
     return Elem;
 }
 
@@ -150,6 +148,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         double rest_energy = 0.0;
         double charge = -1.0;
+        double gamma0;
+        double beta0;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         double Length=atGetDouble(ElemData,"Length");
@@ -160,7 +160,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double HarmNumber=atGetOptionalLong(ElemData,"HarmNumber", 0); check_error();
 		double TimeLag = atGetOptionalDouble(ElemData,"TimeLag",0.0); check_error();
 		double PhaseLag = atGetOptionalDouble(ElemData,"PhaseLag",0.0); check_error();
-        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+        if (nrhs > 2) atParameters(prhs[2], &Energy, &rest_energy, &charge, &gamma0, &beta0);
 
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */
@@ -169,7 +169,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         nvx = Voltages[0] / Energy;
         nvy = Voltages[1] / Energy;
 	    CrabCavityPass(r_in, Length, nvx, nvy, Frequency, HarmNumber, TimeLag, PhaseLag,
-	        0, 0.0, 0.0, Energy/rest_energy, num_particles);
+	        0, 0.0, 0.0, gamma0, num_particles);
     }
     else if (nrhs == 0) {
 	    plhs[0] = mxCreateCellMatrix(3,1);

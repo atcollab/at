@@ -230,15 +230,15 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
     }
-    #if defined(RADIATION) || defined(QUANTUM)
-    double gamma0 = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
-    #ifdef DIFFUSION
-    double *bdiff = Param->bdiff;
-    #elif defined RADIATION
-    double *bdiff = NULL;
-    #endif
-    #endif
     if ((num_particles > 0) && (r_in) && (Elem->Length != 0.0)) {
+        #if defined(RADIATION) || defined(QUANTUM)
+        double gamma0 = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
+        #ifdef DIFFUSION
+        double *bdiff = Param->bdiff;
+        #elif defined RADIATION
+        double *bdiff = NULL;
+        #endif
+        #endif
         magnet(r_in, Elem->Length, Elem->BendingAngle,
                 Elem->PolynomA, Elem->PolynomB,
                 Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
@@ -317,8 +317,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
         double rest_energy = 0.0;
         double charge = -1.0;
-        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
-        double gamma0 = atGamma(Energy, Energy, rest_energy);
+        double gamma0;
+        double beta0;
+        if (nrhs > 2) atParameters(prhs[2], &Energy, &rest_energy, &charge, &gamma0, &beta0);
         #endif
 
         magnet(r_in, Length, BendingAngle, PolynomA, PolynomB,

@@ -83,8 +83,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
     if (energy == 0.0) energy = Elem->Energy;
 
-    CavityPass(r_in,Elem->Length,Elem->Voltage/energy,Elem->Frequency,
-            Elem->TimeLag,Elem->PhaseLag,num_particles);
+    if (num_particles > 0) {
+        CavityPass(r_in,Elem->Length,Elem->Voltage/energy,Elem->Frequency,
+                   Elem->TimeLag,Elem->PhaseLag,num_particles);
+    }
     return Elem;
 }
 
@@ -99,6 +101,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nrhs >= 2) {
         double rest_energy = 0.0;
         double charge = -1.0;
+        double gamma0;
+        double beta0;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
@@ -108,7 +112,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Energy=atGetOptionalDouble(ElemData,"Energy",0.0);
         double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
         double PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0);
-        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+        if (nrhs > 2) atParameters(prhs[2], &Energy, &rest_energy, &charge, &gamma0, &beta0);
 
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */

@@ -244,7 +244,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 
 {
-    double gamma;
     double *bdiff = Param->bdiff;
 
     if (!Elem) {
@@ -291,12 +290,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T1=T1;
         Elem->T2=T2;
     }
-    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
-
-    GWigSymplecticRadPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
-            Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
-            Elem->By, Elem->Bx, Elem->T1, Elem->T2, Elem->R1, Elem->R2,
-            num_particles, bdiff);
+if (num_particles >0) {
+        double gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+        GWigSymplecticRadPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
+                Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
+                Elem->By, Elem->Bx, Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+                num_particles, bdiff);
+  }
   return Elem;
 }
 
@@ -316,6 +316,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         double charge = -1.0;
         double *r_in;
         double Gamma;
+        double beta0;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         double *By, *Bx;
@@ -341,7 +342,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
         T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
-        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+        if (nrhs > 2) atParameters(prhs[2], &Energy, &rest_energy, &charge, &Gamma, &beta0);
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);

@@ -38,7 +38,7 @@ typedef double mxDouble;
 
 #endif
 
-
+#define atPrintf(...) mexPrintf(__VA_ARGS__)
 
 #define LATTICE prhs[0]
 #define INITCONDITIONS prhs[1]
@@ -320,7 +320,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         param.nturn = counter;
 
     if (nrhs >= 10) {
-        atProperties(RINGPROPERTIES, &param.energy, &param.rest_energy, &param.charge);
+        atParameters(RINGPROPERTIES, &param.energy, &param.rest_energy, &param.charge, &param.gamma0, &param.beta0);
     }
 
     if (nlhs >= 2) {

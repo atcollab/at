@@ -519,6 +519,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
       double *VoltDelay, *PhaseDelay, *pil_init;
       double wakefact, Energy, Frequency, TimeLag, Length;
+      double gamma0, beta0;
       double normfact, qfactor, rshunt, beta, phis, ts, cutoff;
       double *gain;
       double *turnhistory;
@@ -669,7 +670,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->IIRout=IIRout;
       
       Elem->fbmode = fbmode;
-      if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+      if (nrhs > 2) atParameters(prhs[2], &Energy, &rest_energy, &charge, &gamma0, &beta0);
 
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */

@@ -77,21 +77,22 @@ MODULE_DEF(RFCavityPass)        /* Dummy module initialisation */
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 { 	
   if (nrhs >= 2) {
-      double Energy = 0.0;
       double rest_energy = 0.0;
       double charge = -1.0;
+      double gamma0;
+      double beta0;
       double *r_in;
       const mxArray *ElemData = prhs[0];
       int num_particles = mxGetN(prhs[1]);
       double Length=atGetDouble(ElemData,"Length");
       double Voltage=atGetDouble(ElemData,"Voltage");
-      Energy=atGetOptionalDouble(ElemData,"Energy",Energy);
+      double Energy=atGetOptionalDouble(ElemData,"Energy", 0.0);
       double Frequency=atGetDouble(ElemData,"Frequency");
       double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
       double PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0);
       double T0=1.0/Frequency;      /* Does not matter since nturns == 0 */
       double HarmNumber=round(Frequency*T0);
-      if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+      if (nrhs > 2) atParameters(prhs[2], &Energy, &rest_energy, &charge, &gamma0, &beta0);
 
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
