@@ -200,9 +200,9 @@ static void default_parameters(struct parameters *param, at_state *module_data)
     param->T0 =0.0;
     param->s_coord = 0.0;
     param->energy = 1.0e9;
-    param->rest_energy = module_data->electron_mass;
+    param->rest_energy = 0.0;
     param->charge = -1.0;
-    param->gamma0 = 1.0E-9 * param->energy / __E0;
+    param->gamma0 = param->energy / module_data->electron_mass;
     param->beta0 = 1.0;
     param->beam_current = 0.0;
     param->nbunch = 1;
@@ -220,7 +220,7 @@ static void lattice_parameters(
     struct parameters *param,
     at_state *module_data,
     PyObject *lattice,
-    PyObject *particle,
+    PyObject *particle
 )
 {
      if (particle != NULL)     /* Try argument first */
@@ -243,7 +243,7 @@ static void lattice_parameters(
     }
 }
 
-static void energy_parameters(struct parameters *param, double arg_energy)
+static void energy_parameters(struct parameters *param, at_state *module_data, double arg_energy)
 {
     if (arg_energy > 0.0) {
         param->energy = arg_energy;
@@ -251,7 +251,7 @@ static void energy_parameters(struct parameters *param, double arg_energy)
 
     if (param->rest_energy == 0.0) {
         param->T0 = param->RingLength/module_data->clight;
-        param->gamma0 = 1.0E-9 * param->energy / __E0;
+        param->gamma0 = 1.0E-9 * param->energy / module_data->electron_mass;
         param->beta0 = 1.0;
     }
     else {
@@ -394,7 +394,7 @@ static void *allocate_lattice(
 
     param->RingLength = length;
     param->nturn = 0;
-    energy_parameters(param, energy);
+    energy_parameters(param, module_data, energy);
 
     return lattice_data;
 }
@@ -454,7 +454,7 @@ static PyObject *elem_pass(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     lattice_parameters(&param, module_data, NULL, particle);
-    energy_parameters(&param, energy);
+    energy_parameters(&param, module_data, energy);
 
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
@@ -512,7 +512,7 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     lattice_parameters(&param, module_data, NULL, particle);
-    energy_parameters(&param, energy);
+    energy_parameters(&param, module_data, energy);
 
     if (PyArray_DIM(rin,0) != 6) {
         return PyErr_Format(PyExc_ValueError, "rin is not 6D");
