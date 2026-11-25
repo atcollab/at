@@ -364,3 +364,200 @@ class ResWallElement(WakeElement):
     def Yokoya(self, yokoya):
         self._yokoya = yokoya
         self.rebuild_wake()
+        
+############################################
+
+
+# noinspection PyPep8Naming
+class NonLinearWakeElement(Collective, Element):
+    """Class to generate an AT wake element using the passmethod NonLinearWakeFieldPass
+    """
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    default_pass = {False: 'IdentityPass', True: 'NonLinearWakeFieldPass'}
+    _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
+                        _nelem=int, _wakeFact=float,
+                        NormFact=lambda v: _array(v, (3,)),
+                        ZCuts=lambda v: _array(v),
+                        _wakeDX=lambda v: _array(v),
+                        _wakeDY=lambda v: _array(v),
+                        _wakeQX=lambda v: _array(v),
+                        _wakeQY=lambda v: _array(v),
+                        _wakeZ=lambda v: _array(v),
+                        _wakeT=lambda v: _array(v),
+                        _wakeCX=lambda v: _array(v),
+                        _wakeCY=lambda v: _array(v),
+                        FactorDX=lambda v: _array(v),
+                        FactorDY=lambda v: _array(v),
+                        FactorQX=lambda v: _array(v),
+                        FactorQY=lambda v: _array(v),
+                        OrderDX=int, OrderDY=int,
+                        OrderQX=int, OrderQY=int)
+
+    def __init__(self, family_name: str, ring: Lattice, wake: Wake, **kwargs):
+        """
+        Parameters:
+            family name:    Element name
+            ring:           Lattice in which the element will be inserted
+            wake:           :py:class:`.Wake` object
+
+        Keyword Arguments:
+            Nslice (int):       Number of slices per bunch. Default: 101
+            Nturns (int):       Number of turn for the wake field. Default: 1
+            ZCuts:              Limits for fixed slicing, default is adaptive
+            NormFact (Tuple[float,...]):    Normalization for the 3 planes,
+              to account for beta function at the observation point for
+              example. Default: (1,1,1)
+            
+               
+"""
+        kwargs.setdefault('PassMethod', self.default_pass[True])
+        zcuts = kwargs.pop('ZCuts', None)
+        self._wakefact = - ring.circumference/(clight *
+                                               ring.energy*ring.beta**3)
+        self._nslice = kwargs.pop('Nslice', 101)
+        self._nturns = kwargs.pop('Nturns', 1)
+        self._factorDX = kwargs.pop("FactorDX", None)
+        self._factorDY = kwargs.pop("FactorDY", None)        
+        self._factorQX = kwargs.pop("FactorQX", None)
+        self._factorQY = kwargs.pop("FactorQY", None)
+        self._orderDX = kwargs.pop("OrderDX", None)
+        self._orderDY = kwargs.pop("OrderDY", None)
+        self._orderQX = kwargs.pop("OrderQX", None)
+        self._orderQY = kwargs.pop("OrderQY", None)
+        self._turnhistory = None    # Defined here to avoid warning
+        self.clear_history(ring=ring)
+        self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
+        self._build(wake)
+        if zcuts is not None:
+            self.ZCuts = zcuts
+        super(WakeElement, self).__init__(family_name, **kwargs)
+
+    def _build(self, wake):
+        self._wakeT = wake.srange
+        self._nelem = len(self._wakeT)
+        if wake.Z is not None:
+            self._wakeZ = wake.Z
+        if wake.DX is not None:
+            self._wakeDX = wake.DX
+        if wake.DY is not None:
+            self._wakeDY = wake.DY
+        if wake.QX is not None:
+            self._wakeQX = wake.QX
+        if wake.QY is not None:
+            self._wakeQY = wake.QY
+        if wake.CX is not None:
+            self._wakeCX = wake.CX
+        if wake.CY is not None:
+            self._wakeCY = wake.CY
+        
+    def rebuild_wake(self, wake):
+        self._build(wake)
+
+    def clear_history(self, ring=None):
+        if ring is not None:
+            self._nbunch = ring.nbunch
+        tl = self._nturns*self._nslice*self._nbunch
+        self._turnhistory = numpy.zeros((tl, 4), order='F')
+
+    def set_normfactxy(self, ring):
+        l0, _, _ = ring.get_optics()
+        self.NormFact[0] = 1/l0['beta'][0]
+        self.NormFact[1] = 1/l0['beta'][1]
+
+    @property
+    def WakeT(self):
+        return self._wakeT
+
+    @property
+    def WakeZ(self):
+        """Longitudinal component"""
+        return getattr(self, '_wakeZ', None)
+
+    @property
+    def WakeDX(self):
+        """Dipole X component"""
+        return getattr(self, '_wakeDX', None)
+
+    @property
+    def WakeDY(self):
+        """Dipole Y component"""
+        return getattr(self, '_wakeDY', None)
+
+    @property
+    def WakeQX(self):
+        """Quadrupole X component"""
+        return getattr(self, '_wakeQX', None)
+
+    @property
+    def WakeQY(self):
+        """Quadrupole Y component"""
+        return getattr(self, '_wakeQY', None)
+
+    @property
+    def WakeCX(self):
+        """Constant Dipole X component"""
+        return getattr(self, '_wakeCX', None)
+
+    @property
+    def WakeCY(self):
+        """Constant Dipole Y component"""
+        return getattr(self, '_wakeCY', None)
+
+    @property
+    def FactorDX(self):
+        """Dipole X factor """
+        return getattr(self, '_factorDX', None)
+
+    @property
+    def FactorDY(self):
+        """Dipole Y factor """
+        return getattr(self, '_factorDY', None)
+
+    @property
+    def FactorQX(self):
+        """Quad. X factor """
+        return getattr(self, '_factorQX', None)
+
+    @property
+    def FactorQY(self):
+        """Quad Y factor """
+        return getattr(self, '_factorQY', None)
+
+                
+    @property
+    def Nslice(self):
+        """Number of slices per bunch"""
+        return self._nslice
+
+    @Nslice.setter
+    def Nslice(self, nslice):
+        self._nslice = nslice
+        self.clear_history()
+
+    @property
+    def Nturns(self):
+        """Number of turn for the wake field"""
+        return self._nturns
+
+    @Nturns.setter
+    def Nturns(self, nturns):
+        self._nturns = nturns
+        self.clear_history()
+
+    @property
+    def TurnHistory(self):
+        """Turn histroy of the slices center of mass"""
+        return self._turnhistory
+
+    def __repr__(self):
+        """Simplified __repr__ to avoid errors due to arguments
+        not defined as attributes
+        """
+        attrs = dict((k, v) for (k, v) in self.items()
+                     if not k.startswith('_'))
+        return '{0}({1})'.format(self.__class__.__name__, attrs)
+        
+        
+        
+        
+        
