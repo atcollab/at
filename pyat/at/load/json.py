@@ -7,6 +7,7 @@ from __future__ import annotations
 __all__ = ["load_json", "save_json"]
 
 from pathlib import Path
+from collections.abc import Mapping, Generator
 import json
 from typing import Any
 
@@ -37,6 +38,16 @@ class _AtEncoder(json.JSONEncoder):
             return super().default(o)
 
 
+def json_decoder(elem_dict: Mapping) -> Generator[tuple[str, Any], None, None]:
+    for k, v in elem_dict.items():
+        if isinstance(v, (str, int, float, bool)):
+            yield k, v
+        elif isinstance(v, Mapping):
+            yield k, dict(json_decoder(v))
+        else:
+            yield k, np.array(v)
+
+
 def save_json(
     ring: Lattice, filename: str | Path | None = None, compact: bool = False
 ) -> None:
@@ -51,6 +62,7 @@ def save_json(
 
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
+
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     indent = None if compact else 2
@@ -104,7 +116,7 @@ def _load_at(root: dict[str, Any], **kwargs) -> Lattice:
         for k, v in properties.items():
             params.setdefault(k, v)
         for idx, elem_dict in enumerate(elements):
-            yield element_from_dict(elem_dict, index=idx)
+            yield element_from_dict(json_decoder(elem_dict), index=idx)
 
     return Lattice(root, iterator=json_generator, **kwargs)
 

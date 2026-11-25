@@ -21,7 +21,7 @@ import collections
 import re
 from typing import ClassVar, Any
 from warnings import warn, filterwarnings
-from collections.abc import Generator, Callable
+from collections.abc import Generator, Callable, Mapping, Iterable
 
 import numpy as np
 
@@ -258,7 +258,8 @@ def find_class(elem: dict, *, index: int | None = None, quiet: bool = False) -> 
 
 
 def element_from_dict(
-    elem_dict: dict,
+    elem_dict: Mapping[str, Any] | Iterable[tuple[str, Any]],
+    /,
     index: int | None = None,
     quiet: bool = False,
 ) -> Element:
@@ -273,24 +274,25 @@ def element_from_dict(
         elem (Element): new :py:class:`.Element`
     """
     # Translate Matlab field names back to python
-    dct = {show_under(k): v for k, v in elem_dict.items()}
+    elem_iter = elem_dict.items() if isinstance(elem_dict, Mapping) else elem_dict
+    dct = {show_under(k): v for k, v in elem_iter}
     # Extract the class name, or try to deduce it from the element contents
     try:
         classname = dct.pop("Class")
     except KeyError:
-        classname = find_class(elem_dict, index=index, quiet=quiet)
+        classname = find_class(dct, index=index, quiet=quiet)
     # Get the class from the class name, or use Drift/Marker if not found
     try:
         cls = _CLASS_MAP[classname.lower()]
     except KeyError:
-        if elem_dict.get("Length", 0.0) > 0:
+        if dct.get("Length", 0.0) > 0:
             cls = Drift
-            elem_dict["PassMethod"] = "DriftPass"
+            dct["PassMethod"] = "DriftPass"
         else:
             cls = Marker
-            elem_dict["PassMethod"] = "IdentityPass"
+            dct["PassMethod"] = "IdentityPass"
         msg = f"Class '{classname}' does not exist, using `{cls.__name__}` instead."
-        _warn(index, msg, elem_dict, stacklevel=3)
+        _warn(index, msg, dct, stacklevel=3)
     return cls.new_from_dict(**dct)
 
 
