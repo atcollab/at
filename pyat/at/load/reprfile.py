@@ -13,17 +13,25 @@ from collections.abc import Generator
 import numpy as np
 
 # imports necessary in 'globals()' for 'eval'
-from numpy import array, uint8, nan as NaN  # noqa: F401
+from numpy import array, uint8, nan as NaN
 
 from at.lattice import Lattice, Element
 
 # imports necessary in' globals()' for 'eval'
-from at.lattice import Particle  # noqa: F401
+from at.lattice import Particle
 from at.load import register_format
 from at.load.utils import keep_attributes, keep_elements
 
 # Map class names to Element classes
 _CLASS_MAP = {cls.__name__: cls for cls in Element.subclasses()}
+_EVAL_GLOBALS = {
+    "__builtins__": {},
+    "np": np,
+    "array": array,
+    "uint8": uint8,
+    "NaN": NaN,
+    "Particle": Particle,
+}
 
 
 def _element_from_string(elem_string: str) -> Element:
@@ -35,7 +43,7 @@ def _element_from_string(elem_string: str) -> Element:
     Returns:
         elem (Element): new :py:class:`.Element`
     """
-    return eval(elem_string, globals(), _CLASS_MAP)
+    return eval(elem_string, _EVAL_GLOBALS, _CLASS_MAP)
 
 
 def load_repr(filename: str | Path, **kwargs) -> Lattice:

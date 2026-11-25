@@ -7,6 +7,7 @@ from __future__ import annotations
 __all__ = ["load_m", "load_mat", "load_var", "save_m", "save_mat"]
 
 import sys
+from ast import literal_eval
 from collections.abc import Generator, Sequence, Mapping, Iterator, Iterable
 from math import isfinite
 from pathlib import Path
@@ -16,11 +17,6 @@ from warnings import warn
 import h5py
 import numpy as np
 import scipy.io
-
-# imports necessary in 'globals()' for 'eval'
-from numpy import array  # noqa: F401
-from numpy import nan as NaN  # noqa: F401
-from numpy import uint8  # noqa: F401
 
 from ..lattice import (
     AtError,
@@ -138,7 +134,6 @@ def _matfile_generator(
             raise AtError(msg)
         return params, key
 
-    # noinspection PyUnresolvedReferences
     check = params.pop("check", True)  # noqa: F841 # kept for compatibility
     quiet = params.pop("quiet", False)
     params.setdefault("in_file", str(mat_file))
@@ -277,15 +272,15 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
     def argsplit(value):
         return [a.strip() for a in split_ignoring_parentheses(value)]
 
-    def makedir(mat_struct: Iterable[str]) -> Iterator[tuple[str, Any]]:
-        """Build directory from Matlab struct arguments."""
+    def makedict(mat_struct: Iterable[str]) -> Iterator[tuple[str, Any]]:
+        """Build dictionary from Matlab struct arguments."""
         it = iter(mat_struct)
         while True:
             try:
                 a = next(it)
             except StopIteration:
                 break
-            yield eval(a), convert(next(it))
+            yield literal_eval(a), convert(next(it))
 
     def makearray(mat_arr: str) -> np.ndarray:
         """Build numpy array from Matlab array as strings.
@@ -306,14 +301,14 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
         if value.startswith("["):
             result = makearray(value)
         elif value.startswith("struct"):
-            result = dict(makedir(argsplit(value[7:-1])))
+            result = dict(makedict(argsplit(value[7:-1])))
         elif value == "false":
             result = False
         elif value == "true":
             result = True
-        else:
+        else:  # string, scalar
             try:
-                result = eval(value)
+                result = literal_eval(value)
             except (NameError, SyntaxError):
                 msg = (
                     f"In element {index}:\n"
@@ -334,7 +329,7 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
         arguments.insert(ll, "'PassMethod'")
     elem_args = [convert(v) for v in arguments[:ll]]
     elem_kwargs = dict(zip(build_attrs, elem_args, strict=True))
-    elem_kwargs.update(makedir(arguments[ll:]))
+    elem_kwargs.update(makedict(arguments[ll:]))
     if matcls == "rbend":
         # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
         # necessary for using the python sector bend
@@ -424,7 +419,6 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
         lattice (Lattice):  New :py:class:`.Lattice` object
     """
 
-    # noinspection PyUnusedLocal
     def var_generator(params, latt):
         quiet = params.pop("quiet", False)
         for index, elem in enumerate(latt):
