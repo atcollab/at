@@ -219,6 +219,14 @@ cconfig = Extension(
     extra_compile_args=cflags + omp_cflags,
 )
 
+ibsrates = Extension(
+    name="at.collective._ibs",
+    sources=[at_src / "at" / "collective" / "_ibs.c"],
+    include_dirs=[np.get_include(), str(integrator_src_orig)],
+    define_macros=macros,
+    extra_compile_args=cflags,
+)
+
 gpusource = [
     *gpu_pass_methods,
     gpu_src / "AbstractGPU.cpp",
@@ -248,7 +256,7 @@ openclext = Extension(
 )
 
 setup(
-    ext_modules=[at, cconfig]
+    ext_modules=[at, cconfig, ibsrates]
     + [integrator_ext(pm, cflags) for pm in c_pass_methods]
     + [integrator_ext(pm, cppflags) for pm in cpp_pass_methods]
     + ([cudaext] if cuda else [])
