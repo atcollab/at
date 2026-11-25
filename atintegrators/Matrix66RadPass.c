@@ -34,11 +34,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double *M66=atGetOptionalDoubleArray(ElemData,"M66Rad");
-        if (M66 == NULL) M66=atGetDoubleArray(ElemData,"M66");
+        double *M66=atGetOptionalDoubleArray(ElemData,"M66Rad"); check_error();
+        if (M66 == NULL) M66=atGetDoubleArray(ElemData,"M66"); check_error();
         /*optional fields*/
         double *M6 =atGetOptionalDoubleArray(ElemData,"M6Rad"); check_error();
-        if (M6 == NULL) M6=atGetOptionalDoubleArray(ElemData,"M6");
+        if (M6 == NULL) M6=atGetOptionalDoubleArray(ElemData,"M6"); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
@@ -66,11 +66,11 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double *M66=atGetDoubleArray(ElemData,"M66Rad"); check_error();
-        if (M66 == NULL) M66=atGetDoubleArray(ElemData,"M66");
+        double *M66=atGetOptionalDoubleArray(ElemData,"M66Rad"); check_error();
+        if (M66 == NULL) M66=atGetDoubleArray(ElemData,"M66"); check_error();
         /*optional fields*/
         double *M6=atGetOptionalDoubleArray(ElemData,"M6Rad"); check_error();
-        if (M6 == NULL) M6=atGetOptionalDoubleArray(ElemData,"M6");
+        if (M6 == NULL) M6=atGetOptionalDoubleArray(ElemData,"M6"); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
@@ -88,8 +88,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(7,1);
-            mxSetCell(plhs[0], 0,mxCreateString("M66Rad"));
-            mxSetCell(plhs[0], 1,mxCreateString("M6"));
+            mxSetCell(plhs[1], 0,mxCreateString("M66Rad"));
+            mxSetCell(plhs[1], 1,mxCreateString("M6"));
             mxSetCell(plhs[1], 2,mxCreateString("M6Rad"));
             mxSetCell(plhs[1], 3,mxCreateString("T1Rad"));
             mxSetCell(plhs[1], 4,mxCreateString("T2Rad"));

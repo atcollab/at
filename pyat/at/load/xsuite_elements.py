@@ -749,7 +749,7 @@ class FirstOrderTaylorMap(XsElement):
     def _set_at_params(self, beta0: float = 1.0, **kwargs) -> dict[str, Any]:
         atparams = super()._set_at_params(beta0=beta0, **kwargs)
         if (m1 := self.get("m1", None)) is not None:
-            m66 = m1.copy(order="F")
+            m66 = np.array(m1, order="F")
             # Swap columns 4 and 5
             tmp = m66[:, 5].copy()
             m66[:, 5] = -m66[:, 4] / beta0
@@ -760,7 +760,7 @@ class FirstOrderTaylorMap(XsElement):
             m66[4, :] = tmp / beta0
             atparams["M66"] = m66
         if (m0 := self.get("m0", None)) is not None:
-            m6 = m0.copy(order="F")
+            m6 = np.array(m0, order="F")
             # Swap items 4 and 5
             tmp = m6[5]
             m6[5] = -m6[4] * beta0
