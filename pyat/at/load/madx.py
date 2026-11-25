@@ -557,7 +557,6 @@ class ignore(_MadElement):
 class _Value:
     """VALUE command."""
 
-    # noinspection PyUnusedLocal
     @staticmethod
     def argparser(parser, argcount, argstr):
         return argstr, parser.evaluate(argstr)
@@ -607,7 +606,6 @@ class _Line(SequenceDescr):
                         yield from el.expand(parser)
 
 
-# noinspection PyPep8Naming
 class _Sequence(SequenceDescr):
     """Descriptor for the MADX SEQUENCE."""
 
@@ -1056,7 +1054,6 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             radiate = False
         else:
             del lat.radiate
-        # noinspection PyUnboundLocalVariable
         if radiate:
             lat.enable_6d(copy=False)
         # if not parameterised:

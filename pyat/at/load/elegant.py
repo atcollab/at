@@ -128,14 +128,12 @@ class _ElegantElement(ElementDescr):
 # ------------------------------
 
 
-# noinspection PyPep8Naming
 class DRIF(_ElegantElement):
     @elegant_element
     def to_at(self, l=0.0, **params):  # noqa: E741
         return [elt.Drift(self.name, l, **params)]
 
 
-# noinspection PyPep8Naming
 class MARK(_ElegantElement):
     at2mad: ClassVar[dict[str, str]] = {}
 
@@ -144,7 +142,6 @@ class MARK(_ElegantElement):
         return [elt.Marker(self.name, **params)]
 
 
-# noinspection PyPep8Naming
 class KQUAD(_ElegantElement):
     @elegant_element
     def to_at(self, l, k1=0.0, **params):  # noqa: E741
@@ -157,7 +154,6 @@ class KQUAD(_ElegantElement):
         return el
 
 
-# noinspection PyPep8Naming
 class KSEXT(_ElegantElement):
     @elegant_element
     def to_at(self, l, k2=0.0, **params):  # noqa: E741
@@ -170,7 +166,6 @@ class KSEXT(_ElegantElement):
         return el
 
 
-# noinspection PyPep8Naming
 class KQUSE(_ElegantElement):
     @elegant_element
     def to_at(self, l, k1=0.0, k2=0.0, **params):  # noqa: E741
@@ -178,7 +173,6 @@ class KQUSE(_ElegantElement):
         return [elt.Multipole(self.name, l, [], poly_b, **params)]
 
 
-# noinspection PyPep8Naming
 class KOCT(_ElegantElement):
     @elegant_element
     def to_at(self, l, k3=0.0, **params):  # noqa: E741
@@ -206,7 +200,6 @@ class MULT(_ElegantElement):
             return [elt.Multipole(self.name, l, poly_a, poly_b, **params)]
 
 
-# noinspection PyPep8Naming
 class CSBEND(_ElegantElement):
     at2mad: ClassVar[dict[str, str]] = {
         "Length": "L",
@@ -253,7 +246,6 @@ class CSBEND(_ElegantElement):
         return el
 
 
-# noinspection PyPep8Naming
 class RBEN(CSBEND):
     @elegant_element
     def to_at(self, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
@@ -268,7 +260,6 @@ class RBEN(CSBEND):
         return self["l"] / sinc(hangle)
 
 
-# noinspection PyPep8Naming
 class KICKER(_ElegantElement):
     @elegant_element
     def to_at(self, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
@@ -284,21 +275,18 @@ class KICKER(_ElegantElement):
         return el
 
 
-# noinspection PyPep8Naming
 class HKICK(KICKER):
     @elegant_element
     def to_at(self, l=0.0, kick=0.0, **params):  # noqa: E741
         return super().to_at(l=l, hkick=kick, **params)
 
 
-# noinspection PyPep8Naming
 class VKICK(KICKER):
     @elegant_element
     def to_at(self, l=0.0, kick=0.0, **params):  # noqa: E741
         return super().to_at(l=l, vkick=kick, **params)
 
 
-# noinspection PyPep8Naming
 class RFCA(_ElegantElement):
     at2mad: ClassVar[dict[str, str]] = {
         "Length": "L",
@@ -327,7 +315,6 @@ class RFCA(_ElegantElement):
         return [cavity]
 
 
-# noinspection PyPep8Naming
 class MONI(_ElegantElement):
     @elegant_element
     def to_at(self, l=0.0, **params):  # noqa: E741
@@ -342,12 +329,10 @@ class MONI(_ElegantElement):
             ]
 
 
-# noinspection PyPep8Naming
 class HMON(MONI):
     pass
 
 
-# noinspection PyPep8Naming
 class VMON(MONI):
     pass
 
