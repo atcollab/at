@@ -100,8 +100,8 @@ void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunc
        
         if (!atIsNaN(r6[0])) {
             r6[4] += kz[islice];
-            r6[1] += (kx[islice]+r6[0]*kx2[islice]+kcx[islice])*(1+r6[4]);
-            r6[3] += (ky[islice]+r6[2]*ky2[islice]+kcy[islice])*(1+r6[4]);
+            r6[1] += (kx[islice]+kx2[islice]/(r6[0]*r6[0]*r6[0])+kcx[islice])*(1+r6[4]);
+            r6[3] += (ky[islice]+ky2[islice]/(r6[2]*r6[2]*r6[2])+kcy[islice])*(1+r6[4]);
         }
         
     }

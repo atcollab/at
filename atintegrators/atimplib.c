@@ -179,161 +179,6 @@ static void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     atFree(hz);
 };
 
-static double compute_scaled_factor(double value, double factor, int order){
-    int abs_order = abs(order);
-    int i;
-    double new_value = 1.0;
-        
-    for(i=0;i<abs_order;i++){
-        new_value *= value;
-    }
-
-    if(order<0){
-        new_value = 1/new_value;
-    }    
-
-    return factor * new_value;
-}
-
-static void compute_kicks_nonlinear(int nslice,int nturns,int nelem,
-                                    double *turnhistory,double *waketableT,double *waketableDX,
-                                    double *waketableDY,double *waketableQX,double *waketableQY,
-                                    double *waketableZ, double *waketableCX, double *waketableCY,
-                                    double *normfact, double *kx,double *ky,
-                                    double *kx2,double *ky2,double *kz, double *kcx, double *kcy,
-                                    double *factorDX, double *factorDY, double *factorQX, double *factorQY,
-                                    int orderDX, int orderDY){
-    int rank=0;
-    int size=1;
-    int i,ii,index;
-    double ds,wi,dx,dy;
-    double *turnhistoryX = turnhistory;
-    double *turnhistoryY = turnhistory+nslice*nturns;
-    double *turnhistoryZ = turnhistory+nslice*nturns*2;
-    double *turnhistoryW = turnhistory+nslice*nturns*3;
-    double fdx, fdy, fqx, fqy;
-    
-    for (i=0;i<nslice;i++) {
-        kx[i]=0.0;
-        ky[i]=0.0;
-        kx2[i]=0.0;
-        ky2[i]=0.0;
-        kz[i]=0.0;
-        kcx[i]=0.0;
-        kcy[i]=0.0;
-    }
-
-    #ifdef MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    #endif
-    for(i=nslice*(nturns-1);i<nslice*nturns;i++){  
-        if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
-            for (ii=0;ii<nslice*nturns;ii++){
-                ds = turnhistoryZ[i]-turnhistoryZ[ii];
-                wi = turnhistoryW[ii];
-                if(wi>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
-                    dx = turnhistoryX[ii];
-                    dy = turnhistoryY[ii];
-                    index = index_from_bisection(waketableT,ds,nelem,0,0);
-                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*interpolTable(waketableZ,waketableT,ds,index);
-                    if(waketableCX)kcx[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableCX,waketableT,ds,index);
-                    if(waketableCY)kcy[i-nslice*(nturns-1)] += normfact[1]*wi*interpolTable(waketableCY,waketableT,ds,index);
-                    
-                    if(waketableDX){
-                        if(factorDX){
-                            fdx = interpolTable(factorDX, waketableT, ds, index); 
-                            fdx = compute_scaled_factor(dx, fdx, orderDX);
-                        }else{
-                            fdx = 1.0;
-                        }
-                        kx[i-nslice*(nturns-1)] += fdx*dx*normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index);
-                    }
-                    
-                    if(waketableDY){
-                        if(factorDY){
-                            fdy = interpolTable(factorDY, waketableT, ds, index); 
-                            fdy = compute_scaled_factor(dy, fdy, orderDY);
-                        }else{
-                            fdy = 1.0;
-                        }
-                        ky[i-nslice*(nturns-1)] += fdy*dy*normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index);
-                    }
-                    
-                    if(waketableQX){
-                        if(factorQX){
-                            fqx = interpolTable(factorQX, waketableT, ds, index);
-                        }else{
-                            fqx = 1.0;
-                        }    
-                        kx2[i-nslice*(nturns-1)] += fqx*normfact[0]*wi*interpolTable(waketableQX,waketableT,ds,index);
-                    }
-                    
-                    if(waketableQY){
-                        if(factorQY){
-                            fqy = interpolTable(factorQY, waketableT, ds, index);
-                        }else{
-                            fqy = 1.0;
-                        }                        
-                        ky2[i-nslice*(nturns-1)] += fqy*normfact[1]*wi*interpolTable(waketableQY,waketableT,ds,index);
-                    }   
-
-                }            
-            }
-        }
-    }
-    #ifdef MPI
-    if(waketableDX)MPI_Allreduce(MPI_IN_PLACE,kx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    if(waketableDY)MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    if(waketableQX)MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    if(waketableQY)MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    if(waketableZ)MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    if(waketableCX)MPI_Allreduce(MPI_IN_PLACE,kcx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    if(waketableCY)MPI_Allreduce(MPI_IN_PLACE,kcy,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
-    #endif
-};
-
-
-
-static void wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
-
-    double omega, alpha, omegabar;
-    wake[0] = 0.0;
-    wake[1] = 0.0;
-    double dt;
-    
-    omega = TWOPI * freqres;
-    alpha = omega / (2 * qfactor);
-    omegabar = sqrt(fabs(omega*omega - alpha*alpha));
-    
-    dt = -ds/(beta * C0);      
-             
-    if (dt==0) {
-        wake[0] = rshunt * alpha;
-        wake[1] = 0.0;
-    } else if (dt<0) {
-        if (qfactor > 0.5) {
-            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cos(omegabar * dt) + \
-                      alpha / omegabar * sin(omegabar*dt));
-            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sin(omegabar * dt) - \
-                      alpha / omegabar * cos(omegabar*dt));
-        } else if (qfactor == 0.5) {
-            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (1. + alpha * dt);
-            wake[1] = 0.0;
-        } else if (qfactor < 0.5) {
-            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cosh(omegabar * dt) + \
-                      alpha / omegabar * sinh(omegabar * dt)); 
-            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sinh(omegabar * dt) - \
-                      alpha / omegabar * cosh(omegabar*dt));
-        }       
-    } else {
-        wake[0] = 0.0;
-        wake[1] = 0.0;
-    }            
-}
-
-
 static void compute_kicks(int nslice,int nturns,int nelem,
                    double *turnhistory,double *waketableT,double *waketableDX,
                    double *waketableDY,double *waketableQX,double *waketableQY,
@@ -372,8 +217,8 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
                     index = index_from_bisection(waketableT,ds,nelem,0,0);
-                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index);
-                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index);
+                    if(waketableDX)kx[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index) / (dx*dx*dx);
+                    if(waketableDY)ky[i-nslice*(nturns-1)] += normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index) / (dy*dy*dy);
                     if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableQX,waketableT,ds,index);
                     if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*interpolTable(waketableQY,waketableT,ds,index);
                     if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*interpolTable(waketableZ,waketableT,ds,index);
@@ -396,6 +241,43 @@ static void compute_kicks(int nslice,int nturns,int nelem,
     #endif
 };
 
+
+static void wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
+
+    double omega, alpha, omegabar;
+    wake[0] = 0.0;
+    wake[1] = 0.0;
+    double dt;
+    
+    omega = TWOPI * freqres;
+    alpha = omega / (2 * qfactor);
+    omegabar = sqrt(fabs(omega*omega - alpha*alpha));
+    
+    dt = -ds/(beta * C0);      
+             
+    if (dt==0) {
+        wake[0] = rshunt * alpha;
+        wake[1] = 0.0;
+    } else if (dt<0) {
+        if (qfactor > 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cos(omegabar * dt) + \
+                      alpha / omegabar * sin(omegabar*dt));
+            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sin(omegabar * dt) - \
+                      alpha / omegabar * cos(omegabar*dt));
+        } else if (qfactor == 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (1. + alpha * dt);
+            wake[1] = 0.0;
+        } else if (qfactor < 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cosh(omegabar * dt) + \
+                      alpha / omegabar * sinh(omegabar * dt)); 
+            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sinh(omegabar * dt) - \
+                      alpha / omegabar * cosh(omegabar*dt));
+        }       
+    } else {
+        wake[0] = 0.0;
+        wake[1] = 0.0;
+    }            
+}
 
 
 static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
