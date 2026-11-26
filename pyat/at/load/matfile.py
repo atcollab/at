@@ -333,10 +333,13 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
     build_attrs = cls._BUILD_ATTRIBUTES
     arguments = argsplit(line[left + 1 : right])
     legacy_attrs = getattr(cls, "_LEGACY_M_BUILD_ATTRIBUTES", None)
-    if legacy_attrs and len(arguments) == len(legacy_attrs):
-        pass_index = legacy_attrs.index("PassMethod")
-        if arguments[pass_index].strip("'\"").endswith("Pass"):
-            build_attrs = legacy_attrs
+    if (
+        legacy_attrs
+        and len(arguments) >= len(legacy_attrs)
+        and arguments[1].endswith("Pass'")
+        and not arguments[4].startswith("'")
+    ):
+        build_attrs = legacy_attrs
     ll = len(build_attrs)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")

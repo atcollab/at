@@ -155,12 +155,13 @@ end
         """The previous positional MATLAB constructor syntax remains readable."""
         fname = tmp_path / "legacy_idmap.m"
         fname.write_text(
-            """function ring = legacy_idmap()
-ring = {...
-atinsertiondevicekickmap('idmap','IdTablePass','',6.04,10,1,[1],[2],[0],[0],[0],[0]);...
-};
-end
-""",
+            "function ring = legacy_idmap()\n"
+            "ring = {...\n"
+            "atinsertiondevicekickmap('idmap','IdTablePass','',6.04,"
+            "10,1,[1],[2],[0],[0],[0],[0],"
+            "'T1',[1 2 3 4 5 6]);...\n"
+            "};\n"
+            "end\n",
             encoding="utf-8",
         )
 
@@ -171,6 +172,7 @@ end
         assert loaded.Normalization_energy == 6.04
         assert loaded.list_kickmaps() == ["default"]
         assert loaded.active_kickmap == "default"
+        assert_array_equal(loaded.T1, [1, 2, 3, 4, 5, 6])
 
     @pytest.mark.parametrize("suffix", [".json", ".mat"])
     def test_legacy_data_file_loads(self, idkm_elem, tmp_path, suffix):
