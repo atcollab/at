@@ -193,7 +193,6 @@ class InsertionDeviceKickMap(Element):
             super().__init__(family_name, **kwargs)
             self.KickmapStore = {}
             self.ActiveKickmap = ""
-            self._disable_passmethod = "DriftPass"
 
     def to_dict(self) -> dict[str, Any]:
         """Return serializable attributes, omitting the default empty store."""
@@ -600,7 +599,6 @@ class InsertionDeviceKickMap(Element):
                 self._enable_passmethod = data["PassMethod"]
             else:
                 self.PassMethod = data["PassMethod"]
-            self._disable_passmethod = "DriftPass"
 
     def use_kickmap(self: InsertionDeviceKickMap, key: str) -> None:
         """Activate a stored kickmap by key for tracking.
