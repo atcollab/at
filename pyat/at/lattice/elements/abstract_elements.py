@@ -35,7 +35,9 @@ class LongtMotion(ABC):
         return False
 
     @abc.abstractmethod
-    def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
+    def set_longt_motion(
+        self, enable, new_pass: str | None = None, copy: bool = False, **kwargs
+    ):
         """Enable/Disable longitudinal motion.
 
         Parameters:
@@ -94,7 +96,7 @@ class _DictLongtMotion(LongtMotion):
     def _get_longt_motion(self):
         return self.PassMethod != self.default_pass[False]
 
-    def set_longt_motion(self, enable, new_pass=None, **kwargs):
+    def set_longt_motion(self, enable, new_pass: str | None = None, **kwargs):
         if new_pass == "auto":
             new_pass = self.default_pass[enable]
         return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
