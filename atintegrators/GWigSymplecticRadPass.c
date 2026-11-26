@@ -346,7 +346,6 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        Gamma = atGamma(Energy, Energy, rest_energy);
         r_in = mxGetDoubles(plhs[0]);
 
         GWigSymplecticRadPass(r_in, Gamma, Ltot, Lw, Bmax, Nstep, Nmeth,

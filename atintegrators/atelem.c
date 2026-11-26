@@ -87,6 +87,24 @@ static double atEnergy(double ringenergy, double elemenergy)
         }
 }
 
+static double atGamma2(struct parameters *param, double elemenergy)
+{
+    double gamma0 = param->gamma0;
+    if (gamma0 == 0.0) {
+        if (elemenergy > 0.0) {
+            if (param->rest_energy == 0.0)
+                gamma0 = 1.0E-9 * elemenergy / __E0;
+            else
+                gamma0 = elemenergy / param->rest_energy;
+        }
+        else {
+            atError("Energy must be positive. Check lattice or passmethod parameters.");
+            return 0.0;   /* Never reached but makes the compiler happy */
+        }
+    }
+    return gamma0;
+}
+
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
    mxArray *field;
@@ -235,9 +253,21 @@ static double atEnergy(double ringenergy, double elemenergy)
         return ringenergy;
     else {
         atError("Energy must be positive. Check lattice or set the track() keyword argument.");
-        return 0.0;   /* Never reached but makes the compiler happy */
+        return 0.0;
     }       
 }
+//#define atEnergy(ringenergy, elemenergy) (ringenergy)
+
+static double atGamma2(struct parameters *param, double elemenergy)
+{
+    if (param->gamma0 > 0.0)
+        return param->gamma0;
+    else {
+        atError("Energy must be positive. Check lattice or set the track() keyword argument.");
+        return 0.0;
+    }
+}
+//#define atGamma2(param, elemenergy) (param->gamma0)
 
 static NUMPY_IMPORT_ARRAY_TYPE init_numpy(void)
 {

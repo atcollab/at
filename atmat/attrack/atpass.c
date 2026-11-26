@@ -306,6 +306,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.energy = 0.0;
     param.rest_energy = 0.0;
     param.charge = -1.0;
+    param.gamma0 = 0.0;
+    param.beta0 = 1.0;
     param.nbunch = 1;
     param.num_turns = num_turns;
     param.bdiff = NULL;
@@ -414,10 +416,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else {
         /*  Only relativistic tracking is implemented: keep everything consistent
-        double gamma0 = param.energy/param.rest_energy;
-        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
-        double beta0 = betagamma0/gamma0;
-        param.T0 = param.RingLength/beta0/C0;
+        param.T0 = param.RingLength/param->beta0/C0;
         */
         param.T0 = param.RingLength/C0;
     }
