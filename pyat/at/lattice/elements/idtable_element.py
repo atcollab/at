@@ -19,6 +19,15 @@ def _anyarray(value: np.ndarray) -> np.ndarray:
     return np.require(value, dtype=np.float64, requirements=["F", "A"])
 
 
+def _check_key(key: str) -> None:
+    if not isinstance(key, str):
+        msg = "Kickmap names must be strings"
+        raise TypeError(msg)
+    if not key:
+        msg = "Kickmap names cannot be empty"
+        raise ValueError(msg)
+
+
 class InsertionDeviceKickMap(Element):
     """Insertion device kick-map element for a parallel electron beam.
 
@@ -223,9 +232,7 @@ class InsertionDeviceKickMap(Element):
         key: str,
         spec: tuple[int, str | Path | dict[str, Any], float],
     ) -> tuple[int, str | Path | dict[str, Any], float]:
-        if not isinstance(key, str):
-            msg = "Kickmap names must be strings"
-            raise TypeError(msg)
+        _check_key(key)
         if not isinstance(spec, (tuple, list)) or len(spec) != 3:
             msg = (
                 f"Kickmap {key!r} must be defined as "
@@ -242,12 +249,7 @@ class InsertionDeviceKickMap(Element):
         fname: str | Path | dict[str, Any],
         norm_energy: float,
     ) -> dict:
-        if not isinstance(key, str):
-            msg = "Kickmap names must be strings"
-            raise TypeError(msg)
-        if not key:
-            msg = "Kickmap names cannot be empty"
-            raise ValueError(msg)
+        _check_key(key)
         if key in self.KickmapStore:
             msg = (
                 f"Kickmap {key!r} replaced in store. "
