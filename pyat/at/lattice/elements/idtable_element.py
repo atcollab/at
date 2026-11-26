@@ -162,6 +162,8 @@ class InsertionDeviceKickMap(Element):
             super().__init__(family_name, **kwargs)
             if hasattr(self, "KickmapStore"):
                 self._normalise_kickmap_store()
+                if not hasattr(self, "ActiveKickmap"):
+                    self.ActiveKickmap = next(iter(self.KickmapStore), "")
             else:
                 self.KickmapStore = {"default": self._snapshot()}
                 self.ActiveKickmap = "default"
