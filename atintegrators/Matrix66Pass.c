@@ -5,13 +5,14 @@ struct elem
 {
     double *M66;
     /* optional fields */
+    double *M6;
     double *R1;
     double *R2;
     double *T1;
     double *T2;
 };
 
-void Matrix66Pass(double *r, const double *M,
+void Matrix66Pass(double *r, const double *M66, const double *M6,
         const double *T1, const double *T2,
         const double *R1, const double *R2, int num_particles)
 {
@@ -20,7 +21,8 @@ void Matrix66Pass(double *r, const double *M,
         if (!atIsNaN(r6[0])) {
             if (T1 != NULL) ATaddvv(r6, T1);
             if (R1 != NULL) ATmultmv(r6, R1);
-            ATmultmv(r6, M);
+            ATmultmv(r6, M66);
+            if (M6 != NULL) ATaddvv(r6, M6);
             if (R2 != NULL) ATmultmv(r6, R2);
             if (T2 != NULL) ATaddvv(r6, T2);
         }
@@ -32,23 +34,23 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double *M66;
-        double *R1, *R2, *T1, *T2;
-        M66=atGetDoubleArray(ElemData,"M66"); check_error();
+        double *M66=atGetDoubleArray(ElemData,"M66"); check_error();
         /*optional fields*/
-        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        double *M6=atGetOptionalDoubleArray(ElemData,"M6"); check_error();
+        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->M66=M66;
         /*optional fields*/
+        Elem->M6=M6;
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
         Elem->T2=T2;
         }   
-    Matrix66Pass(r_in, Elem->M66, Elem->T1, Elem->T2, Elem->R1, Elem->R2, num_particles);
+    Matrix66Pass(r_in, Elem->M66, Elem->M6, Elem->T1, Elem->T2, Elem->R1, Elem->R2, num_particles);
     return Elem;
 }
 MODULE_DEF(Matrix66Pass)        /* Dummy module initialisation */
@@ -62,18 +64,18 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double *M66, *R1, *R2, *T1, *T2;
-        M66=atGetDoubleArray(ElemData,"M66"); check_error();
+        double *M66=atGetDoubleArray(ElemData,"M66"); check_error();
         /*optional fields*/
-        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        double *M6 =atGetOptionalDoubleArray(ElemData,"M6"); check_error();
+        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        Matrix66Pass(r_in, M66, T1, T2, R1, R2, num_particles);
+        Matrix66Pass(r_in, M66, M6, T1, T2, R1, R2, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
@@ -81,11 +83,12 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],0,mxCreateString("M66"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(4,1);
-            mxSetCell(plhs[1], 0,mxCreateString("T1"));
-            mxSetCell(plhs[1], 1,mxCreateString("T2"));
-            mxSetCell(plhs[1], 2,mxCreateString("R1"));
-            mxSetCell(plhs[1], 3,mxCreateString("R2"));
+            plhs[1] = mxCreateCellMatrix(5,1);
+            mxSetCell(plhs[1], 0,mxCreateString("M6"));
+            mxSetCell(plhs[1], 1,mxCreateString("T1"));
+            mxSetCell(plhs[1], 2,mxCreateString("T2"));
+            mxSetCell(plhs[1], 3,mxCreateString("R1"));
+            mxSetCell(plhs[1], 4,mxCreateString("R2"));
         }
     }
     else {

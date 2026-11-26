@@ -1,23 +1,24 @@
-"""Abstract :py:class:`.Element` classes"""
+"""Abstract :py:class:`.Element` classes."""
 
 from __future__ import annotations
 
 __all__ = [
+    "Collective",
     "LongtMotion",
+    "Radiative",
     "_DictLongtMotion",
     "_Radiative",
-    "Radiative",
-    "Collective",
 ]
 
 import abc
 from abc import ABC
 from copy import deepcopy
+import contextlib
 
 
 class LongtMotion(ABC):
     """Abstract Base class for all Element classes whose instances may modify
-    the particle momentum
+    the particle momentum.
 
     Allows identifying elements potentially inducing longitudinal motion.
 
@@ -33,10 +34,11 @@ class LongtMotion(ABC):
     def _get_longt_motion(self):
         return False
 
-    # noinspection PyShadowingNames
     @abc.abstractmethod
-    def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
-        """Enable/Disable longitudinal motion
+    def set_longt_motion(
+        self, enable, new_pass: str | None = None, copy: bool = False, **kwargs
+    ):
+        """Enable/Disable longitudinal motion.
 
         Parameters:
             enable:     :py:obj:`True`: for enabling, :py:obj:`False` for
@@ -63,8 +65,7 @@ class LongtMotion(ABC):
 
 # noinspection PyUnresolvedReferences
 class _DictLongtMotion(LongtMotion):
-    # noinspection PyShadowingNames
-    """Mixin class for elements implementing a 'default_pass' class attribute
+    """Mixin class for elements implementing a 'default_pass' class attribute.
 
     :py:class:`DictLongtMotion` provides:
 
@@ -95,8 +96,7 @@ class _DictLongtMotion(LongtMotion):
     def _get_longt_motion(self):
         return self.PassMethod != self.default_pass[False]
 
-    # noinspection PyShadowingNames
-    def set_longt_motion(self, enable, new_pass=None, **kwargs):
+    def set_longt_motion(self, enable, new_pass: str | None = None, **kwargs):
         if new_pass == "auto":
             new_pass = self.default_pass[enable]
         return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
@@ -104,8 +104,7 @@ class _DictLongtMotion(LongtMotion):
 
 # noinspection PyUnresolvedReferences
 class _Radiative(LongtMotion):
-    # noinspection PyShadowingNames
-    r"""Mixin class for radiating elements
+    r"""Mixin class for radiating elements.
 
     :py:class:`_Radiative` implements the mechanism for converting the pass
     methods of radiating elements. It provides:
@@ -144,7 +143,7 @@ class _Radiative(LongtMotion):
         else:
             return None
 
-    # noinspection PyTypeChecker,PyShadowingNames
+    # noinspection PyTypeChecker
     def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
         if new_pass == "auto":
             new_pass = self._autopass(enable)
@@ -160,10 +159,8 @@ class _Radiative(LongtMotion):
 
             def setpass(el):
                 el.PassMethod = new_pass
-                try:
+                with contextlib.suppress(AttributeError):
                     del el.Energy
-                except AttributeError:
-                    pass
 
         if copy:
             newelem = deepcopy(self)
@@ -175,12 +172,12 @@ class _Radiative(LongtMotion):
 
 class Radiative(_Radiative):
     # noinspection PyUnresolvedReferences
-    r"""Mixin class for default radiating elements (:py:class:`.Dipole`,
-    :py:class:`.Quadrupole`, :py:class:`.Wiggler`)
+    r"""Mixin class for default radiating elements.
 
     :py:class:`Radiative` is a base class for the subset of radiative elements
     considered as the ones to be turned on by default: :py:class:`.Dipole`,
-    :py:class:`.Quadrupole` and :py:class:`.Wiggler`, excluding the higher
+    :py:class:`.Quadrupole`, :py:class:`.Wiggler`, :py:class:`.M66`,
+    :py:class:`.DeltaQ` and :py:class:`.SimpleRadiation`, excluding the higher
     order multipoles.
 
     :py:class:`Radiative` inherits from :py:class:`_Radiative` and does not
@@ -195,12 +192,10 @@ class Radiative(_Radiative):
         suffix.
     """
 
-    pass
-
 
 class Collective(_DictLongtMotion):
     # noinspection PyAbstractClass,PyUnresolvedReferences
-    """Mixin class for elements representing collective effects
+    """Mixin class for elements representing collective effects.
 
     Derived classes will automatically set the
     :py:attr:`~Element.is_collective` property when the element is active.

@@ -462,7 +462,6 @@ class M66(Radiative, Element):
     This implements Taylor maps of order 0 and 1:
 
     :math:`\mathbf{X}_{out} = \mathbf{M66} \cdot \mathbf{X}_{in} + \mathbf{M6}`
-
     """
 
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "M66"]
@@ -471,6 +470,8 @@ class M66(Radiative, Element):
         "M66Rad": _array66,
         "M6": _array6,
         "M6Rad": _array6,
+        "T1Rad": lambda v: _array(v, (6,)),
+        "T2Rad": lambda v: _array(v, (6,)),
     }
     _file_classname = "Matrix66"
 
@@ -481,10 +482,17 @@ class M66(Radiative, Element):
         Args:
             family_name:    Name of the element
             m66:            Transfer matrix. Default: 6x6 identity matrix
-            m66rad:         Transfer matrix including radiation. Default: *m66*
+            m66rad:         Transfer matrix including radiation, applied when 6D
+              tracking is turned on. Default: *m66*
             m6:             6x1 vector added to the particle coordinates. Default: 0
-            m6rad:          6x1 vector added to the particle coordinates,
-              including radiation. Default: *m6*.
+            m6rad:          6x1 vector added to the particle coordinates, taking
+              precedence over *m6* when 6D tracking is turned on. Default: *m6*.
+
+        Keyword args:
+            T1Rad:          If present, will take precedence over *T1* when 6D
+              tracking is turned on
+            T2Rad:          If present, will take precedence over *T2* when 6D
+              tracking is turned on
 
         Default PassMethod: ``Matrix66Pass``
         """
