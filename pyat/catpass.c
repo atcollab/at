@@ -251,7 +251,7 @@ static void energy_parameters(struct parameters *param, at_state *module_data, d
 
     if (param->rest_energy == 0.0) {
         param->T0 = param->RingLength/module_data->clight;
-        param->gamma0 = 1.0E-9 * param->energy / module_data->electron_mass;
+        param->gamma0 = param->energy / module_data->electron_mass;
         param->beta0 = 1.0;
     }
     else {
