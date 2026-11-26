@@ -27,6 +27,12 @@ Xsuite has a special definition for the x-axis rotation, opposite to the standar
 consequence, the signs of the ``pitch`` in AT and ``rot-x-rad`` in Xsuite are
 opposite. The conversion takes care of that.
 
+The misalignment of :py:func:`.transform_elem` is converted to the same rigid
+motion: the rotation is decomposed in Xsuite's order, and the shifts are corrected
+for Xsuite's pivot point, which is on the arc of a bend while AT's is on the chord.
+An element with both a misalignment and ``tilt_frame`` keeps only the frame tilt,
+with a warning.
+
 Rectangular bending magnets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A Xsuite :py:class:`.RBend` magnet corresponds to a standard :py:class:`.Dipole` if its

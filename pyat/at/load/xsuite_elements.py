@@ -13,6 +13,7 @@ import numpy as np
 
 from ..lattice import AtWarning, ReferencePoint, constants as cst
 from ..lattice import elements as elt
+from ..lattice.transformation import _rotation
 from .madx import poly_from_mad, poly_to_mad
 
 _INDEX_TO_EDGE_MODEL = {
@@ -22,6 +23,56 @@ _INDEX_TO_EDGE_MODEL = {
     2: "dipole-only",
 }
 _EDGE_MODEL_TO_INDEX = {k: v for v, k in _INDEX_TO_EDGE_MODEL.items()}
+_AT_MISALIGN_KEYS = ("dx", "dy", "dz", "pitch", "yaw", "tilt")
+
+
+def _xs_rotation(pitch: float, yaw: float, tilt: float) -> np.ndarray:
+    """Xsuite rotation matrix (``track_misalignments.h``): Ry, then Rx, then Rz.
+
+    The angles have AT's signs: Xsuite's ``rot_x_rad`` is ``-pitch``.
+    """
+    return _rotation([0.0, yaw, 0.0]) @ _rotation([pitch, 0.0, tilt])
+
+
+def _pivot_offset(length: float, angle: float) -> np.ndarray:
+    """Position of AT's centre (chord midpoint) relative to Xsuite's (arc midpoint).
+
+    AT rotates a bend around the midpoint of its chord, Xsuite around the point of
+    the design orbit at half the length. Both frames have their z axis along the
+    chord, they are separated by the sagitta.
+    """
+    if angle == 0.0 or length == 0.0:
+        return np.zeros(3)
+    return np.array([-length / angle * (1.0 - np.cos(0.5 * angle)), 0.0, 0.0])
+
+
+def _at2xs_misalignment(tr: dict, reference, length, angle) -> None:
+    """Convert in place the AT misalignment to the same rigid motion in Xsuite.
+
+    AT composes the rotations as Rx(pitch) Ry(yaw) Rz(tilt) (Venturini and Hellert,
+    Eq. 3), Xsuite as Ry Rx Rz: the rotation matrix is decomposed again in
+    Xsuite's order, keeping AT's signs.
+    """
+    ra = _rotation([tr["pitch"], tr["yaw"], tr["tilt"]])
+    offsets = np.array([tr["dx"], tr["dy"], tr["dz"]])
+    if reference == ReferencePoint.CENTRE:
+        offsets = offsets + (np.identity(3) - ra) @ _pivot_offset(length, angle)
+    tr.update(zip(("dx", "dy", "dz"), offsets.tolist(), strict=True))
+    tr["pitch"] = float(-np.arcsin(ra[1, 2]))
+    tr["yaw"] = float(np.arctan2(ra[0, 2], ra[2, 2]))
+    tr["tilt"] = float(np.arctan2(ra[1, 0], ra[1, 1]))
+
+
+def _xs2at_misalignment(tr: dict, reference, length, angle) -> None:
+    """Inverse of :py:func:`_at2xs_misalignment`, applied in place to *tr*."""
+    rx = _xs_rotation(tr["pitch"], tr["yaw"], tr["tilt"])
+    offsets = np.array([tr["dx"], tr["dy"], tr["dz"]])
+    if reference == ReferencePoint.CENTRE:
+        offsets = offsets - (np.identity(3) - rx) @ _pivot_offset(length, angle)
+    tr.update(zip(("dx", "dy", "dz"), offsets.tolist(), strict=True))
+    tr["pitch"] = float(np.arctan2(-rx[1, 2], rx[2, 2]))
+    tr["yaw"] = float(np.arcsin(rx[0, 2]))
+    tr["tilt"] = float(np.arctan2(-rx[0, 1], rx[0, 0]))
 
 
 class _XsFactory(Protocol):
@@ -71,26 +122,39 @@ class XsElement(dict, _XsFactory):
 
     def _set_xs_integrator(self, atelem) -> None:
         """Set the integrator for the Xsuite element."""
-        if (integrator := self.get("_at_integrator", None)) is not None:
+        if (integrator := self._at_integrator) is not None:
             self["integrator"] = integrator
 
     def _set_xs_transforms(self, atelem) -> None:
         """Generate Xsuite element displacements."""
-        tr = {
-            "shift_x": getattr(atelem, "_dx", 0.0),
-            "shift_y": getattr(atelem, "_dy", 0.0),
-            "shift_s": getattr(atelem, "_dz", 0.0),
-            "rot_s_rad_no_frame": getattr(atelem, "_tilt", 0.0),
-            "rot_x_rad": -getattr(atelem, "_pitch", 0.0),
-            "rot_y_rad": getattr(atelem, "_yaw", 0.0),
-        }
-        misalign = {k: v for k, v in tr.items() if v != 0.0}
-        if misalign and not self._allow_rot_shift:
+        attr = {k: getattr(atelem, "_" + k, 0.0) for k in _AT_MISALIGN_KEYS}
+        if not any(attr.values()):
+            attr = {}
+        if attr and not self._allow_rot_shift:
             msg = "Misalignment and rotations are not avalaible in Xsuite, ignored"
             self._warn(msg)
             return
-        refpoint = getattr(atelem, "_reference", ReferencePoint.CENTRE)
+        # The reference point is stored as its integer value
+        refpoint = ReferencePoint(
+            getattr(atelem, "_referencepoint", ReferencePoint.CENTRE.value)
+        )
         rots_frame = getattr(atelem, "_tilt_frame", 0.0)
+        if attr:
+            _at2xs_misalignment(
+                attr,
+                refpoint,
+                getattr(atelem, "Length", 0.0),
+                getattr(atelem, "BendingAngle", 0.0),
+            )
+        tr = {
+            "shift_x": attr.get("dx", 0.0),
+            "shift_y": attr.get("dy", 0.0),
+            "shift_s": attr.get("dz", 0.0),
+            "rot_s_rad_no_frame": attr.get("tilt", 0.0),
+            "rot_x_rad": -attr.get("pitch", 0.0),
+            "rot_y_rad": attr.get("yaw", 0.0),
+        }
+        misalign = {k: v for k, v in tr.items() if v != 0.0}
 
         if rots_frame != 0.0:
             if misalign:
@@ -100,14 +164,15 @@ class XsElement(dict, _XsFactory):
             if refpoint == ReferencePoint.ENTRANCE:
                 misalign["rot_shift_anchor"] = 0.0
             else:
-                misalign["rot_shift_anchor"] = self._integration_length / 2.0
+                # along the design arc, not the integration length of an RBend
+                misalign["rot_shift_anchor"] = self["length"] / 2.0
 
         self.update(misalign)
 
     def _set_at_passmethod(self) -> dict[str, str]:
         """Get the AT passmethod."""
         passmethod = self._xsuite2at_model.get(self.get("model"), None)
-        if passmethod is not None:
+        if passmethod is None:
             passmethod = self._xsuite2at_model.get(None, None)
         return {} if passmethod is None else {"PassMethod": passmethod}
 
@@ -130,7 +195,7 @@ class XsElement(dict, _XsFactory):
                 self._warn("alignment errors available only for H bends, ignored")
             transforms = {"tilt_frame": rot_s_frame}
         elif ismisaligned:
-            length = self._integration_length
+            length = self["length"]  # rot_shift_anchor is along the arc
             rot_shift_anchor = self.get("rot_shift_anchor", 0.0)
             anchor = 0.5 if length == 0.0 else rot_shift_anchor / length
             if anchor == 0.0:
@@ -144,6 +209,8 @@ class XsElement(dict, _XsFactory):
                 )
                 self._warn(msg)
                 reference = ReferencePoint.CENTRE
+            _xs2at_misalignment(tr, reference, self["length"], self.get("angle", 0.0))
+            transforms = {k: v for k, v in tr.items() if v != 0.0}
             transforms["reference"] = reference.value
         return transforms
 
@@ -372,6 +439,25 @@ class Multipole(XsElement):
     }
     _allow_rot_shift = True
 
+    def _set_at_passmethod(self) -> dict[str, str]:
+        """Get the AT passmethod, 4th order variant for a 4th order integrator."""
+        atparams = super()._set_at_passmethod()
+        passmethod = atparams.get("PassMethod", "")
+        if self.get("integrator") == "yoshida-4" and "Symplectic6" in passmethod:
+            atparams["PassMethod"] = passmethod.replace("Symplectic6", "Symplectic4")
+        return atparams
+
+    def _set_xs_integrator(self, atelem) -> None:
+        """Set the Yoshida integrator of the same order as the AT PassMethod.
+
+        Same rule as :py:attr:`.Multipole.NumIntKicks`: 4th order (3 kicks per
+        step) if the PassMethod name contains "4", 6th order (7 kicks) otherwise.
+        Xsuite's default ``adaptive`` integrator does not keep
+        ``num_multipole_kicks``.
+        """
+        passmethod = getattr(atelem, "PassMethod", "")
+        self["integrator"] = "yoshida-4" if "4" in passmethod else "yoshida-6"
+
     def _set_at_poly(self) -> dict[str, Any]:
         """Generate the AT field expansion."""
 
@@ -531,9 +617,15 @@ class Bend(Multipole):
     _xsuite2at_edge: ClassVar[dict[str, tuple]] = {
         "suppressed": (0, None),
         "linear": (1, None),
-        "dipole-only": (None, None),
-        "full": (None, 1),
+        # explicit: the default AT FringeBend is linear for BndMPoleSymplectic
+        "dipole-only": (4, None),
+        "full": (4, 1),
     }
+
+    @staticmethod
+    def _nonlinear_bend_fringe(fringe_bend: int) -> bool:
+        """True if the AT FringeBend value is the nonlinear dipole fringe."""
+        return fringe_bend == 4
 
     def _set_at_fringe(self) -> dict[str, Any]:
         def edge_model(xskey, bendkey, quadkey):
@@ -558,10 +650,17 @@ class Bend(Multipole):
     def _set_xs_fringe(self, atelem):
         def edge_model(bendkey, quadkey):
             at_quad_fringe = getattr(atelem, quadkey, 0)
+            at_bend_fringe = getattr(atelem, bendkey, def_bend_fringe)
             if at_quad_fringe > 0:
-                return "full"
-            else:
-                return self._at2xsuite_edge[getattr(atelem, bendkey, def_bend_fringe)]
+                if self._nonlinear_bend_fringe(at_bend_fringe):
+                    return "full"
+                # Xsuite's multipole fringe exists only with the full dipole fringe
+                self._warn(
+                    f"{quadkey}={at_quad_fringe} with {bendkey}={at_bend_fringe}: "
+                    "the multipole fringe is not available with this dipole fringe "
+                    "in Xsuite, ignored"
+                )
+            return self._at2xsuite_edge[at_bend_fringe]
 
         if (gap := getattr(atelem, "FullGap", None)) is not None:
             self["edge_entry_hgap"] = 0.5 * gap
@@ -576,7 +675,11 @@ class Bend(Multipole):
     def _set_at_params(self, **kwargs) -> dict[str, Any]:
         atparams = {"EntranceAngle": 0.0, "ExitAngle": 0.0}
         atparams.update(super()._set_at_params(**kwargs))
-        if not self.get("k0_from_h", "k0" not in self):
+        if self.get("k0_from_h", "k0" not in self):
+            # Xsuite ignores k0 and uses h: remove a stored k0 from PolynomB[0]
+            atparams["PolynomB"][0] -= self.get("k0", 0.0)
+        else:
+            # Xsuite k0 is the total dipole field, AT PolynomB[0] excludes h
             atparams["PolynomB"][0] -= self["angle"] / self["length"]
         return atparams
 
@@ -585,7 +688,15 @@ class Bend(Multipole):
         cls, atelem: elt.Element, *, match_model: bool = True, **kwargs
     ) -> XsElement:
         elem = super().from_at(atelem, match_model=match_model, **kwargs)
-        elem["k0_from_h"] = True
+        knl = elem.get("knl")
+        if knl is not None and knl[0] != 0.0 and elem._integration_length > 0.0:
+            # A dipole error goes in the main k0, the total dipole field: Xsuite
+            # uses knl[0] in the dipole fringe but not in the wedge
+            elem["k0"] = elem["angle"] / elem["length"] + knl[0] / elem._integration_length
+            elem["k0_from_h"] = False
+            knl[0] = 0.0
+        else:
+            elem["k0_from_h"] = True
         return elem
 
 
@@ -595,8 +706,35 @@ class RBend(Bend):
     _at2xsuite_model = {
         None: "drift-kick-drift-exact",  # Default Xsuite model
         "ExactRectangularBendPass": None,  # Default AT passmethod,
+        "ExactRectangularBendRadPass": None,
+        "ExactRectBendPass": "bend-kick-bend",
+        "ExactRectBendRadPass": "bend-kick-bend",
     }
-    _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
+    # Explicit: the inverse of _at2xsuite_model is not unique
+    _xsuite2at_model = {
+        None: "ExactRectangularBendPass",
+        "drift-kick-drift-exact": "ExactRectangularBendPass",
+        "bend-kick-bend": "ExactRectBendPass",
+    }
+    # straight_dipole.h: any non-zero FringeBend is the nonlinear dipole fringe
+    _at2xsuite_edge: ClassVar[dict[int, str]] = {
+        0: "suppressed",
+        1: "dipole-only",
+        2: "dipole-only",
+        3: "dipole-only",
+        4: "dipole-only",
+    }
+
+    @staticmethod
+    def _nonlinear_bend_fringe(fringe_bend: int) -> bool:
+        return fringe_bend != 0
+
+    def _set_at_fringe(self) -> dict[str, Any]:
+        for key in ("edge_entry_model", "edge_exit_model"):
+            if self.get(key, "linear") == "linear":
+                self._warn(f"{key} 'linear' is not available in AT rectangular "
+                           "bends: nonlinear dipole fringe")
+        return super()._set_at_fringe()
 
     @property
     def _integration_length(self):
