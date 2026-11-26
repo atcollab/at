@@ -398,7 +398,7 @@ class InsertionDeviceKickMap(Element):
             "PassMethod": "IdTablePass",
             "Filename_in": fname,
             "Normalization_energy": norm_energy,
-            "Nslice": np.uint8(nslice),
+            "Nslice": int(nslice),
             "Length": el_length,
             "xkick": xkick,
             "ykick": ykick,
