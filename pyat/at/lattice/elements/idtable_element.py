@@ -15,6 +15,18 @@ from ..exceptions import AtWarning
 from .element_object import Element
 
 _KEY_RE = re.compile(r"[A-Za-z]\w{0,62}", re.ASCII)
+_KICKMAP_FIELDS = (
+    "Filename_in",
+    "Normalization_energy",
+    "Nslice",
+    "Length",
+    "xkick",
+    "ykick",
+    "xkick1",
+    "ykick1",
+    "xtable",
+    "ytable",
+)
 
 
 def _anyarray(value: np.ndarray) -> np.ndarray:
@@ -258,45 +270,34 @@ class InsertionDeviceKickMap(Element):
             warn(AtWarning(msg), stacklevel=3)
         data = self._load_kickmap(nslice, fname, norm_energy)
         self.KickmapStore[key] = {
-            field: data[field]
-            for field in (
-                "Filename_in",
-                "Normalization_energy",
-                "Nslice",
-                "Length",
-                "xkick",
-                "ykick",
-                "xkick1",
-                "ykick1",
-                "xtable",
-                "ytable",
-            )
+            field: data[field] for field in _KICKMAP_FIELDS
         }
         return data
 
     def _snapshot(self: InsertionDeviceKickMap) -> dict:
         """Return a dict of the element's current tracking-field values."""
-        return {
-            "Filename_in": getattr(self, "Filename_in", ""),
-            "Normalization_energy": float(self.Normalization_energy),
-            "Nslice": int(self.Nslice),
-            "Length": float(self.Length),
-            "xkick":  self.xkick.copy(),
-            "ykick":  self.ykick.copy(),
-            "xkick1": self.xkick1.copy(),
-            "ykick1": self.ykick1.copy(),
-            "xtable": self.xtable.copy(),
-            "ytable": self.ytable.copy(),
+        data = {
+            field: getattr(self, field, "")
+            if field == "Filename_in"
+            else getattr(self, field)
+            for field in _KICKMAP_FIELDS
         }
+        for field, convert in zip(
+            _KICKMAP_FIELDS[:4], (str, float, int, float), strict=True
+        ):
+            data[field] = convert(data[field])
+        for field in _KICKMAP_FIELDS[4:]:
+            data[field] = data[field].copy()
+        return data
 
     def _normalise_kickmap_store(self: InsertionDeviceKickMap) -> None:
         """Restore kickmap types after loading from a lattice file."""
         for data in self.KickmapStore.values():
-            data["Filename_in"] = str(data["Filename_in"])
-            data["Normalization_energy"] = float(data["Normalization_energy"])
-            data["Nslice"] = int(data["Nslice"])
-            data["Length"] = float(data["Length"])
-            for field in ("xkick", "ykick", "xkick1", "ykick1", "xtable", "ytable"):
+            for field, convert in zip(
+                _KICKMAP_FIELDS[:4], (str, float, int, float), strict=True
+            ):
+                data[field] = convert(data[field])
+            for field in _KICKMAP_FIELDS[4:]:
                 data[field] = _anyarray(data[field])
 
     def _load_kickmap(
@@ -565,16 +566,8 @@ class InsertionDeviceKickMap(Element):
         )
     def _apply_kickmap_data(self: InsertionDeviceKickMap, data: dict) -> None:
         """Apply kickmap data dict to the active tracking fields."""
-        self.Filename_in = data["Filename_in"]
-        self.Normalization_energy = data["Normalization_energy"]
-        self.Nslice = data["Nslice"]
-        self.Length = data["Length"]
-        self.xkick = data["xkick"]
-        self.ykick = data["ykick"]
-        self.xkick1 = data["xkick1"]
-        self.ykick1 = data["ykick1"]
-        self.xtable = data["xtable"]
-        self.ytable = data["ytable"]
+        for field in _KICKMAP_FIELDS:
+            setattr(self, field, data[field])
 
     def add_kickmap(
         self: InsertionDeviceKickMap,
