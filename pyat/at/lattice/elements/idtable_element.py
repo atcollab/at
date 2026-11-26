@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,8 @@ from ...constants import clight, e_mass
 from ..exceptions import AtWarning
 from .element_object import Element
 
+_KEY_RE = re.compile(r"[A-Za-z]\w{0,62}", re.ASCII)
+
 
 def _anyarray(value: np.ndarray) -> np.ndarray:
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
@@ -20,11 +23,8 @@ def _anyarray(value: np.ndarray) -> np.ndarray:
 
 
 def _check_key(key: str) -> None:
-    if not isinstance(key, str):
-        msg = "Kickmap names must be strings"
-        raise TypeError(msg)
-    if not key:
-        msg = "Kickmap names cannot be empty"
+    if not (isinstance(key, str) and _KEY_RE.fullmatch(key)):
+        msg = f"Kickmap name {key!r} must be a valid Matlab identifier"
         raise ValueError(msg)
 
 
