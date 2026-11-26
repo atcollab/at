@@ -489,10 +489,10 @@ class M66(Radiative, Element):
               precedence over *m6* when 6D tracking is turned on. Default: *m6*.
 
         Keyword args:
-            T1Rad:          If present, will take precedence over T1 when 6D tracking is
-                turned on
-            T2Rad:          If present, will take precedence over T2 when 6D tracking is
-                turned on
+            T1Rad:          If present, will take precedence over *T1* when 6D
+              tracking is turned on
+            T2Rad:          If present, will take precedence over *T2* when 6D
+              tracking is turned on
 
         Default PassMethod: ``Matrix66Pass``
         """
