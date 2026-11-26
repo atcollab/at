@@ -172,13 +172,13 @@ class _Radiative(LongtMotion):
 
 class Radiative(_Radiative):
     # noinspection PyUnresolvedReferences
-    r"""Mixin class for default radiating elements (:py:class:`.Dipole`,
-    :py:class:`.Quadrupole`, :py:class:`.Wiggler`, :py:class:`.M66`).
+    r"""Mixin class for default radiating elements.
 
     :py:class:`Radiative` is a base class for the subset of radiative elements
     considered as the ones to be turned on by default: :py:class:`.Dipole`,
-    :py:class:`.Quadrupole`, :py:class:`.Wiggler` and :py:class:`.M66`, excluding
-    the higher order multipoles.
+    :py:class:`.Quadrupole`, :py:class:`.Wiggler`, :py:class:`.M66`,
+    :py:class:`.DeltaQ` and :py:class:`.SimpleRadiation`, excluding the higher
+    order multipoles.
 
     :py:class:`Radiative` inherits from :py:class:`_Radiative` and does not
     add any new functionality. Its purpose is to identify the default set of
