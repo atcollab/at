@@ -7,6 +7,7 @@
 #include <mex.h>
 #include "attypes.h"
 #include "atrandom.c"
+#include "atconstants.h"
 
 /* Get ready for R2018a C matrix API */
 #ifndef mxGetDoubles
@@ -32,8 +33,6 @@ typedef double mwDouble;
 #define GETTRACKFCN(libfilename) dlsym((libfilename),"trackFunction")
 
 #endif
-
-#define C0  	2.99792458e8
 
 typedef int*(*pass_function)(mxArray*, int*, double*, int, int);
 typedef struct elem*(*track_function)(const mxArray*, struct elem*, double*, int, struct parameters*);
@@ -174,6 +173,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.energy = getdouble(prhs[ENERGY], ENERGY);
     param.rest_energy = 0.0;
     param.charge = -1.0;
+    param.gamma0 = 0.0;
+    param.beta0 = 1.0;
     param.nbunch = 3;
     param.num_turns = 0;
     param.bdiff = bdiff;
@@ -182,11 +183,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.RingLength = getdouble(prhs[CELL_LENGTH], CELL_LENGTH);
     if (param.rest_energy == 0.0) {
         param.T0 = param.RingLength/C0;
+        param.gamma0 = 1.0e-9 * param.energy / __E0;
     }
     else {
         double gamma0 = param.energy/param.rest_energy;
         double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
+        param.gamma0 = gamma0;
         param.T0 = param.RingLength/beta0/C0;
     }
     param.s_coord = getdouble(prhs[S_POS], S_POS);

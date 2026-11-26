@@ -232,7 +232,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
     if ((num_particles > 0) && (r_in) && (Elem->Length != 0.0)) {
         #if defined(RADIATION) || defined(QUANTUM)
-        double gamma0 = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
+        double gamma0 = atGamma2(Param, Elem->Energy); check_error();
         #ifdef DIFFUSION
         double *bdiff = Param->bdiff;
         #elif defined RADIATION
