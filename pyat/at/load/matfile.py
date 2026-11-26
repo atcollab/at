@@ -42,7 +42,6 @@ from .utils import (
     element_from_dict,
     keep_elements,
     split_ignoring_parentheses,
-    element_from_dict,
     element_to_dict,
 )
 
