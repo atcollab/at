@@ -269,6 +269,7 @@ class InsertionDeviceKickMap(Element):
             )
             warn(AtWarning(msg), stacklevel=3)
         data = self._load_kickmap(nslice, fname, norm_energy)
+        self.KickmapStore = self.KickmapStore.copy()
         self.KickmapStore[key] = {
             field: data[field] for field in _KICKMAP_FIELDS
         }
