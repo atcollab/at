@@ -56,6 +56,7 @@ def _values_equal(value, default) -> bool:
         )
     return np.array_equal(value, default)
 
+
 def _passmethod(v):
     """Check for existing PassMethod."""
     pm = str(v)
