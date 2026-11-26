@@ -66,6 +66,11 @@ class InsertionDeviceKickMap(Element):
     it and changes the pass method to ``IdTablePass``. Supplying ``nslice``,
     ``fname`` and ``norm_energy`` creates one kickmap named ``"default"``.
 
+    Native lattice formats store the active map both in the element tracking
+    fields and in its ``KickmapStore`` entry. This intentional duplication
+    preserves the MATLAB user experience, where tracking fields are available
+    directly on the element.
+
     First-order maps are optional. Positive and negative signs are not applied
     by this implementation, so the input data must already contain the desired
     signs.
