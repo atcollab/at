@@ -42,7 +42,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
+        if (T1 == NULL) T1 = atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         double *T2=atGetOptionalDoubleArray(ElemData,"T2Rad"); check_error();
+        if (T2 == NULL) T2 = atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->M66=M66;
         /*optional fields*/
@@ -69,12 +71,14 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *M66=atGetOptionalDoubleArray(ElemData,"M66Rad"); check_error();
         if (M66 == NULL) M66=atGetDoubleArray(ElemData,"M66"); check_error();
         /*optional fields*/
-        double *M6=atGetOptionalDoubleArray(ElemData,"M6Rad"); check_error();
+        double *M6 =atGetOptionalDoubleArray(ElemData,"M6Rad"); check_error();
         if (M6 == NULL) M6=atGetOptionalDoubleArray(ElemData,"M6"); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
+        if (T1 == NULL) T1 = atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         double *T2=atGetOptionalDoubleArray(ElemData,"T2Rad"); check_error();
+        if (T2 == NULL) T2 = atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
