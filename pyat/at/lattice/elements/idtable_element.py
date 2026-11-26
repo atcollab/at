@@ -2,47 +2,117 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 import numpy as np
 
 from ...constants import clight, e_mass
+from ..exceptions import AtWarning
 from .element_object import Element
 
-# 2023jan15 orblancog first release
-# 2023jan18 orblancog fix bug with element print
-# 2023apr30 orblancog redefinition to function
-# 2023jul04 orblancog changing class to save in .mat and .m
-# 2025ago15 orblancog include first order kick maps from text files
+_KEY_RE = re.compile(r"[A-Za-z]\w{0,62}", re.ASCII)
+_KICKMAP_FIELDS = (
+    "Filename_in",
+    "Normalization_energy",
+    "Nslice",
+    "Length",
+    "xkick",
+    "ykick",
+    "xkick1",
+    "ykick1",
+    "xtable",
+    "ytable",
+)
 
 
-def _anyarray(value: np.ndarray) -> None:
+def _anyarray(value: np.ndarray) -> np.ndarray:
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return np.require(value, dtype=np.float64, requirements=["F", "A"])
 
 
+def _check_key(key: str) -> None:
+    if not (isinstance(key, str) and _KEY_RE.fullmatch(key)):
+        msg = f"Kickmap name {key!r} must be a valid Matlab identifier"
+        raise ValueError(msg)
+
+
 class InsertionDeviceKickMap(Element):
+    """Insertion device kick-map element for a parallel electron beam.
+
+    The element implements tracking through integrated first- and second-order
+    magnetic field maps normalized to a reference energy. It may be created
+    empty, from one kickmap, or from a mapping of named kickmaps.
+
+    Args:
+        family_name: Element family name.
+        nslice: Number of integration slices for a single kickmap.
+        fname: Radia text-file path or dictionary containing a single kickmap.
+        norm_energy: Normalization energy in GeV.
+
+    Keyword Args:
+        length: Insertion device length in m. A zero value uses the length
+            read from a supplied kickmap.
+        kickmaps: Mapping of kickmap names to ``(nslice, source, energy)``
+            tuples. The first entry is initially active.
+        **kwargs: Additional element attributes. This is also used internally
+            when restoring an element from a lattice file.
+
+    If no kickmap arguments are supplied, an empty element with
+    ``PassMethod="DriftPass"`` is created. Adding the first kickmap activates
+    it and changes the pass method to ``IdTablePass``. Supplying ``nslice``,
+    ``fname`` and ``norm_energy`` creates one kickmap named ``"default"``.
+
+    Native lattice formats store the active map both in the element tracking
+    fields and in its ``KickmapStore`` entry. This intentional duplication
+    preserves the MATLAB user experience, where tracking fields are available
+    directly on the element.
+
+    First-order maps are optional. Positive and negative signs are not applied
+    by this implementation, so the input data must already contain the desired
+    signs.
+
+    See P. Elleaume, "A New Approach to the Electron Beam Dynamics in
+    Undulators and Wigglers", EPAC 1992, 0661.
+
+    Examples:
+        Create an empty element and add a kickmap later:
+
+        >>> elem = InsertionDeviceKickMap("ID")
+        >>> elem.add_kickmap("LH", 25, "lh_kickmap.txt", 2.75)
+
+        Create an element with one kickmap:
+
+        >>> elem = InsertionDeviceKickMap(
+        ...     "ID", 25, "lh_kickmap.txt", 2.75
+        ... )
+
+        The same element may be created with keyword arguments:
+
+        >>> elem = InsertionDeviceKickMap(
+        ...     "ID",
+        ...     nslice=25,
+        ...     fname="lh_kickmap.txt",
+        ...     norm_energy=2.75,
+        ... )
+
+        Create an element with several named kickmaps:
+
+        >>> elem = InsertionDeviceKickMap(
+        ...     "ID",
+        ...     kickmaps={
+        ...         "LH": (25, "lh_kickmap.txt", 2.75),
+        ...         "LV": (25, "lv_kickmap.txt", 2.75),
+        ...     },
+        ... )
     """
-    Insertion Device Element. Valid for a parallel electron beam.
 
-    This elememt implements tracking through an integrated magnetic
-    field map of second order in energy, normalized to an energy
-    value that is required to calculate alpha. See Eq. (5) in [#].
-
-    First order maps could be included. See Eq. (3) in [#].
-    Note that positive and negative signs are not taken into account in
-    this implementation. Input should already include the sign difference.
-
-    Default PassMethod: ``IdTablePass``.
-
-    [#] Pascale ELLEAUME, "A New Approach to the Electron Beam Dynamics in
-        Undulators and  Wigglers". EPAC1992 0661.
-        European Synchrotron Radiation Facility.
-        BP 220, F-38043 Grenoble, France
-    """
-
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + [
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    _LEGACY_M_BUILD_ATTRIBUTES = [
+        "FamName",
         "PassMethod",
         "Filename_in",
         "Normalization_energy",
@@ -58,98 +128,193 @@ class InsertionDeviceKickMap(Element):
 
     _conversions = dict(
         Element._conversions,
+        Normalization_energy=float,
         Nslice=int,
         xkick=_anyarray,
         ykick=_anyarray,
         xkick1=_anyarray,
         ykick1=_anyarray,
+        xtable=_anyarray,
+        ytable=_anyarray,
     )
 
     def __init__(
         self: InsertionDeviceKickMap,
         family_name: str,
-        *args: any,
-        **kwargs: dict[any, any],
-    ) -> None:
-        """
-        Init IdTable.
-
-        This __init__ takes the input to initialize an InsertionDeviceKickMap
-        from an user input with arguments, for example at the moment of the
-        element creation, or from all parameters, for example when reading
-        a Lattice.
-
-        Args:
-            family_name: the family name
-            args: postional arguments from user.
-            kwargs: dictionary from element.
-
-        """
-        _argnames = [
-            "PassMethod",
-            "Filename_in",
-            "Normalization_energy",
-            "Nslice",
-            "Length",
-            "xkick",
-            "ykick",
-            "xkick1",
-            "ykick1",
-            "xtable",
-            "ytable",
+        nslice: int = 1,
+        fname: str | Path | dict[str, Any] | None = None,
+        norm_energy: float = 0.0,
+        *,
+        length: float = 0.0,
+        kickmaps: Mapping[
+            str, tuple[int, str | Path | dict[str, Any], float]
         ]
-        if len(args) < 11:
-            # get data from user input
-            elemargs = self.from_user(*args)
+        | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize an insertion device kick-map element."""
+        file_data = "xkick" in kwargs or "KickmapStore" in kwargs
+        has_source = fname is not None and fname != ""
+
+        if file_data:
+            if kickmaps is not None:
+                msg = "Kickmap arguments cannot be combined with serialized data"
+                raise TypeError(msg)
+            kwargs.setdefault("Length", length)
+            kwargs.setdefault("Normalization_energy", norm_energy)
+            kwargs.setdefault("Nslice", nslice)
+            kwargs.setdefault("Filename_in", "" if fname is None else fname)
+            super().__init__(family_name, **kwargs)
+            if hasattr(self, "KickmapStore"):
+                self._normalise_kickmap_store()
+                if not hasattr(self, "ActiveKickmap"):
+                    self.ActiveKickmap = next(iter(self.KickmapStore), "")
+            else:
+                self.KickmapStore = {"default": self._snapshot()}
+                self.ActiveKickmap = "default"
+            return
+
+        if kickmaps is not None and (
+            length != 0.0
+            or norm_energy != 0.0
+            or nslice != 1
+            or has_source
+        ):
+            msg = (
+                "kickmaps cannot be combined with length, norm_energy, "
+                "nslice or fname"
+            )
+            raise TypeError(msg)
+        if not has_source and nslice != 1:
+            msg = "nslice, fname and norm_energy must be supplied together"
+            raise TypeError(msg)
+        if has_source and norm_energy == 0.0:
+            msg = "nslice, fname and norm_energy must be supplied together"
+            raise TypeError(msg)
+
+        if kickmaps:
+            entries = list(kickmaps.items())
+            first_key, first_spec = entries[0]
+            first_data = self._load_kickmap(
+                *self._validate_kickmap_spec(first_key, first_spec)
+            )
+            first_data.update(kwargs)
+            super().__init__(family_name, **first_data)
+            self.KickmapStore = {first_key: self._snapshot()}
+            self.ActiveKickmap = first_key
+            for key, spec in entries[1:]:
+                self._store_kickmap(key, *self._validate_kickmap_spec(key, spec))
+        elif has_source:
+            elemargs = self._load_kickmap(nslice, fname, norm_energy)
+            if length != 0.0:
+                elemargs["Length"] = length
+            elemargs.update(kwargs)
+            super().__init__(family_name, **elemargs)
+            self.KickmapStore = {"default": self._snapshot()}
+            self.ActiveKickmap = "default"
         else:
-            # get data from arguments
-            elemargs = dict(zip(_argnames, args))
-        elemargs.update(kwargs)
-        super().__init__(family_name, **elemargs)
+            kwargs.setdefault("PassMethod", "DriftPass")
+            kwargs.setdefault("Length", length)
+            kwargs.setdefault("Normalization_energy", norm_energy)
+            kwargs.setdefault("Nslice", nslice)
+            kwargs.setdefault("Filename_in", "")
+            super().__init__(family_name, **kwargs)
+            self.KickmapStore = {}
+            self.ActiveKickmap = ""
 
-    def set_DriftPass(self: InsertionDeviceKickMap) -> None:
-        """Set DriftPass tracking pass method."""
-        self.PassMethod = "DriftPass"
+    def to_dict(self) -> dict[str, Any]:
+        """Return serializable attributes, omitting the default empty store."""
+        attributes = super().to_dict()
+        if not self.KickmapStore:
+            attributes.pop("KickmapStore")
+            attributes.pop("ActiveKickmap")
+        return attributes
 
-    def set_IdTablePass(self: InsertionDeviceKickMap) -> str:
-        """Set IdTablePass tracking pass method."""
-        self.PassMethod = "IdTablePass"
+    @classmethod
+    def new_from_dict(cls, **elem_dict) -> InsertionDeviceKickMap:
+        """Restore kickmap state when loading dictionary-based formats."""
+        elem = super().new_from_dict(**elem_dict)
+        if hasattr(elem, "KickmapStore"):
+            elem._normalise_kickmap_store()
+            if not hasattr(elem, "ActiveKickmap"):
+                elem.ActiveKickmap = next(iter(elem.KickmapStore), "")
+        elif hasattr(elem, "xkick"):
+            elem.KickmapStore = {"default": elem._snapshot()}
+            elem.ActiveKickmap = "default"
+        else:
+            elem.KickmapStore = {}
+            elem.ActiveKickmap = ""
+        return elem
 
-    def get_PassMethod(self: InsertionDeviceKickMap) -> str:
-        """Get the current tracking pass method.
+    @staticmethod
+    def _validate_kickmap_spec(
+        key: str,
+        spec: tuple[int, str | Path | dict[str, Any], float],
+    ) -> tuple[int, str | Path | dict[str, Any], float]:
+        _check_key(key)
+        if not isinstance(spec, (tuple, list)) or len(spec) != 3:
+            msg = (
+                f"Kickmap {key!r} must be defined as "
+                "(nslice, source, norm_energy)"
+            )
+            raise TypeError(msg)
+        map_nslice, map_source, map_energy = spec
+        return map_nslice, map_source, map_energy
 
-        Returns:
-            String with the current tracking pass method.
-        """
-        warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
-        return self.PassMethod
-
-    def from_user(
-        self: InsertionDeviceKickMap, nslice: int, fname: str, norm_energy: float
+    def _store_kickmap(
+        self,
+        key: str,
+        nslice: int,
+        fname: str | Path | dict[str, Any],
+        norm_energy: float,
     ) -> dict:
-        """
-        Create an Insertion Device Kick Map from a Radia field map file.
+        _check_key(key)
+        if key in self.KickmapStore:
+            msg = (
+                f"Kickmap {key!r} replaced in store. "
+                "Use a different name to avoid overwriting."
+            )
+            warn(AtWarning(msg), stacklevel=3)
+        data = self._load_kickmap(nslice, fname, norm_energy)
+        self.KickmapStore = self.KickmapStore.copy()
+        self.KickmapStore[key] = {
+            field: data[field] for field in _KICKMAP_FIELDS
+        }
+        return data
 
-        The following is an example of an Insertion Device element, idelem,
-        created from a file 'radiakickmap.txt' with 10 integration steps.
-        The tables have been normalized to 3 GeV. The family name is 'IDname'.
-        >>> idelem = at.InsertionDeviceKickMap('IDname', 10, 'radiakickmap.txt', 3)
+    def _snapshot(self: InsertionDeviceKickMap) -> dict:
+        """Return a dict of the element's current tracking-field values."""
+        data = {
+            field: getattr(self, field, "")
+            if field == "Filename_in"
+            else getattr(self, field)
+            for field in _KICKMAP_FIELDS
+        }
+        for field, convert in zip(
+            _KICKMAP_FIELDS[:4], (str, float, int, float), strict=True
+        ):
+            data[field] = convert(data[field])
+        for field in _KICKMAP_FIELDS[4:]:
+            data[field] = data[field].copy()
+        return data
 
-        The input file could be a text file or a dictionary.
-        See read_text_radia_field_map for info about the text file format.
-        See read_dict_radia_field_map for info about the dict format.
+    def _normalise_kickmap_store(self: InsertionDeviceKickMap) -> None:
+        """Restore kickmap types after loading from a lattice file."""
+        for data in self.KickmapStore.values():
+            for field, convert in zip(
+                _KICKMAP_FIELDS[:4], (str, float, int, float), strict=True
+            ):
+                data[field] = convert(data[field])
+            for field in _KICKMAP_FIELDS[4:]:
+                data[field] = _anyarray(data[field])
 
-        Family name is part of the base class, and all other arguments are
-        parsed here below.
-
-        Arguments:
-            nslice: number of slices in integrator.
-            fname: input filename. Text of .mat files.
-            norm_energy: particle energy in GeV.
-
-        Returns:
-            A dict with the file data.
-        """
+    def _load_kickmap(
+        self: InsertionDeviceKickMap,
+        nslice: int,
+        fname: str | Path | dict[str, Any],
+        norm_energy: float,
+    ) -> dict:
+        """Load and normalize one Radia field map."""
 
         def sorted_table(
             table_in: np.ndarray, sorted_index: np.ndarray, order_axis: str
@@ -166,7 +331,9 @@ class InsertionDeviceKickMap(Element):
             """
             # np.asfortranarray makes a copy of contiguous memory positions
             table_out = np.copy(table_in)
-            for i, iis in zip(range(len(sorted_index)), sorted_index):
+            for i, iis in zip(
+                range(len(sorted_index)), sorted_index, strict=True
+            ):
                 if order_axis == "col":
                     table_out[:, i] = table_in[:, iis]
                 if order_axis == "row":
@@ -178,6 +345,7 @@ class InsertionDeviceKickMap(Element):
             fname = ""
         else:
             # assume text file
+            fname = str(fname)
             thefields = self.read_text_radia_field_map(fname)
 
         (
@@ -239,7 +407,7 @@ class InsertionDeviceKickMap(Element):
             "PassMethod": "IdTablePass",
             "Filename_in": fname,
             "Normalization_energy": norm_energy,
-            "Nslice": np.uint8(nslice),
+            "Nslice": int(nslice),
             "Length": el_length,
             "xkick": xkick,
             "ykick": ykick,
@@ -346,7 +514,7 @@ class InsertionDeviceKickMap(Element):
         lenkick_block_list = len(kick_block_list)
         if lenkick_block_list < 2 or lenkick_block_list == 3:
             _minimumblocknumbererrormsg = (
-                "Input file contains only " f"{len(kick_block_list)} block"
+                f"Input file contains only {len(kick_block_list)} block"
             )
             raise ValueError(_minimumblocknumbererrormsg)
         if lenkick_block_list == 2:
@@ -358,7 +526,7 @@ class InsertionDeviceKickMap(Element):
             _warn4kickblocks = (
                 "Input file contains more than 4 blocks. Additional blocks ignored"
             )
-            warn(_warn4kickblocks)
+            warn(AtWarning(_warn4kickblocks), stacklevel=2)
 
         return (
             el_length,
@@ -404,6 +572,68 @@ class InsertionDeviceKickMap(Element):
             h_points,
             v_points,
         )
+    def _apply_kickmap_data(self: InsertionDeviceKickMap, data: dict) -> None:
+        """Apply kickmap data dict to the active tracking fields."""
+        for field in _KICKMAP_FIELDS:
+            setattr(self, field, data[field])
 
+    def add_kickmap(
+        self: InsertionDeviceKickMap,
+        key: str,
+        nslice: int,
+        fname: str | Path | dict[str, Any],
+        norm_energy: float,
+    ) -> None:
+        """Store a kickmap under a string key without activating it.
+
+        Use :meth:`use_kickmap` to make a stored kickmap active for tracking.
+
+        Arguments:
+            key: identifier string for this kickmap.
+            nslice: number of slices in integrator.
+            fname: input filename (text file or dict).
+            norm_energy: normalization energy in GeV.
+        """
+        was_empty = not self.KickmapStore
+        data = self._store_kickmap(key, nslice, fname, norm_energy)
+        if was_empty:
+            self.use_kickmap(key)
+            if hasattr(self, "_enable_passmethod"):
+                self._enable_passmethod = data["PassMethod"]
+            else:
+                self.PassMethod = data["PassMethod"]
+
+    def use_kickmap(self: InsertionDeviceKickMap, key: str) -> None:
+        """Activate a stored kickmap by key for tracking.
+
+        Swaps xtable, ytable, xkick, ykick, xkick1, ykick1 and Nslice/Length
+        to the data stored under *key*.
+
+        Arguments:
+            key: identifier of a kickmap previously added with
+                :meth:`add_kickmap`.
+
+        Raises:
+            KeyError: if *key* is not found in the store.
+        """
+        if not hasattr(self, "KickmapStore") or key not in self.KickmapStore:
+            available = self.list_kickmaps()
+            msg = f"Kickmap '{key}' not found. Available keys: {available}"
+            raise KeyError(msg)
+        self.ActiveKickmap = key
+        self._apply_kickmap_data(self.KickmapStore[key])
+
+    @property
+    def active_kickmap(self: InsertionDeviceKickMap) -> str | None:
+        """The key of the currently active kickmap, or None if not set."""
+        return getattr(self, "ActiveKickmap", "") or None
+
+    def list_kickmaps(self: InsertionDeviceKickMap) -> list[str]:
+        """Return the list of stored kickmap keys.
+
+        Returns:
+            List of key strings.
+        """
+        return list(getattr(self, "KickmapStore", {}))
 
 # EOF
