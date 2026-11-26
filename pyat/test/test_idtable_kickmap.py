@@ -79,6 +79,8 @@ class TestKickmapStore:
         assert elem.PassMethod == "IdTablePass"
         assert elem.list_kickmaps() == ["mode_a"]
         assert elem.active_kickmap == "mode_a"
+        elem.disable()
+        assert elem.PassMethod == "DriftPass"
 
     def test_constructor_accepts_named_kickmap_mapping(self, idkm_file):
         """Several named kickmaps may be supplied at construction."""

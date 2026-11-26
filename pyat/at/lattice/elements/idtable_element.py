@@ -595,12 +595,11 @@ class InsertionDeviceKickMap(Element):
         was_empty = not self.KickmapStore
         data = self._store_kickmap(key, nslice, fname, norm_energy)
         if was_empty:
-            self.Filename_in = data["Filename_in"]
-            self.Normalization_energy = data["Normalization_energy"]
-            self.ActiveKickmap = key
-            self._apply_kickmap_data(self.KickmapStore[key])
-            self.PassMethod = data["PassMethod"]
-            self._enable_passmethod = data["PassMethod"]
+            self.use_kickmap(key)
+            if hasattr(self, "_enable_passmethod"):
+                self._enable_passmethod = data["PassMethod"]
+            else:
+                self.PassMethod = data["PassMethod"]
             self._disable_passmethod = "DriftPass"
 
     def use_kickmap(self: InsertionDeviceKickMap, key: str) -> None:
