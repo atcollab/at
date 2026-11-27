@@ -470,7 +470,7 @@ static double getEnergy(pcg32_random_t *rng, double ec)
 #define INTEGRATOR_PREFIX \
     double dp1 = 1.0 + r6[4]; \
     double gamma = dp1 * gamma0; \
-    double cstec = CST1 * gamma * gamma; \
+    double cstec = CST1 * gamma * gamma * dp1; \
     double cstng = CST2 * gamma; \
     double p_norm = 1.0 / dp1; \
     double xp0 = r6[1] * p_norm; \
