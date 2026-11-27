@@ -190,12 +190,18 @@ at_src = Path("pyat")
 c_pass_methods = integrator_src_orig.glob("*Pass.c")
 cpp_pass_methods = integrator_src_orig.glob("*Pass.cc")
 gpu_pass_methods = gpu_src.glob("*Pass.cpp")
+integrator_deps = sorted(
+    str(p)
+    for p in integrator_src_orig.glob("*.[ch]")
+    if not p.name.endswith("Pass.c")
+)
 
 
 def integrator_ext(pass_method, flags):
     return Extension(
         name=f"at.integrators.{pass_method.stem}",
         sources=[pass_method],
+        depends=integrator_deps,
         include_dirs=[np.get_include(), *mpi_includes, str(integrator_src_orig)],
         define_macros=macros + omp_macros + mpi_macros,
         extra_compile_args=flags + omp_cflags,
@@ -206,6 +212,7 @@ def integrator_ext(pass_method, flags):
 at = Extension(
     "at.tracking.atpass",
     sources=[at_src / "at.c"],
+    depends=integrator_deps,
     define_macros=macros + omp_macros + mpi_macros,
     include_dirs=[np.get_include(), str(integrator_src_orig)],
     extra_compile_args=cflags + omp_cflags,
@@ -222,6 +229,7 @@ cconfig = Extension(
 ibsrates = Extension(
     name="at.collective._ibs",
     sources=[at_src / "at" / "collective" / "_ibs.c"],
+    depends=integrator_deps,
     include_dirs=[np.get_include(), str(integrator_src_orig)],
     define_macros=macros,
     extra_compile_args=cflags,
